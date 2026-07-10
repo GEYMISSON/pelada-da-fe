@@ -1,1 +1,0 @@
-# pelada-da-fe
