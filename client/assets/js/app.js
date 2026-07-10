@@ -52,6 +52,24 @@ async function carregarPagina(nome) {
 
         document.getElementById("conteudo").innerHTML = html;
 
+        if (nome === "jogadores") {
+
+            const scriptAntigo = document.getElementById("pagina-script");
+
+            if (scriptAntigo) {
+                scriptAntigo.remove();
+            }
+
+            const script = document.createElement("script");
+
+            script.src = "assets/js/jogadores.js";
+
+            script.id = "pagina-script";
+
+            document.body.appendChild(script);
+
+        }
+
         document.getElementById("tituloPagina").innerText =
             nome.charAt(0).toUpperCase() + nome.slice(1);
 

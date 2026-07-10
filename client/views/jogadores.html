@@ -1,0 +1,203 @@
+<div class="container-fluid">
+
+    <div class="d-flex justify-content-between align-items-center mb-4">
+
+        <div>
+            <h2 class="mb-0">
+                <i class="bi bi-people-fill"></i>
+                Jogadores
+            </h2>
+
+            <small class="text-muted">
+                Cadastro de jogadores da Pelada da Fé
+            </small>
+        </div>
+
+        <button class="btn btn-success" id="btnNovoJogador">
+            <i class="bi bi-plus-circle"></i>
+            Novo Jogador
+        </button>
+
+    </div>
+
+    <div class="card shadow-sm mb-4">
+
+        <div class="card-body">
+
+            <input
+                type="text"
+                id="pesquisaJogador"
+                class="form-control"
+                placeholder="Pesquisar jogador...">
+
+        </div>
+
+    </div>
+
+    <div class="row" id="listaJogadores">
+
+    </div>
+
+    <!-- Modal Novo Jogador -->
+<div class="modal fade" id="modalJogador" tabindex="-1">
+
+    <div class="modal-dialog modal-lg">
+
+        <div class="modal-content">
+
+            <div class="modal-header">
+
+                <h5 class="modal-title">
+
+                    👤 Novo Jogador
+
+                </h5>
+
+                <button class="btn-close" data-bs-dismiss="modal"></button>
+
+            </div>
+
+            <div class="modal-body">
+
+                <div class="row">
+
+                    <div class="col-md-6 mb-3">
+
+                        <label>Nome *</label>
+
+                        <input
+                            id="nome"
+                            class="form-control">
+
+                    </div>
+
+                    <div class="col-md-6 mb-3">
+
+                        <label>Data de nascimento</label>
+
+                        <input
+                            id="dataNascimento"
+                            type="date"
+                            class="form-control">
+
+                    </div>
+
+                    <div class="col-md-6 mb-3">
+
+                        <label>Posição</label>
+
+                        <select
+                            id="posicao"
+                            class="form-select">
+
+                            <option value="">Selecione</option>
+                            <option>Goleiro</option>
+                            <option>Zagueiro</option>
+                            <option>Lateral</option>
+                            <option>Volante</option>
+                            <option>Meia</option>
+                            <option>Atacante</option>
+
+                        </select>
+
+                    </div>
+
+                    <div class="col-md-6 mb-3">
+
+                        <label>Número</label>
+
+                        <input
+                            id="numeroCamisa"
+                            type="number"
+                            class="form-control">
+
+                    </div>
+
+                    <div class="col-md-4 mb-3">
+
+                        <label>Nível</label>
+
+                        <select
+                            id="nivel"
+                            class="form-select">
+
+                            <option value="1">⭐</option>
+                            <option value="2">⭐⭐</option>
+                            <option value="3" selected>⭐⭐⭐</option>
+                            <option value="4">⭐⭐⭐⭐</option>
+                            <option value="5">⭐⭐⭐⭐⭐</option>
+
+                        </select>
+
+                    </div>
+
+                    <div class="col-md-4 mb-3">
+
+                        <label>⚽ Gols</label>
+
+                        <input
+                            id="gols"
+                            type="number"
+                            value="0"
+                            class="form-control">
+
+                    </div>
+
+                    <div class="col-md-4 mb-3">
+
+                        <label>🎯 Assistências</label>
+
+                        <input
+                            id="assistencias"
+                            type="number"
+                            value="0"
+                            class="form-control">
+
+                    </div>
+
+                    <div class="col-md-6">
+
+                        <label>Status</label>
+
+                        <select
+                            id="status"
+                            class="form-select">
+
+                            <option>Ativo</option>
+                            <option>Inativo</option>
+
+                        </select>
+
+                    </div>
+
+                </div>
+
+            </div>
+
+            <div class="modal-footer">
+
+                <button
+                    class="btn btn-secondary"
+                    data-bs-dismiss="modal">
+
+                    Cancelar
+
+                </button>
+
+                <button
+                    class="btn btn-success"
+                    id="salvarJogador">
+
+                    Salvar
+
+                </button>
+
+            </div>
+
+        </div>
+
+    </div>
+
+</div>
+
+</div>
