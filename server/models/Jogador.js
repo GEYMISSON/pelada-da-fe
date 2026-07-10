@@ -1,49 +1,58 @@
 const mongoose = require("mongoose");
 
-const jogadorSchema = new mongoose.Schema({
-
+const jogadorSchema = new mongoose.Schema(
+  {
     foto: {
-        type: String,
-        default: ""
+      type: String,
+      default: "",
     },
 
     nome: {
-        type: String,
-        required: true,
-        trim: true
+      type: String,
+      required: [true, "O nome é obrigatório."],
+      trim: true,
     },
 
     dataNascimento: {
-        type: Date
+      type: Date,
     },
 
     posicao: {
-        type: String,
-        default: ""
+      type: String,
+      enum: [
+        "",
+        "Goleiro",
+        "Zagueiro",
+        "Lateral",
+        "Volante",
+        "Meia",
+        "Atacante",
+      ],
+      default: "",
     },
 
     numeroCamisa: {
-        type: Number
+      type: Number,
+      min: 1,
+      max: 99,
     },
 
     nivel: {
-        type: Number,
-        required: true,
-        min: 1,
-        max: 5
+      type: Number,
+      required: true,
+      min: 1,
+      max: 5,
     },
 
     status: {
-        type: String,
-        enum: ["Ativo", "Inativo"],
-        default: "Ativo"
+      type: String,
+      enum: ["Ativo", "Inativo"],
+      default: "Ativo",
     },
-
-    criadoEm: {
-        type: Date,
-        default: Date.now
-    }
-
-});
+  },
+  {
+    timestamps: true,
+  }
+);
 
 module.exports = mongoose.model("Jogador", jogadorSchema);

@@ -4,7 +4,6 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-
     <title>Pelada da Fé</title>
 
     <!-- Bootstrap -->
@@ -25,32 +24,74 @@
         <aside class="sidebar">
 
             <div class="logo">
-
                 <img src="assets/img/logo.png" alt="Logo">
-
                 <h3>Pelada da Fé</h3>
-                
             </div>
 
             <ul class="menu">
 
-                <li><a href="#"><i class="bi bi-house-door-fill"></i> Dashboard</a></li>
+                <li>
+                    <a href="#" data-page="dashboard">
+                        <i class="bi bi-house-door-fill"></i>
+                        Dashboard
+                    </a>
+                </li>
 
-                <li><a href="#"><i class="bi bi-people-fill"></i> Jogadores</a></li>
+                <li>
+                    <a href="#" data-page="jogadores">
+                        <i class="bi bi-people-fill"></i>
+                        Jogadores
+                    </a>
+                </li>
 
-                <li><a href="#"><i class="bi bi-calendar-event-fill"></i> Peladas</a></li>
+                <li>
+                    <a href="#" data-page="peladas">
+                        <i class="bi bi-calendar-event-fill"></i>
+                        Peladas
+                    </a>
+                </li>
 
-                <li><a href="#"><i class="bi bi-shuffle"></i> Sorteio</a></li>
+                <li>
+                    <a href="#" data-page="sorteio">
+                        <i class="bi bi-shuffle"></i>
+                        Sorteio
+                    </a>
+                </li>
 
-                <li><a href="#"><i class="bi bi-trophy-fill"></i> Partidas</a></li>
+                <li>
+                    <a href="#" data-page="partidas">
+                        <i class="bi bi-trophy-fill"></i>
+                        Partidas
+                    </a>
+                </li>
 
-                <li><a href="#"><i class="bi bi-dribbble"></i> Artilharia</a></li>
+                <li>
+                    <a href="#" data-page="artilharia">
+                        <i class="bi bi-dribbble"></i>
+                        Artilharia
+                    </a>
+                </li>
 
-                <li><a href="#"><i class="bi bi-bar-chart-fill"></i> Estatísticas</a></li>
+                <li>
+                    <a href="#" data-page="estatisticas">
+                        <i class="bi bi-bar-chart-fill"></i>
+                        Estatísticas
+                    </a>
+                </li>
 
-                <li><a href="#"><i class="bi bi-clock-history"></i> Histórico</a></li>
+                <li>
+                    <a href="#" data-page="historico">
+                        <i class="bi bi-clock-history"></i>
+                        Histórico
+                    </a>
+                </li>
 
-                <li><a href="#"><i class="bi bi-gear-fill"></i> Configurações</a></li>
+                <li>
+                    <a href="#" data-page="configuracoes">
+                        <i class="bi bi-gear-fill"></i>
+                        Configurações
+                    </a>
+                </li>
 
             </ul>
 
@@ -63,62 +104,25 @@
             <header class="topbar">
 
                 <button id="menu-btn" class="menu-btn">
-
                     <i class="bi bi-list"></i>
-
                 </button>
 
                 <div class="topbar-center">
-
-                    <h2>Dashboard</h2>
-
+                    <h2 id="tituloPagina">Dashboard</h2>
                     <small id="relogio"></small>
-
                 </div>
 
                 <div class="usuario">
-
-                    <img src="assets/img/logo.png">
-
+                    <img src="assets/img/logo.png" alt="Logo">
                     <span>Administrador</span>
-
                 </div>
 
             </header>
 
-            <!-- Cards -->
+            <!-- Área dinâmica -->
+            <section id="conteudo">
 
-            <section class="cards">
-
-                <div class="card-box">
-                    <h5>👥 Jogadores</h5>
-                    <h2>18</h2>
-                </div>
-
-                <div class="card-box">
-                    <h5>📅 Peladas</h5>
-                    <h2>0</h2>
-                </div>
-
-                <div class="card-box">
-                    <h5>⚽ Gols</h5>
-                    <h2>0</h2>
-                </div>
-
-                <div class="card-box">
-                    <h5>🏆 Artilheiro</h5>
-                    <h2>---</h2>
-                </div>
-
-            </section>
-
-            <section class="conteudo">
-
-                <h3>Bem-vindo ao Pelada da Fé</h3>
-
-                <p>
-                    Nosso sistema está sendo desenvolvido passo a passo.
-                </p>
+                <!-- dashboard.html será carregado aqui -->
 
             </section>
 
