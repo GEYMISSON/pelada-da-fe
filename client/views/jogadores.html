@@ -1,172 +1,388 @@
-<div class="container-fluid">
+<div class="container-fluid py-3">
 
-    <div class="d-flex justify-content-between align-items-center mb-4">
+    <!-- Cabeçalho -->
+    <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center mb-4">
 
         <div>
-            <h2 class="mb-0">
-                <i class="bi bi-people-fill"></i>
+
+            <h2 class="fw-bold mb-1">
+
+                <i class="bi bi-people-fill text-success"></i>
+
                 Jogadores
+
             </h2>
 
-            <small class="text-muted">
-                Cadastro de jogadores da Pelada da Fé
-            </small>
+            <p class="text-muted mb-0">
+
+                Gerencie todos os jogadores da Pelada da Fé.
+
+            </p>
+
         </div>
 
-        <button class="btn btn-success" id="btnNovoJogador">
-            <i class="bi bi-plus-circle"></i>
-            Novo Jogador
-        </button>
+        <div class="mt-3 mt-md-0">
+
+            <button
+                class="btn btn-success"
+                id="btnNovoJogador">
+
+                <i class="bi bi-plus-circle"></i>
+
+                Novo Jogador
+
+            </button>
+
+        </div>
 
     </div>
 
-    <div class="card shadow-sm mb-4">
+    <!-- Pesquisa -->
+
+    <div class="card shadow-sm border-0 mb-4">
 
         <div class="card-body">
 
-            <input
-                type="text"
-                id="pesquisaJogador"
-                class="form-control"
-                placeholder="Pesquisar jogador...">
+            <div class="input-group">
+
+                <span class="input-group-text">
+
+                    <i class="bi bi-search"></i>
+
+                </span>
+
+                <input
+                    id="pesquisaJogador"
+                    type="text"
+                    class="form-control"
+                    placeholder="Pesquisar jogador...">
+
+            </div>
 
         </div>
 
     </div>
 
+    <!-- Lista -->
+
     <div class="row" id="listaJogadores">
+
+        <!-- Cards carregados via JavaScript -->
 
     </div>
 
-    <!-- Modal Novo Jogador -->
-<div class="modal fade" id="modalJogador" tabindex="-1">
+</div>
 
-    <div class="modal-dialog modal-lg">
+<!-- Modal -->
 
-        <div class="modal-content">
+<div
+    class="modal fade"
+    id="modalJogador"
+    tabindex="-1">
 
-            <div class="modal-header">
+    <div class="modal-dialog modal-xl modal-dialog-scrollable">
 
-                <h5 class="modal-title">
+        <div class="modal-content border-0 shadow">
 
-                    👤 Novo Jogador
+            <div class="modal-header bg-success text-white">
 
-                </h5>
+                <div>
 
-                <button class="btn-close" data-bs-dismiss="modal"></button>
+                    <h4 class="mb-0">
+
+                        <i class="bi bi-person-plus-fill"></i>
+
+                        Cadastro de Jogador
+
+                    </h4>
+
+                    <small>
+
+                        Cadastre um novo participante da Pelada da Fé
+
+                    </small>
+
+                </div>
+
+                <button
+                    class="btn-close btn-close-white"
+                    data-bs-dismiss="modal">
+
+                </button>
 
             </div>
 
             <div class="modal-body">
 
-                <div class="row">
+                <!-- Abas -->
 
-                    <div class="col-md-6 mb-3">
+                <ul class="nav nav-tabs mb-4">
 
-                        <label>Nome *</label>
+                    <li class="nav-item">
 
-                        <input
-                            id="nome"
-                            class="form-control">
+                        <button
+                            class="nav-link active"
+                            data-bs-toggle="tab"
+                            data-bs-target="#dados">
+
+                            Dados do Jogador
+
+                        </button>
+
+                    </li>
+
+                    <li class="nav-item">
+
+                        <button
+                            class="nav-link"
+                            data-bs-toggle="tab"
+                            data-bs-target="#estatisticas">
+
+                            Estatísticas
+
+                        </button>
+
+                    </li>
+
+                </ul>
+
+                <div class="tab-content">
+
+                    <!-- Dados -->
+
+                    <div
+                        class="tab-pane fade show active"
+                        id="dados">
+
+                        <div class="row">
+
+                            <!-- Foto -->
+
+                            <div class="col-md-4 text-center mb-4">
+
+                                <img
+                                    id="previewFoto"
+                                    src="assets/img/logo.png"
+                                    class="rounded-circle border shadow"
+                                    style="width:180px;height:180px;object-fit:cover;">
+
+                                <div class="mt-3">
+
+                                    <input
+                                        id="foto"
+                                        type="file"
+                                        class="form-control"
+                                        accept="image/*">
+
+                                </div>
+
+                            </div>
+
+                            <!-- Dados -->
+
+                            <div class="col-md-8">
+
+                                <div class="row">
+
+                                    <div class="col-md-12 mb-3">
+
+                                        <label class="form-label">
+
+                                            🧍 Nome *
+
+                                        </label>
+
+                                        <input
+                                            id="nome"
+                                            class="form-control">
+
+                                    </div>
+
+                                    <div class="col-md-6 mb-3">
+
+                                        <label class="form-label">
+
+                                            📅 Data de nascimento
+
+                                        </label>
+
+                                        <input
+                                            id="dataNascimento"
+                                            type="date"
+                                            class="form-control">
+
+                                    </div>
+
+                                    <div class="col-md-6 mb-3">
+
+                                        <label class="form-label">
+
+                                            📍 Posição
+
+                                        </label>
+
+                                        <select
+                                            id="posicao"
+                                            class="form-select">
+
+                                            <option value="">Selecione</option>
+
+                                            <option>Goleiro</option>
+
+                                            <option>Zagueiro</option>
+
+                                            <option>Lateral</option>
+
+                                            <option>Volante</option>
+
+                                            <option>Meia</option>
+
+                                            <option>Atacante</option>
+
+                                        </select>
+
+                                    </div>
+
+                                    <div class="col-md-6 mb-3">
+
+                                        <label class="form-label">
+
+                                            👕 Número da camisa
+
+                                        </label>
+
+                                        <input
+                                            id="numeroCamisa"
+                                            type="number"
+                                            min="1"
+                                            max="99"
+                                            class="form-control">
+
+                                    </div>
+
+                                    <div class="col-md-6 mb-3">
+
+                                        <label class="form-label">
+
+                                            ⭐ Nível
+
+                                        </label>
+
+                                        <select
+                                            id="nivel"
+                                            class="form-select">
+
+                                            <option value="1">⭐</option>
+
+                                            <option value="2">⭐⭐</option>
+
+                                            <option value="3" selected>⭐⭐⭐</option>
+
+                                            <option value="4">⭐⭐⭐⭐</option>
+
+                                            <option value="5">⭐⭐⭐⭐⭐</option>
+
+                                        </select>
+
+                                    </div>
+
+                                </div>
+
+                            </div>
+
+                        </div>
 
                     </div>
 
-                    <div class="col-md-6 mb-3">
+                                        <!-- Estatísticas -->
 
-                        <label>Data de nascimento</label>
+                    <div
+                        class="tab-pane fade"
+                        id="estatisticas">
 
-                        <input
-                            id="dataNascimento"
-                            type="date"
-                            class="form-control">
+                        <div class="row">
 
-                    </div>
+                            <div class="col-md-4 mb-3">
 
-                    <div class="col-md-6 mb-3">
+                                <label class="form-label">
 
-                        <label>Posição</label>
+                                    ⚽ Gols
 
-                        <select
-                            id="posicao"
-                            class="form-select">
+                                </label>
 
-                            <option value="">Selecione</option>
-                            <option>Goleiro</option>
-                            <option>Zagueiro</option>
-                            <option>Lateral</option>
-                            <option>Volante</option>
-                            <option>Meia</option>
-                            <option>Atacante</option>
+                                <input
+                                    id="gols"
+                                    type="number"
+                                    min="0"
+                                    value="0"
+                                    class="form-control">
 
-                        </select>
+                            </div>
 
-                    </div>
+                            <div class="col-md-4 mb-3">
 
-                    <div class="col-md-6 mb-3">
+                                <label class="form-label">
 
-                        <label>Número</label>
+                                    🎯 Assistências
 
-                        <input
-                            id="numeroCamisa"
-                            type="number"
-                            class="form-control">
+                                </label>
 
-                    </div>
+                                <input
+                                    id="assistencias"
+                                    type="number"
+                                    min="0"
+                                    value="0"
+                                    class="form-control">
 
-                    <div class="col-md-4 mb-3">
+                            </div>
 
-                        <label>Nível</label>
+                            <div class="col-md-4 mb-3">
 
-                        <select
-                            id="nivel"
-                            class="form-select">
+                                <label class="form-label">
 
-                            <option value="1">⭐</option>
-                            <option value="2">⭐⭐</option>
-                            <option value="3" selected>⭐⭐⭐</option>
-                            <option value="4">⭐⭐⭐⭐</option>
-                            <option value="5">⭐⭐⭐⭐⭐</option>
+                                    🟢 Status
 
-                        </select>
+                                </label>
 
-                    </div>
+                                <select
+                                    id="status"
+                                    class="form-select">
 
-                    <div class="col-md-4 mb-3">
+                                    <option value="Ativo" selected>
+                                        Ativo
+                                    </option>
 
-                        <label>⚽ Gols</label>
+                                    <option value="Inativo">
+                                        Inativo
+                                    </option>
 
-                        <input
-                            id="gols"
-                            type="number"
-                            value="0"
-                            class="form-control">
+                                </select>
 
-                    </div>
+                            </div>
 
-                    <div class="col-md-4 mb-3">
+                            <div class="col-12">
 
-                        <label>🎯 Assistências</label>
+                                <div class="alert alert-light border mt-3">
 
-                        <input
-                            id="assistencias"
-                            type="number"
-                            value="0"
-                            class="form-control">
+                                    <strong>Informação</strong>
 
-                    </div>
+                                    <hr>
 
-                    <div class="col-md-6">
+                                    <p class="mb-1">
+                                        ⚽ Os gols cadastrados aqui farão parte da
+                                        <strong>Artilharia Geral</strong>.
+                                    </p>
 
-                        <label>Status</label>
+                                    <p class="mb-0">
+                                        🎯 As assistências serão utilizadas nos
+                                        rankings futuros do sistema.
+                                    </p>
 
-                        <select
-                            id="status"
-                            class="form-select">
+                                </div>
 
-                            <option>Ativo</option>
-                            <option>Inativo</option>
+                            </div>
 
-                        </select>
+                        </div>
 
                     </div>
 
@@ -177,7 +393,7 @@
             <div class="modal-footer">
 
                 <button
-                    class="btn btn-secondary"
+                    class="btn btn-outline-secondary"
                     data-bs-dismiss="modal">
 
                     Cancelar
@@ -188,7 +404,9 @@
                     class="btn btn-success"
                     id="salvarJogador">
 
-                    Salvar
+                    <i class="bi bi-check-circle-fill"></i>
+
+                    Salvar Jogador
 
                 </button>
 
@@ -197,7 +415,5 @@
         </div>
 
     </div>
-
-</div>
 
 </div>
