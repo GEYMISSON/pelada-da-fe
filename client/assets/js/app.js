@@ -1,53 +1,92 @@
-const menu = document.querySelector(".sidebar");
-const botao = document.getElementById("menu-btn");
+// ==========================
+// MENU LATERAL
+// ==========================
 
-if (botao) {
-    botao.addEventListener("click", () => {
-        menu.classList.toggle("active");
+const sidebar = document.querySelector(".sidebar");
+const menuBtn = document.getElementById("menu-btn");
+
+if (menuBtn) {
+    menuBtn.addEventListener("click", () => {
+        sidebar.classList.toggle("active");
     });
 }
 
-// Relógio
+// ==========================
+// RELÓGIO
+// ==========================
+
 function atualizarRelogio() {
+
     const agora = new Date();
+
+    const texto =
+        agora.toLocaleDateString("pt-BR") +
+        " • " +
+        agora.toLocaleTimeString("pt-BR");
 
     const relogio = document.getElementById("relogio");
 
     if (relogio) {
-        relogio.innerHTML =
-            agora.toLocaleDateString("pt-BR") +
-            " - " +
-            agora.toLocaleTimeString("pt-BR");
+
+        relogio.textContent = texto;
+
     }
+
 }
 
 setInterval(atualizarRelogio, 1000);
+
 atualizarRelogio();
 
-// Carregar telas
-async function carregarPagina(nomePagina) {
+// ==========================
+// CARREGAR PÁGINAS
+// ==========================
 
-    const resposta = await fetch(`views/${nomePagina}.html`);
+async function carregarPagina(nome) {
 
-    const html = await resposta.text();
+    try {
 
-    document.getElementById("conteudo").innerHTML = html;
+        const resposta = await fetch(`views/${nome}.html`);
+
+        const html = await resposta.text();
+
+        document.getElementById("conteudo").innerHTML = html;
+
+        document.getElementById("tituloPagina").innerText =
+            nome.charAt(0).toUpperCase() + nome.slice(1);
+
+    } catch (erro) {
+
+        document.getElementById("conteudo").innerHTML = `
+            <div class="alert alert-danger mt-3">
+                Erro ao carregar a página.
+            </div>
+        `;
+
+        console.error(erro);
+
+    }
+
 }
 
-// Dashboard inicial
-carregarPagina("dashboard");
+// ==========================
+// MENU
+// ==========================
 
-// Menu
 document.querySelectorAll(".menu a").forEach(link => {
 
     link.addEventListener("click", e => {
 
         e.preventDefault();
 
-        const pagina = link.dataset.page;
-
-        carregarPagina(pagina);
+        carregarPagina(link.dataset.page);
 
     });
 
 });
+
+// ==========================
+// PRIMEIRA TELA
+// ==========================
+
+carregarPagina("dashboard");
