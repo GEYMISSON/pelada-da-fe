@@ -1,53 +1,95 @@
-async function carregarJogadores() {
+const Jogadores = {
 
-    const resposta = await fetch("/api/jogadores");
+    async iniciar() {
 
-    const jogadores = await resposta.json();
+        await this.listar();
 
-    const lista = document.getElementById("listaJogadores");
+    },
 
-    if (!lista) return;
+    async listar() {
 
-    lista.innerHTML = "";
+        try {
 
-    jogadores.forEach(jogador => {
+            const jogadores = await JogadorService.listar();
 
-        lista.innerHTML += `
-            <div class="col-lg-4 col-md-6 mb-4">
+            this.renderizar(jogadores);
 
-                <div class="card shadow h-100">
+        }
 
-                    <div class="card-body text-center">
+        catch (erro) {
 
-                        <img
-                            src="${jogador.foto || 'assets/img/logo.png'}"
-                            class="rounded-circle mb-3"
-                            width="90"
-                            height="90">
+            console.error(erro);
 
-                        <h5>${jogador.nome}</h5>
+            toast("Erro ao carregar jogadores.", "#dc3545");
 
-                        <p class="text-warning fs-5">
-                            ${"⭐".repeat(jogador.nivel)}
-                        </p>
+        }
 
-                        <p>👕 ${jogador.numeroCamisa || "-"}</p>
+    },
 
-                        <p>📍 ${jogador.posicao || "-"}</p>
+    renderizar(jogadores) {
 
-                        <span class="badge bg-success">
-                            ${jogador.status}
-                        </span>
+        const lista = document.getElementById("listaJogadores");
+
+        if (!lista) return;
+
+        lista.innerHTML = "";
+
+        if (jogadores.length === 0) {
+
+            lista.innerHTML = `
+                <div class="col-12">
+
+                    <div class="alert alert-secondary">
+
+                        Nenhum jogador cadastrado.
 
                     </div>
 
                 </div>
+            `;
 
-            </div>
-        `;
+            return;
 
-    });
+        }
 
-}
+        jogadores.forEach(jogador => {
 
-carregarJogadores();
+            lista.innerHTML += `
+                <div class="col-lg-4 col-md-6 mb-4">
+
+                    <div class="card shadow-sm">
+
+                        <div class="card-body">
+
+                            <h5>${jogador.nome}</h5>
+
+                            <p>
+
+                                ⭐ ${jogador.nivel}
+
+                            </p>
+
+                            <p>
+
+                                ⚽ ${jogador.gols}
+
+                            </p>
+
+                        </div>
+
+                    </div>
+
+                </div>
+            `;
+
+        });
+
+    }
+
+};
+
+document.addEventListener("DOMContentLoaded", () => {
+
+    Jogadores.iniciar();
+
+});
