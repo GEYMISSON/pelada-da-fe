@@ -2,6 +2,8 @@ const Jogadores = {
 
     jogadores: [],
 
+    jogadorEditandoId: null,
+
 
     // ==========================
     // INICIALIZAÇÃO
@@ -38,16 +40,14 @@ const Jogadores = {
 
             btnNovo.addEventListener("click", () => {
 
-                this.limparFormulario();
-
-                this.abrirModal();
+                this.novo();
 
             });
 
         }
 
 
-        // Salvar jogador
+        // Salvar / editar
 
         if (btnSalvar) {
 
@@ -88,9 +88,12 @@ const Jogadores = {
             const jogadores =
                 await JogadorService.listar();
 
-            this.jogadores = jogadores;
+            this.jogadores =
+                jogadores || [];
 
-            this.renderizar(jogadores);
+            this.renderizar(
+                this.jogadores
+            );
 
         } catch (erro) {
 
@@ -99,9 +102,8 @@ const Jogadores = {
                 erro
             );
 
-            toast(
-                "Erro ao carregar jogadores.",
-                "#dc3545"
+            this.mostrarErro(
+                "Erro ao carregar jogadores."
             );
 
         }
@@ -156,7 +158,11 @@ const Jogadores = {
 
             const foto =
                 jogador.foto ||
-                CONFIG.DEFAULT_AVATAR;
+                (
+                    typeof CONFIG !== "undefined"
+                        ? CONFIG.DEFAULT_AVATAR
+                        : "assets/img/avatar.png"
+                );
 
             const posicao =
                 jogador.posicao ||
@@ -167,6 +173,14 @@ const Jogadores = {
 
             const gols =
                 jogador.gols ?? 0;
+
+            const assistencias =
+                jogador.assistencias ?? 0;
+
+            const status =
+                jogador.status ||
+                "Ativo";
+
 
             lista.innerHTML += `
 
@@ -179,7 +193,7 @@ const Jogadores = {
                             <div class="d-flex align-items-center mb-3">
 
                                 <img
-                                    src="${foto}"
+                                    src="${this.escaparHtml(foto)}"
                                     alt="Foto de ${this.escaparHtml(jogador.nome)}"
                                     class="rounded-circle me-3"
                                     style="
@@ -208,10 +222,40 @@ const Jogadores = {
                                 <strong>${nivel}</strong>
                             </p>
 
-                            <p class="mb-0">
+                            <p class="mb-2">
                                 ⚽ Gols:
                                 <strong>${gols}</strong>
                             </p>
+
+                            <p class="mb-3">
+                                🎯 Assistências:
+                                <strong>${assistencias}</strong>
+                            </p>
+
+                            <div class="d-flex justify-content-between align-items-center">
+
+                                <span class="badge ${
+                                    status === "Ativo"
+                                        ? "bg-success"
+                                        : "bg-secondary"
+                                }">
+
+                                    ${this.escaparHtml(status)}
+
+                                </span>
+
+                                <button
+                                    type="button"
+                                    class="btn btn-sm btn-outline-primary"
+                                    onclick="Jogadores.editar('${jogador._id}')"
+                                >
+
+                                    <i class="bi bi-pencil"></i>
+                                    Editar
+
+                                </button>
+
+                            </div>
 
                         </div>
 
@@ -227,34 +271,238 @@ const Jogadores = {
 
 
     // ==========================
-    // FILTRAR
+    // NOVO JOGADOR
     // ==========================
 
-    filtrar(texto) {
+    novo() {
 
-        const busca =
-            texto
-                .trim()
-                .toLowerCase();
+        this.jogadorEditandoId = null;
 
-        if (!busca) {
+        this.limparFormulario();
 
-            this.renderizar(
-                this.jogadores
+        this.configurarModalNovo();
+
+        this.abrirModal();
+
+    },
+
+
+    // ==========================
+    // EDITAR JOGADOR
+    // ==========================
+
+    editar(id) {
+
+        const jogador =
+            this.jogadores.find(
+                item => item._id === id
+            );
+
+
+        if (!jogador) {
+
+            this.mostrarErro(
+                "Jogador não encontrado."
             );
 
             return;
 
         }
 
-        const filtrados =
-            this.jogadores.filter(jogador =>
-                (jogador.nome || "")
-                    .toLowerCase()
-                    .includes(busca)
+
+        this.jogadorEditandoId =
+            jogador._id;
+
+
+        this.preencherFormulario(
+            jogador
+        );
+
+
+        this.configurarModalEdicao();
+
+        this.abrirModal();
+
+    },
+
+
+    // ==========================
+    // CONFIGURAR MODAL - NOVO
+    // ==========================
+
+    configurarModalNovo() {
+
+        const titulo =
+            document.querySelector(
+                "#modalJogador .modal-title"
             );
 
-        this.renderizar(filtrados);
+        if (titulo) {
+
+            titulo.innerHTML =
+                "👤 Novo Jogador";
+
+        }
+
+
+        const btnSalvar =
+            document.getElementById(
+                "salvarJogador"
+            );
+
+        if (btnSalvar) {
+
+            btnSalvar.innerHTML =
+                "Salvar";
+
+        }
+
+    },
+
+
+    // ==========================
+    // CONFIGURAR MODAL - EDIÇÃO
+    // ==========================
+
+    configurarModalEdicao() {
+
+        const titulo =
+            document.querySelector(
+                "#modalJogador .modal-title"
+            );
+
+        if (titulo) {
+
+            titulo.innerHTML =
+                "✏️ Editar Jogador";
+
+        }
+
+
+        const btnSalvar =
+            document.getElementById(
+                "salvarJogador"
+            );
+
+        if (btnSalvar) {
+
+            btnSalvar.innerHTML =
+                "Salvar Alterações";
+
+        }
+
+    },
+
+
+    // ==========================
+    // PREENCHER FORMULÁRIO
+    // ==========================
+
+    preencherFormulario(jogador) {
+
+        const nome =
+            document.getElementById("nome");
+
+        const dataNascimento =
+            document.getElementById(
+                "dataNascimento"
+            );
+
+        const posicao =
+            document.getElementById(
+                "posicao"
+            );
+
+        const numeroCamisa =
+            document.getElementById(
+                "numeroCamisa"
+            );
+
+        const nivel =
+            document.getElementById(
+                "nivel"
+            );
+
+        const gols =
+            document.getElementById(
+                "gols"
+            );
+
+        const assistencias =
+            document.getElementById(
+                "assistencias"
+            );
+
+        const status =
+            document.getElementById(
+                "status"
+            );
+
+
+        if (nome) {
+
+            nome.value =
+                jogador.nome || "";
+
+        }
+
+
+        if (dataNascimento) {
+
+            dataNascimento.value =
+                this.formatarDataParaInput(
+                    jogador.dataNascimento
+                );
+
+        }
+
+
+        if (posicao) {
+
+            posicao.value =
+                jogador.posicao || "";
+
+        }
+
+
+        if (numeroCamisa) {
+
+            numeroCamisa.value =
+                jogador.numeroCamisa ?? "";
+
+        }
+
+
+        if (nivel) {
+
+            nivel.value =
+                jogador.nivel ?? 3;
+
+        }
+
+
+        if (gols) {
+
+            gols.value =
+                jogador.gols ?? 0;
+
+        }
+
+
+        if (assistencias) {
+
+            assistencias.value =
+                jogador.assistencias ?? 0;
+
+        }
+
+
+        if (status) {
+
+            status.value =
+                jogador.status || "Ativo";
+
+        }
 
     },
 
@@ -312,9 +560,8 @@ const Jogadores = {
 
         if (!nome) {
 
-            toast(
-                "Informe o nome do jogador.",
-                "#dc3545"
+            this.mostrarErro(
+                "Informe o nome do jogador."
             );
 
             document
@@ -366,12 +613,13 @@ const Jogadores = {
         };
 
 
-        try {
+        const btnSalvar =
+            document.getElementById(
+                "salvarJogador"
+            );
 
-            const btnSalvar =
-                document.getElementById(
-                    "salvarJogador"
-                );
+
+        try {
 
             if (btnSalvar) {
 
@@ -389,43 +637,64 @@ const Jogadores = {
             }
 
 
+            let resultado;
+
+
             // ==========================
-            // API
+            // EDIÇÃO
             // ==========================
 
-            const novoJogador =
-                await JogadorService.salvar(
-                    jogador
+            if (this.jogadorEditandoId) {
+
+                resultado =
+                    await JogadorService.editar(
+                        this.jogadorEditandoId,
+                        jogador
+                    );
+
+                console.log(
+                    "Jogador atualizado:",
+                    resultado
                 );
 
 
-            console.log(
-                "Jogador cadastrado:",
-                novoJogador
-            );
+                this.fecharModal();
+
+                await this.listar();
+
+                this.mostrarSucesso(
+                    "Jogador atualizado com sucesso!"
+                );
+
+            }
 
 
             // ==========================
-            // FECHAR MODAL
+            // NOVO
             // ==========================
 
-            this.fecharModal();
+            else {
+
+                resultado =
+                    await JogadorService.salvar(
+                        jogador
+                    );
+
+                console.log(
+                    "Jogador cadastrado:",
+                    resultado
+                );
 
 
-            // ==========================
-            // ATUALIZAR LISTA
-            // ==========================
+                this.fecharModal();
 
-            await this.listar();
+                await this.listar();
 
+                this.mostrarSucesso(
+                    "Jogador cadastrado com sucesso!"
+                );
 
-            // ==========================
-            // MENSAGEM
-            // ==========================
-
-            sucesso(
-                "Jogador cadastrado com sucesso!"
-            );
+            }
 
 
         } catch (erro) {
@@ -435,27 +704,21 @@ const Jogadores = {
                 erro
             );
 
-            toast(
+            this.mostrarErro(
                 erro.message ||
-                "Erro ao cadastrar jogador.",
-                "#dc3545"
+                "Erro ao salvar jogador."
             );
 
         } finally {
-
-            const btnSalvar =
-                document.getElementById(
-                    "salvarJogador"
-                );
 
             if (btnSalvar) {
 
                 btnSalvar.disabled = false;
 
-                btnSalvar.innerHTML = `
-                    <i class="bi bi-check-circle-fill"></i>
-                    Salvar Jogador
-                `;
+                btnSalvar.innerHTML =
+                    this.jogadorEditandoId
+                        ? "Salvar Alterações"
+                        : "Salvar";
 
             }
 
@@ -566,14 +829,6 @@ const Jogadores = {
                 "status"
             );
 
-        const foto =
-            document.getElementById("foto");
-
-        const previewFoto =
-            document.getElementById(
-                "previewFoto"
-            );
-
 
         if (nome) {
 
@@ -623,18 +878,148 @@ const Jogadores = {
 
         }
 
-        if (foto) {
+    },
 
-            foto.value = "";
+
+    // ==========================
+    // PESQUISA
+    // ==========================
+
+    filtrar(texto) {
+
+        const busca =
+            texto
+                .trim()
+                .toLowerCase();
+
+
+        if (!busca) {
+
+            this.renderizar(
+                this.jogadores
+            );
+
+            return;
 
         }
 
-        if (previewFoto) {
 
-            previewFoto.src =
-                CONFIG.DEFAULT_AVATAR;
+        const filtrados =
+            this.jogadores.filter(
+                jogador =>
+                    (jogador.nome || "")
+                        .toLowerCase()
+                        .includes(busca)
+            );
+
+
+        this.renderizar(
+            filtrados
+        );
+
+    },
+
+
+    // ==========================
+    // DATA PARA INPUT DATE
+    // ==========================
+
+    formatarDataParaInput(data) {
+
+        if (!data) {
+
+            return "";
 
         }
+
+
+        const dataObj =
+            new Date(data);
+
+
+        if (Number.isNaN(
+            dataObj.getTime()
+        )) {
+
+            return "";
+
+        }
+
+
+        const ano =
+            dataObj.getFullYear();
+
+        const mes =
+            String(
+                dataObj.getMonth() + 1
+            ).padStart(2, "0");
+
+        const dia =
+            String(
+                dataObj.getDate()
+            ).padStart(2, "0");
+
+
+        return `${ano}-${mes}-${dia}`;
+
+    },
+
+
+    // ==========================
+    // MENSAGEM DE SUCESSO
+    // ==========================
+
+    mostrarSucesso(mensagem) {
+
+        if (
+            typeof sucesso === "function"
+        ) {
+
+            sucesso(mensagem);
+
+            return;
+
+        }
+
+
+        if (
+            typeof toast === "function"
+        ) {
+
+            toast(
+                mensagem,
+                "#198754"
+            );
+
+            return;
+
+        }
+
+        console.log(mensagem);
+
+    },
+
+
+    // ==========================
+    // MENSAGEM DE ERRO
+    // ==========================
+
+    mostrarErro(mensagem) {
+
+        if (
+            typeof toast === "function"
+        ) {
+
+            toast(
+                mensagem,
+                "#dc3545"
+            );
+
+            return;
+
+        }
+
+        console.error(mensagem);
 
     },
 
