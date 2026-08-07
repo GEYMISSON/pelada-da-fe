@@ -6,35 +6,64 @@ const Jogadores = {
 
     },
 
+
+    // ==========================
+    // LISTAR JOGADORES
+    // ==========================
+
     async listar() {
 
         try {
 
-            const jogadores = await JogadorService.listar();
+            const jogadores =
+                await JogadorService.listar();
 
             this.renderizar(jogadores);
 
-        }
+        } catch (erro) {
 
-        catch (erro) {
+            console.error(
+                "Erro ao carregar jogadores:",
+                erro
+            );
 
-            console.error(erro);
+            if (typeof toast === "function") {
 
-            toast("Erro ao carregar jogadores.", "#dc3545");
+                toast(
+                    "Erro ao carregar jogadores.",
+                    "#dc3545"
+                );
+
+            }
 
         }
 
     },
 
+
+    // ==========================
+    // RENDERIZAR JOGADORES
+    // ==========================
+
     renderizar(jogadores) {
 
-        const lista = document.getElementById("listaJogadores");
+        const lista =
+            document.getElementById("listaJogadores");
 
-        if (!lista) return;
+        if (!lista) {
+
+            return;
+
+        }
 
         lista.innerHTML = "";
 
-        if (jogadores.length === 0) {
+
+        // ==========================
+        // NENHUM JOGADOR
+        // ==========================
+
+        if (!jogadores || jogadores.length === 0) {
 
             lista.innerHTML = `
                 <div class="col-12">
@@ -52,27 +81,33 @@ const Jogadores = {
 
         }
 
+
+        // ==========================
+        // CARDS
+        // ==========================
+
         jogadores.forEach(jogador => {
 
             lista.innerHTML += `
+
                 <div class="col-lg-4 col-md-6 mb-4">
 
-                    <div class="card shadow-sm">
+                    <div class="card shadow-sm h-100">
 
                         <div class="card-body">
 
-                            <h5>${jogador.nome}</h5>
+                            <h5 class="card-title">
+                                ${jogador.nome || "Sem nome"}
+                            </h5>
 
-                            <p>
-
-                                ⭐ ${jogador.nivel}
-
+                            <p class="mb-2">
+                                ⭐ Nível:
+                                ${jogador.nivel ?? 0}
                             </p>
 
-                            <p>
-
-                                ⚽ ${jogador.gols}
-
+                            <p class="mb-0">
+                                ⚽ Gols:
+                                ${jogador.gols ?? 0}
                             </p>
 
                         </div>
@@ -80,6 +115,7 @@ const Jogadores = {
                     </div>
 
                 </div>
+
             `;
 
         });
@@ -88,8 +124,9 @@ const Jogadores = {
 
 };
 
-document.addEventListener("DOMContentLoaded", () => {
 
-    Jogadores.iniciar();
+// ==========================
+// INICIALIZAÇÃO
+// ==========================
 
-});
+Jogadores.iniciar();
