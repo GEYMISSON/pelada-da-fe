@@ -91,6 +91,12 @@ const Jogadores = {
             this.jogadores =
                 jogadores || [];
 
+
+            // Atualiza os indicadores
+            this.atualizarResumo();
+
+
+            // Renderiza os jogadores
             this.renderizar(
                 this.jogadores
             );
@@ -110,6 +116,87 @@ const Jogadores = {
 
     },
 
+    // ==========================
+    // RESUMO DOS JOGADORES
+    // ==========================
+
+    atualizarResumo() {
+
+        const jogadores =
+            this.jogadores || [];
+
+
+        // Total de jogadores
+
+        const total =
+            jogadores.length;
+
+
+        // Jogadores ativos
+
+        const ativos =
+            jogadores.filter(
+                jogador =>
+                    jogador.status === "Ativo"
+            ).length;
+
+
+        // Total de gols
+
+        const gols =
+            jogadores.reduce(
+                (total, jogador) =>
+                    total +
+                    Number(jogador.gols || 0),
+                0
+            );
+
+
+        // Elementos da tela
+
+        const totalElement =
+            document.getElementById(
+                "totalJogadores"
+            );
+
+        const ativosElement =
+            document.getElementById(
+                "jogadoresAtivos"
+            );
+
+        const golsElement =
+            document.getElementById(
+                "totalGols"
+            );
+
+
+        // Atualiza tela
+
+        if (totalElement) {
+
+            totalElement.textContent =
+                total;
+
+        }
+
+
+        if (ativosElement) {
+
+            ativosElement.textContent =
+                ativos;
+
+        }
+
+
+        if (golsElement) {
+
+            golsElement.textContent =
+                gols;
+
+        }
+
+    },
+
 
     // ==========================
     // RENDERIZAR
@@ -117,160 +204,263 @@ const Jogadores = {
 
     renderizar(jogadores) {
 
-        const lista =
-            document.getElementById(
-                "listaJogadores"
-            );
+    const lista =
+        document.getElementById(
+            "listaJogadores"
+        );
 
-        if (!lista) {
+    if (!lista) {
+        return;
+    }
 
-            return;
-
-        }
-
-        lista.innerHTML = "";
+    lista.innerHTML = "";
 
 
-        // Nenhum jogador
+    // ==========================
+    // NENHUM JOGADOR
+    // ==========================
 
-        if (!jogadores || jogadores.length === 0) {
+    if (!jogadores || jogadores.length === 0) {
 
-            lista.innerHTML = `
-                <div class="col-12">
+        lista.innerHTML = `
+            <div class="col-12">
 
-                    <div class="alert alert-secondary">
+                <div class="card border-0 shadow-sm">
 
-                        Nenhum jogador cadastrado.
+                    <div class="card-body text-center py-5">
+
+                        <div
+                            class="mb-3"
+                            style="font-size: 48px;"
+                        >
+                            ⚽
+                        </div>
+
+                        <h5 class="mb-2">
+                            Nenhum jogador encontrado
+                        </h5>
+
+                        <p class="text-muted mb-0">
+                            Cadastre um jogador para começar
+                            a montar sua pelada.
+                        </p>
 
                     </div>
 
                 </div>
-            `;
 
-            return;
+            </div>
+        `;
 
-        }
-
-
-        // Cards
-
-        jogadores.forEach(jogador => {
-
-            const foto =
-                jogador.foto ||
-                (
-                    typeof CONFIG !== "undefined"
-                        ? CONFIG.DEFAULT_AVATAR
-                        : "assets/img/avatar.png"
-                );
-
-            const posicao =
-                jogador.posicao ||
-                "Posição não informada";
-
-            const nivel =
-                jogador.nivel ?? 3;
-
-            const gols =
-                jogador.gols ?? 0;
-
-            const assistencias =
-                jogador.assistencias ?? 0;
-
-            const status =
-                jogador.status ||
-                "Ativo";
+        return;
+    }
 
 
-            lista.innerHTML += `
+    // ==========================
+    // CARDS
+    // ==========================
 
-                <div class="col-lg-4 col-md-6 mb-4">
+    jogadores.forEach(jogador => {
 
-                    <div class="card shadow-sm h-100">
+        const foto =
+            jogador.foto ||
+            (
+                typeof CONFIG !== "undefined"
+                    ? CONFIG.DEFAULT_AVATAR
+                    : "assets/img/avatar.png"
+            );
 
-                        <div class="card-body">
 
-                            <div class="d-flex align-items-center mb-3">
+        const nome =
+            jogador.nome ||
+            "Jogador sem nome";
 
-                                <img
-                                    src="${this.escaparHtml(foto)}"
-                                    alt="Foto de ${this.escaparHtml(jogador.nome)}"
-                                    class="rounded-circle me-3"
-                                    style="
-                                        width:70px;
-                                        height:70px;
-                                        object-fit:cover;
-                                    "
+
+        const posicao =
+            jogador.posicao ||
+            "Posição não informada";
+
+
+        const nivel =
+            Number(jogador.nivel ?? 3);
+
+
+        const gols =
+            Number(jogador.gols ?? 0);
+
+
+        const assistencias =
+            Number(jogador.assistencias ?? 0);
+
+
+        const status =
+            jogador.status ||
+            "Ativo";
+
+
+        // ==========================
+        // ESTRELAS
+        // ==========================
+
+        const estrelasCheias =
+            Math.max(
+                0,
+                Math.min(
+                    5,
+                    nivel
+                )
+            );
+
+
+        const estrelasVazias =
+            5 - estrelasCheias;
+
+
+        const estrelas =
+            "⭐".repeat(estrelasCheias) +
+            "☆".repeat(estrelasVazias);
+
+
+        // ==========================
+        // STATUS
+        // ==========================
+
+        const statusClasse =
+            status === "Ativo"
+                ? "bg-success"
+                : "bg-secondary";
+
+
+        // ==========================
+        // NÚMERO DA CAMISA
+        // ==========================
+
+        const numero =
+            jogador.numeroCamisa
+                ? `#${jogador.numeroCamisa}`
+                : "";
+
+
+        lista.innerHTML += `
+
+            <div class="col-xl-3 col-lg-4 col-md-6 mb-4">
+
+                <div
+                    class="card border-0 shadow-sm h-100"
+                    style="border-radius: 16px;"
+                >
+
+                    <!-- CABEÇALHO -->
+
+                    <div
+                        class="card-body text-center pb-2"
+                    >
+
+                        <div class="position-relative d-inline-block">
+
+                            <img
+                                src="${this.escaparHtml(foto)}"
+                                alt="Foto de ${this.escaparHtml(nome)}"
+                                class="rounded-circle border shadow-sm"
+                                style="
+                                    width: 100px;
+                                    height: 100px;
+                                    object-fit: cover;
+                                "
+                            >
+
+                            ${
+                                jogador.numeroCamisa
+                                    ? `
+                                        <span
+                                            class="position-absolute bottom-0 end-0
+                                                   badge bg-dark rounded-pill"
+                                            style="font-size: 12px;"
+                                        >
+                                            ${numero}
+                                        </span>
+                                    `
+                                    : ""
+                            }
+
+                        </div>
+
+
+                        <h5 class="fw-bold mt-3 mb-1">
+
+                            ${this.escaparHtml(nome)}
+
+                        </h5>
+
+
+                        <div class="text-muted small">
+
+                            ${this.escaparHtml(posicao)}
+
+                        </div>
+
+                    </div>
+
+
+                    <!-- NÍVEL -->
+
+                    <div class="px-3">
+
+                        <div
+                            class="bg-light rounded-3 text-center py-2"
+                        >
+
+                            <div
+                                class="small text-muted mb-1"
+                            >
+                                Nível
+                            </div>
+
+                            <div
+                                style="font-size: 17px;"
+                            >
+                                ${estrelas}
+                            </div>
+
+                        </div>
+
+                    </div>
+
+
+                    <!-- ESTATÍSTICAS -->
+
+                    <div class="card-body">
+
+                        <div class="row text-center">
+
+                            <div class="col-6">
+
+                                <div
+                                    class="fw-bold"
+                                    style="font-size: 24px;"
                                 >
-
-                                <div>
-
-                                    <h5 class="mb-1">
-                                        ${this.escaparHtml(jogador.nome)}
-                                    </h5>
-
-                                    <small class="text-muted">
-                                        ${this.escaparHtml(posicao)}
-                                    </small>
-
+                                    ${gols}
                                 </div>
+
+                                <small class="text-muted">
+                                    ⚽ Gols
+                                </small>
 
                             </div>
 
-                            <p class="mb-2">
-                                ⭐ Nível:
-                                <strong>${nivel}</strong>
-                            </p>
 
-                            <p class="mb-2">
-                                ⚽ Gols:
-                                <strong>${gols}</strong>
-                            </p>
+                            <div class="col-6">
 
-                            <p class="mb-3">
-                                🎯 Assistências:
-                                <strong>${assistencias}</strong>
-                            </p>
-
-                            <div class="d-flex justify-content-between align-items-center">
-
-                                <span class="badge ${
-                                    status === "Ativo"
-                                        ? "bg-success"
-                                        : "bg-secondary"
-                                }">
-
-                                    ${this.escaparHtml(status)}
-
-                                </span>
-
-
-                                <div class="d-flex gap-2">
-
-                                    <button
-                                        type="button"
-                                        class="btn btn-sm btn-outline-primary"
-                                        onclick="Jogadores.editar('${jogador._id}')"
-                                    >
-
-                                        <i class="bi bi-pencil"></i>
-                                        Editar
-
-                                    </button>
-
-
-                                    <button
-                                        type="button"
-                                        class="btn btn-sm btn-outline-danger"
-                                        onclick="Jogadores.excluir('${jogador._id}')"
-                                    >
-
-                                        <i class="bi bi-trash"></i>
-                                        Excluir
-
-                                    </button>
-
+                                <div
+                                    class="fw-bold"
+                                    style="font-size: 24px;"
+                                >
+                                    ${assistencias}
                                 </div>
+
+                                <small class="text-muted">
+                                    🎯 Assistências
+                                </small>
 
                             </div>
 
@@ -278,13 +468,79 @@ const Jogadores = {
 
                     </div>
 
+
+                    <!-- RODAPÉ -->
+
+                    <div
+                        class="card-footer bg-white border-0
+                               pt-0 pb-3 px-3"
+                    >
+
+                        <div
+                            class="d-flex
+                                   justify-content-between
+                                   align-items-center
+                                   mb-3"
+                        >
+
+                            <span
+                                class="badge ${statusClasse}"
+                            >
+                                ${this.escaparHtml(status)}
+                            </span>
+
+
+                            <small class="text-muted">
+                                ID: ${this.escaparHtml(
+                                    String(jogador._id).slice(-6)
+                                )}
+                            </small>
+
+                        </div>
+
+
+                        <div class="d-flex gap-2">
+
+                            <button
+                                type="button"
+                                class="btn btn-outline-primary
+                                       btn-sm flex-fill"
+                                onclick="Jogadores.editar('${jogador._id}')"
+                            >
+
+                                <i class="bi bi-pencil"></i>
+
+                                Editar
+
+                            </button>
+
+
+                            <button
+                                type="button"
+                                class="btn btn-outline-danger
+                                       btn-sm flex-fill"
+                                onclick="Jogadores.excluir('${jogador._id}')"
+                            >
+
+                                <i class="bi bi-trash"></i>
+
+                                Excluir
+
+                            </button>
+
+                        </div>
+
+                    </div>
+
                 </div>
 
-            `;
+            </div>
 
-        });
+        `;
 
-    },
+    });
+
+},
 
 
     // ==========================
