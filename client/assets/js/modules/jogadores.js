@@ -244,16 +244,33 @@ const Jogadores = {
 
                                 </span>
 
-                                <button
-                                    type="button"
-                                    class="btn btn-sm btn-outline-primary"
-                                    onclick="Jogadores.editar('${jogador._id}')"
-                                >
 
-                                    <i class="bi bi-pencil"></i>
-                                    Editar
+                                <div class="d-flex gap-2">
 
-                                </button>
+                                    <button
+                                        type="button"
+                                        class="btn btn-sm btn-outline-primary"
+                                        onclick="Jogadores.editar('${jogador._id}')"
+                                    >
+
+                                        <i class="bi bi-pencil"></i>
+                                        Editar
+
+                                    </button>
+
+
+                                    <button
+                                        type="button"
+                                        class="btn btn-sm btn-outline-danger"
+                                        onclick="Jogadores.excluir('${jogador._id}')"
+                                    >
+
+                                        <i class="bi bi-trash"></i>
+                                        Excluir
+
+                                    </button>
+
+                                </div>
 
                             </div>
 
@@ -322,6 +339,138 @@ const Jogadores = {
         this.configurarModalEdicao();
 
         this.abrirModal();
+
+    },
+
+
+    // ==========================
+    // EXCLUIR JOGADOR
+    // ==========================
+
+    async excluir(id) {
+
+        const jogador =
+            this.jogadores.find(
+                item => item._id === id
+            );
+
+
+        if (!jogador) {
+
+            this.mostrarErro(
+                "Jogador não encontrado."
+            );
+
+            return;
+
+        }
+
+
+        const nome =
+            jogador.nome || "este jogador";
+
+
+        // ==========================
+        // CONFIRMAÇÃO
+        // ==========================
+
+        const confirmado =
+            await this.confirmarExclusao(
+                nome
+            );
+
+
+        if (!confirmado) {
+
+            return;
+
+        }
+
+
+        try {
+
+            await JogadorService.excluir(
+                id
+            );
+
+
+            // Atualiza a lista
+
+            await this.listar();
+
+
+            this.mostrarSucesso(
+                "Jogador excluído com sucesso!"
+            );
+
+
+        } catch (erro) {
+
+            console.error(
+                "Erro ao excluir jogador:",
+                erro
+            );
+
+            this.mostrarErro(
+                erro.message ||
+                "Erro ao excluir jogador."
+            );
+
+        }
+
+    },
+
+
+    // ==========================
+    // CONFIRMAR EXCLUSÃO
+    // ==========================
+
+    async confirmarExclusao(nome) {
+
+        // Usa SweetAlert2 se estiver disponível
+
+        if (
+            typeof Swal !== "undefined"
+        ) {
+
+            const resultado =
+                await Swal.fire({
+
+                    title:
+                        "Excluir jogador?",
+
+                    text:
+                        `Tem certeza que deseja excluir ${nome}?`,
+
+                    icon:
+                        "warning",
+
+                    showCancelButton:
+                        true,
+
+                    confirmButtonText:
+                        "Sim, excluir",
+
+                    cancelButtonText:
+                        "Cancelar",
+
+                    reverseButtons:
+                        true
+
+                });
+
+
+            return resultado.isConfirmed;
+
+        }
+
+
+        // Fallback para o confirm
+        // caso o SweetAlert2 não esteja disponível
+
+        return window.confirm(
+            `Tem certeza que deseja excluir ${nome}?`
+        );
 
     },
 
