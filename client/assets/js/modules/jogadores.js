@@ -33,6 +33,15 @@ const Jogadores = {
         const pesquisa =
             document.getElementById("pesquisaJogador");
 
+        const filtroPosicao =
+            document.getElementById("filtroPosicao");
+
+        const filtroStatus =
+            document.getElementById("filtroStatus");
+
+        const limparFiltros =
+            document.getElementById("limparFiltros");
+
 
         // Novo jogador
 
@@ -66,9 +75,40 @@ const Jogadores = {
 
             pesquisa.addEventListener("input", () => {
 
-                this.filtrar(
-                    pesquisa.value
-                );
+                this.aplicarFiltros();
+
+            });
+
+        }
+
+
+        if (filtroPosicao) {
+
+            filtroPosicao.addEventListener("change", () => {
+
+                this.aplicarFiltros();
+
+            });
+
+        }
+
+
+        if (filtroStatus) {
+
+            filtroStatus.addEventListener("change", () => {
+
+                this.aplicarFiltros();
+
+            });
+
+        }
+
+
+        if (limparFiltros) {
+
+            limparFiltros.addEventListener("click", () => {
+
+                this.limparFiltros();
 
             });
 
@@ -99,6 +139,10 @@ const Jogadores = {
             // Renderiza os jogadores
             this.renderizar(
                 this.jogadores
+            );
+
+            this.atualizarResultadoFiltro(
+                this.jogadores.length
             );
 
         } catch (erro) {
@@ -367,6 +411,7 @@ const Jogadores = {
                                     height: 100px;
                                     object-fit: cover;
                                 "
+                                onerror="this.onerror=null; this.src='/assets/img/avatar.png';"
                             >
 
                             ${
@@ -1285,42 +1330,204 @@ const Jogadores = {
 
     },
 
+    // ==========================
+    // APLICAR FILTROS
+    // ==========================
+
+    aplicarFiltros() {
+
+        const pesquisa =
+            document.getElementById(
+                "pesquisaJogador"
+            )?.value
+            .trim()
+            .toLowerCase() || "";
+
+
+        const posicao =
+            document.getElementById(
+                "filtroPosicao"
+            )?.value || "";
+
+
+        const status =
+            document.getElementById(
+                "filtroStatus"
+            )?.value || "";
+
+
+        const jogadoresFiltrados =
+            this.jogadores.filter(jogador => {
+
+
+                // ==========================
+                // FILTRO POR NOME
+                // ==========================
+
+                const nome =
+                    (jogador.nome || "")
+                        .toLowerCase();
+
+
+                const correspondeNome =
+                    !pesquisa ||
+                    nome.includes(pesquisa);
+
+
+                // ==========================
+                // FILTRO POR POSIÇÃO
+                // ==========================
+
+                const correspondePosicao =
+                    !posicao ||
+                    jogador.posicao === posicao;
+
+
+                // ==========================
+                // FILTRO POR STATUS
+                // ==========================
+
+                const correspondeStatus =
+                    !status ||
+                    jogador.status === status;
+
+
+                return (
+                    correspondeNome &&
+                    correspondePosicao &&
+                    correspondeStatus
+                );
+
+            });
+
+
+        // Renderiza resultado
+
+        this.renderizar(
+            jogadoresFiltrados
+        );
+
+
+        // Atualiza contador
+
+        this.atualizarResultadoFiltro(
+            jogadoresFiltrados.length
+        );
+
+    },
+
 
     // ==========================
-    // PESQUISA
+    // LIMPAR FILTROS
     // ==========================
 
-    filtrar(texto) {
+    limparFiltros() {
 
-        const busca =
-            texto
-                .trim()
-                .toLowerCase();
-
-
-        if (!busca) {
-
-            this.renderizar(
-                this.jogadores
+        const pesquisa =
+            document.getElementById(
+                "pesquisaJogador"
             );
+
+        const filtroPosicao =
+            document.getElementById(
+                "filtroPosicao"
+            );
+
+        const filtroStatus =
+            document.getElementById(
+                "filtroStatus"
+            );
+
+
+        if (pesquisa) {
+
+            pesquisa.value = "";
+
+        }
+
+
+        if (filtroPosicao) {
+
+            filtroPosicao.value = "";
+
+        }
+
+
+        if (filtroStatus) {
+
+            filtroStatus.value = "";
+
+        }
+
+
+        this.renderizar(
+            this.jogadores
+        );
+
+
+        this.atualizarResultadoFiltro(
+            this.jogadores.length
+        );
+
+    },
+
+
+    // ==========================
+    // RESULTADO DOS FILTROS
+    // ==========================
+
+    atualizarResultadoFiltro(total) {
+
+        const elemento =
+            document.getElementById(
+                "resultadoFiltro"
+            );
+
+
+        if (!elemento) {
 
             return;
 
         }
 
 
-        const filtrados =
-            this.jogadores.filter(
-                jogador =>
-                    (jogador.nome || "")
-                        .toLowerCase()
-                        .includes(busca)
+        const totalJogadores =
+            this.jogadores.length;
+
+
+        const algumFiltro =
+            (
+                document.getElementById(
+                    "pesquisaJogador"
+                )?.value
+                .trim()
+            ) ||
+
+            (
+                document.getElementById(
+                    "filtroPosicao"
+                )?.value
+            ) ||
+
+            (
+                document.getElementById(
+                    "filtroStatus"
+                )?.value
             );
 
 
-        this.renderizar(
-            filtrados
-        );
+        if (!algumFiltro) {
+
+            elemento.textContent =
+                `Todos os jogadores (${totalJogadores})`;
+
+            return;
+
+        }
+
+
+        elemento.textContent =
+            `${total} jogador(es) encontrado(s)`;
 
     },
 

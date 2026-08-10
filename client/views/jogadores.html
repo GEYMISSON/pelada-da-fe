@@ -181,11 +181,150 @@
 
                 </span>
 
-                <input
-                    id="pesquisaJogador"
-                    type="text"
-                    class="form-control"
-                    placeholder="Pesquisar jogador...">
+                <!-- Pesquisa e filtros -->
+                <div class="card shadow-sm border-0 mb-4">
+
+                    <div class="card-body">
+
+                        <div class="row g-3">
+
+                            <!-- Pesquisa -->
+                            <div class="col-lg-6">
+
+                                <label
+                                    for="pesquisaJogador"
+                                    class="form-label fw-semibold"
+                                >
+                                    <i class="bi bi-search"></i>
+                                    Pesquisar jogador
+                                </label>
+
+                                <input
+                                    type="text"
+                                    id="pesquisaJogador"
+                                    class="form-control"
+                                    placeholder="Digite o nome do jogador..."
+                                >
+
+                            </div>
+
+
+                            <!-- Posição -->
+                            <div class="col-lg-3 col-md-6">
+
+                                <label
+                                    for="filtroPosicao"
+                                    class="form-label fw-semibold"
+                                >
+                                    <i class="bi bi-person-badge"></i>
+                                    Posição
+                                </label>
+
+                                <select
+                                    id="filtroPosicao"
+                                    class="form-select"
+                                >
+
+                                    <option value="">
+                                        Todas as posições
+                                    </option>
+
+                                    <option value="Goleiro">
+                                        Goleiro
+                                    </option>
+
+                                    <option value="Zagueiro">
+                                        Zagueiro
+                                    </option>
+
+                                    <option value="Lateral">
+                                        Lateral
+                                    </option>
+
+                                    <option value="Volante">
+                                        Volante
+                                    </option>
+
+                                    <option value="Meia">
+                                        Meia
+                                    </option>
+
+                                    <option value="Atacante">
+                                        Atacante
+                                    </option>
+
+                                </select>
+
+                            </div>
+
+
+                            <!-- Status -->
+                            <div class="col-lg-3 col-md-6">
+
+                                <label
+                                    for="filtroStatus"
+                                    class="form-label fw-semibold"
+                                >
+                                    <i class="bi bi-circle-fill"></i>
+                                    Status
+                                </label>
+
+                                <select
+                                    id="filtroStatus"
+                                    class="form-select"
+                                >
+
+                                    <option value="">
+                                        Todos
+                                    </option>
+
+                                    <option value="Ativo">
+                                        Ativos
+                                    </option>
+
+                                    <option value="Inativo">
+                                        Inativos
+                                    </option>
+
+                                </select>
+
+                            </div>
+
+                        </div>
+
+
+                        <!-- Rodapé dos filtros -->
+
+                        <div
+                            class="d-flex justify-content-between
+                                align-items-center mt-3"
+                        >
+
+                            <small
+                                class="text-muted"
+                                id="resultadoFiltro"
+                            >
+                                Todos os jogadores
+                            </small>
+
+
+                            <button
+                                type="button"
+                                class="btn btn-sm btn-outline-secondary"
+                                id="limparFiltros"
+                            >
+
+                                <i class="bi bi-arrow-counterclockwise"></i>
+
+                                Limpar filtros
+
+                            </button>
+
+                        </div>
+
+                    </div>
+
+                </div>
 
             </div>
 
