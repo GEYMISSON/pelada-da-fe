@@ -14,7 +14,7 @@ async function buscarPorId(id) {
 
 async function atualizar(id, dados) {
   return await Jogador.findByIdAndUpdate(id, dados, {
-    new: true,
+    returnDocument: "after",
     runValidators: true,
   });
 }

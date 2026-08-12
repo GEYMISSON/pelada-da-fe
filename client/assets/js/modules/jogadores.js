@@ -1,8 +1,14 @@
+(function () {
+
 const Jogadores = {
 
     jogadores: [],
 
     jogadorEditandoId: null,
+
+    // Foto atual/selecionada do jogador.
+    // A imagem é convertida para Data URL e armazenada no campo "foto".
+    fotoSelecionada: "",
 
 
     // ==========================
@@ -41,6 +47,22 @@ const Jogadores = {
 
         const limparFiltros =
             document.getElementById("limparFiltros");
+
+        const foto =
+            document.getElementById("foto");
+
+
+        // Foto do jogador
+
+        if (foto) {
+
+            foto.addEventListener("change", (evento) => {
+
+                this.selecionarFoto(evento);
+
+            });
+
+        }
 
 
         // Novo jogador
@@ -596,7 +618,10 @@ const Jogadores = {
 
         this.jogadorEditandoId = null;
 
+        this.fotoSelecionada = "";
+
         this.limparFormulario();
+        this.atualizarPreviewFoto("");
 
         this.configurarModalNovo();
 
@@ -631,9 +656,15 @@ const Jogadores = {
         this.jogadorEditandoId =
             jogador._id;
 
+        this.fotoSelecionada =
+            jogador.foto || "";
 
         this.preencherFormulario(
             jogador
+        );
+
+        this.atualizarPreviewFoto(
+            this.fotoSelecionada
         );
 
 
@@ -1062,6 +1093,14 @@ const Jogadores = {
 
         };
 
+        // Em uma edição, manter a foto atual se o usuário não escolher outra.
+        // Em um novo cadastro, só envia foto quando uma imagem foi selecionada.
+        if (this.fotoSelecionada) {
+
+            jogador.foto = this.fotoSelecionada;
+
+        }
+
 
         const btnSalvar =
             document.getElementById(
@@ -1327,6 +1366,244 @@ const Jogadores = {
             status.value = "Ativo";
 
         }
+
+        const foto =
+            document.getElementById("foto");
+
+        if (foto) {
+
+            foto.value = "";
+
+        }
+
+    },
+
+    // ==========================
+    // FOTO DO JOGADOR
+    // ==========================
+
+    async selecionarFoto(evento) {
+
+        const arquivo =
+            evento.target.files?.[0];
+
+        if (!arquivo) {
+
+            return;
+
+        }
+
+        if (!arquivo.type.startsWith("image/")) {
+
+            this.mostrarErro(
+                "Selecione um arquivo de imagem válido."
+            );
+
+            evento.target.value = "";
+            return;
+
+        }
+
+        // Limite de entrada para evitar imagens gigantes no navegador.
+        if (arquivo.size > 10 * 1024 * 1024) {
+
+            this.mostrarErro(
+                "A foto deve ter no máximo 10 MB."
+            );
+
+            evento.target.value = "";
+            return;
+
+        }
+
+        try {
+
+            const foto =
+                await this.redimensionarFoto(
+                    arquivo,
+                    900,
+                    0.82
+                );
+
+            this.fotoSelecionada = foto;
+
+            this.atualizarPreviewFoto(foto);
+
+        } catch (erro) {
+
+            console.error(
+                "Erro ao processar foto:",
+                erro
+            );
+
+            this.mostrarErro(
+                "Não foi possível carregar essa foto."
+            );
+
+            evento.target.value = "";
+
+        }
+
+    },
+
+    redimensionarFoto(arquivo, tamanhoMaximo = 900, qualidade = 0.82) {
+
+        return new Promise((resolve, reject) => {
+
+            const leitor =
+                new FileReader();
+
+            leitor.onload = () => {
+
+                const imagem =
+                    new Image();
+
+                imagem.onload = () => {
+
+                    let largura =
+                        imagem.naturalWidth;
+
+                    let altura =
+                        imagem.naturalHeight;
+
+
+                    const maiorLado =
+                        Math.max(
+                            largura,
+                            altura
+                        );
+
+
+                    if (maiorLado > tamanhoMaximo) {
+
+                        const escala =
+                            tamanhoMaximo /
+                            maiorLado;
+
+                        largura =
+                            Math.round(
+                                largura * escala
+                            );
+
+                        altura =
+                            Math.round(
+                                altura * escala
+                            );
+
+                    }
+
+
+                    const canvas =
+                        document.createElement(
+                            "canvas"
+                        );
+
+                    canvas.width =
+                        largura;
+
+                    canvas.height =
+                        altura;
+
+
+                    const contexto =
+                        canvas.getContext("2d");
+
+                    if (!contexto) {
+
+                        reject(
+                            new Error(
+                                "Canvas não disponível."
+                            )
+                        );
+
+                        return;
+
+                    }
+
+
+                    contexto.drawImage(
+                        imagem,
+                        0,
+                        0,
+                        largura,
+                        altura
+                    );
+
+
+                    resolve(
+                        canvas.toDataURL(
+                            "image/jpeg",
+                            qualidade
+                        )
+                    );
+
+                };
+
+
+                imagem.onerror = () => {
+
+                    reject(
+                        new Error(
+                            "Imagem inválida."
+                        )
+                    );
+
+                };
+
+
+                imagem.src =
+                    leitor.result;
+
+            };
+
+
+            leitor.onerror = () => {
+
+                reject(
+                    leitor.error ||
+                    new Error(
+                        "Erro ao ler o arquivo."
+                    )
+                );
+
+            };
+
+
+            leitor.readAsDataURL(arquivo);
+
+        });
+
+    },
+
+    atualizarPreviewFoto(foto = "") {
+
+        const preview =
+            document.getElementById(
+                "previewFoto"
+            );
+
+        if (!preview) {
+
+            return;
+
+        }
+
+        const padrao =
+            typeof CONFIG !== "undefined"
+                ? CONFIG.DEFAULT_AVATAR
+                : "assets/img/avatar.png";
+
+        preview.src =
+            foto ||
+            padrao;
+
+        preview.onerror = () => {
+
+            preview.onerror = null;
+            preview.src =
+                "assets/img/avatar.png";
+
+        };
 
     },
 
@@ -1658,4 +1935,11 @@ const Jogadores = {
 // INICIALIZAÇÃO
 // ==========================
 
+// Os botões Editar/Excluir do HTML usam os handlers inline abaixo.
+// Exponha o módulo no window para que eles continuem funcionando após
+// a página ser carregada novamente pela SPA.
+window.Jogadores = Jogadores;
+
 Jogadores.iniciar();
+
+})();

@@ -1,254 +1,282 @@
-// ==========================
-// MENU LATERAL
-// ==========================
+// ============================================================
+// PELADA DA FÉ - NAVEGAÇÃO DA SPA
+// ============================================================
 
-const sidebar = document.querySelector(".sidebar");
-const menuBtn = document.getElementById("menu-btn");
+(() => {
+    "use strict";
 
-if (menuBtn && sidebar) {
+    const paginaInicial = "dashboard";
+    let navegacaoId = 0;
 
-    menuBtn.addEventListener("click", () => {
+    const titulos = {
+        dashboard: "Dashboard",
+        jogadores: "Jogadores",
+        peladas: "Peladas",
+        sorteio: "Sorteio",
+        partidas: "Partidas",
+        artilharia: "Artilharia",
+        estatisticas: "Estatísticas",
+        historico: "Histórico",
+        configuracoes: "Configurações"
+    };
 
-        sidebar.classList.toggle("active");
+    // ------------------------------------------------------------
+    // MENU LATERAL
+    // ------------------------------------------------------------
 
-    });
+    const sidebar = document.querySelector(".sidebar");
+    const menuBtn = document.getElementById("menu-btn");
 
-}
-
-
-// ==========================
-// RELÓGIO
-// ==========================
-
-function atualizarRelogio() {
-
-    const agora = new Date();
-
-    const texto =
-        agora.toLocaleDateString("pt-BR") +
-        " • " +
-        agora.toLocaleTimeString("pt-BR");
-
-    const relogio = document.getElementById("relogio");
-
-    if (relogio) {
-
-        relogio.textContent = texto;
-
+    if (menuBtn && sidebar) {
+        menuBtn.addEventListener("click", () => {
+            sidebar.classList.toggle("active");
+        });
     }
 
-}
+    // ------------------------------------------------------------
+    // RELÓGIO
+    // ------------------------------------------------------------
 
-setInterval(atualizarRelogio, 1000);
+    function atualizarRelogio() {
+        const agora = new Date();
+        const relogio = document.getElementById("relogio");
 
-atualizarRelogio();
-
-
-// ==========================
-// CARREGAR SCRIPT DA PÁGINA
-// ==========================
-
-function carregarScriptPagina(nome) {
-
-    return new Promise((resolve, reject) => {
-
-        const scriptExistente =
-            document.getElementById("pagina-script");
-
-        if (scriptExistente) {
-
-            scriptExistente.remove();
-
+        if (relogio) {
+            relogio.textContent =
+                agora.toLocaleDateString("pt-BR") +
+                " • " +
+                agora.toLocaleTimeString("pt-BR");
         }
+    }
 
-        const script = document.createElement("script");
+    setInterval(atualizarRelogio, 1000);
+    atualizarRelogio();
 
-        script.id = "pagina-script";
+    // ------------------------------------------------------------
+    // LIMPAR MÓDULO DA PÁGINA ANTERIOR
+    // ------------------------------------------------------------
 
-        script.src = `assets/js/modules/${nome}.js`;
+    function removerScriptPagina() {
+        const script = document.getElementById("pagina-script");
 
-        script.onload = resolve;
-
-        script.onerror = reject;
-
-        document.body.appendChild(script);
-
-    });
-
-}
-
-
-// ==========================
-// CARREGAR SERVIÇOS DA PÁGINA
-// ==========================
-
-function carregarServicePagina(nome) {
-
-    return new Promise((resolve, reject) => {
-
-        const serviceId = `service-${nome}`;
-
-        const serviceExistente =
-            document.getElementById(serviceId);
-
-        if (serviceExistente) {
-
-            resolve();
-
-            return;
-
+        if (script) {
+            script.remove();
         }
+    }
 
-        const script = document.createElement("script");
+    // ------------------------------------------------------------
+    // CARREGAR SERVIÇO
+    // ------------------------------------------------------------
 
-        script.id = serviceId;
+    function carregarServicePagina(nome) {
+        return new Promise((resolve, reject) => {
+            const serviceId = `service-${nome}`;
+            const existente = document.getElementById(serviceId);
 
-        script.src = `assets/js/services/${nome}Service.js`;
+            if (existente) {
+                resolve();
+                return;
+            }
 
-        script.onload = resolve;
+            const script = document.createElement("script");
+            script.id = serviceId;
+            script.src = `assets/js/services/${nome}Service.js`;
 
-        script.onerror = reject;
+            script.onload = resolve;
+            script.onerror = () =>
+                reject(new Error(`Serviço "${nome}" não encontrado.`));
 
-        document.body.appendChild(script);
+            document.body.appendChild(script);
+        });
+    }
 
-    });
+    // ------------------------------------------------------------
+    // CARREGAR MÓDULO
+    // ------------------------------------------------------------
 
-}
+    function carregarScriptPagina(nome, id) {
+        return new Promise((resolve, reject) => {
+            const script = document.createElement("script");
 
+            script.id = "pagina-script";
 
-// ==========================
-// CARREGAR PÁGINAS
-// ==========================
+            // O parâmetro evita problemas de cache durante o desenvolvimento.
+            script.src = `assets/js/modules/${nome}.js?v=${Date.now()}`;
 
-async function carregarPagina(nome) {
+            script.onload = () => {
+                if (id === navegacaoId) {
+                    resolve();
+                }
+            };
 
-    try {
+            script.onerror = () => {
+                if (id === navegacaoId) {
+                    reject(new Error(`Módulo "${nome}" não encontrado.`));
+                }
+            };
 
-        const resposta =
-            await fetch(`views/${nome}.html`);
+            document.body.appendChild(script);
+        });
+    }
 
-        if (!resposta.ok) {
+    // ------------------------------------------------------------
+    // ATUALIZAR TÍTULO
+    // ------------------------------------------------------------
 
-            throw new Error(
-                `Não foi possível carregar a página: ${nome}`
-            );
-
-        }
-
-        const html = await resposta.text();
-
-        const conteudo =
-            document.getElementById("conteudo");
-
-        if (!conteudo) {
-
-            throw new Error(
-                "Elemento #conteudo não encontrado."
-            );
-
-        }
-
-        conteudo.innerHTML = html;
-
-
-        // ==========================
-        // SERVIÇOS
-        // ==========================
-
-        if (nome === "jogadores") {
-
-            await carregarServicePagina("jogador");
-
-        }
-
-
-        // ==========================
-        // MÓDULO DA PÁGINA
-        // ==========================
-
-        try {
-
-            await carregarScriptPagina(nome);
-
-        } catch (erroScript) {
-
-            console.warn(
-                `Nenhum módulo JavaScript encontrado para "${nome}".`
-            );
-
-        }
-
-
-        // ==========================
-        // TÍTULO
-        // ==========================
-
-        const titulo =
-            document.getElementById("tituloPagina");
+    function atualizarTitulo(nome) {
+        const titulo = document.getElementById("tituloPagina");
 
         if (titulo) {
+            titulo.textContent =
+                titulos[nome] ||
+                nome.charAt(0).toUpperCase() + nome.slice(1);
+        }
+    }
 
-            titulo.innerText =
-                nome.charAt(0).toUpperCase() +
-                nome.slice(1);
+    // ------------------------------------------------------------
+    // MARCAR ITEM ATIVO
+    // ------------------------------------------------------------
 
+    function atualizarMenuAtivo(nome) {
+        document.querySelectorAll(".menu a[data-page]").forEach(link => {
+            link.classList.toggle("active", link.dataset.page === nome);
+        });
+    }
+
+    // ------------------------------------------------------------
+    // CARREGAR PÁGINA
+    // ------------------------------------------------------------
+
+    async function carregarPagina(nome, { atualizarHistorico = true } = {}) {
+        const id = ++navegacaoId;
+        const conteudo = document.getElementById("conteudo");
+
+        if (!conteudo || !nome) {
+            return;
         }
 
-    } catch (erro) {
+        removerScriptPagina();
 
-        console.error(
-            "Erro ao carregar página:",
-            erro
-        );
+        conteudo.innerHTML = `
+            <div class="d-flex justify-content-center align-items-center py-5">
+                <div class="spinner-border text-success" role="status">
+                    <span class="visually-hidden">Carregando...</span>
+                </div>
+            </div>
+        `;
 
-        const conteudo =
-            document.getElementById("conteudo");
+        atualizarTitulo(nome);
+        atualizarMenuAtivo(nome);
 
-        if (conteudo) {
+        if (atualizarHistorico) {
+            const novoHash = `#${nome}`;
+
+            if (window.location.hash !== novoHash) {
+                history.pushState({ pagina: nome }, "", novoHash);
+            }
+        }
+
+        try {
+            const resposta = await fetch(`views/${nome}.html`, {
+                cache: "no-store"
+            });
+
+            if (id !== navegacaoId) {
+                return;
+            }
+
+            if (!resposta.ok) {
+                throw new Error(
+                    `Não foi possível carregar a página "${nome}".`
+                );
+            }
+
+            conteudo.innerHTML = await resposta.text();
+
+            if (id !== navegacaoId) {
+                return;
+            }
+
+            // O serviço de jogadores é carregado uma única vez.
+            if (nome === "jogadores") {
+                await carregarServicePagina("jogador");
+            }
+
+            if (id !== navegacaoId) {
+                return;
+            }
+
+            // Algumas páginas são apenas HTML e não possuem módulo JS.
+            const modulo = `assets/js/modules/${nome}.js`;
+
+            const testeModulo = await fetch(modulo, {
+                method: "HEAD",
+                cache: "no-store"
+            });
+
+            if (id !== navegacaoId) {
+                return;
+            }
+
+            if (testeModulo.ok) {
+                await carregarScriptPagina(nome, id);
+            }
+        } catch (erro) {
+            if (id !== navegacaoId) {
+                return;
+            }
+
+            console.error("Erro ao carregar página:", erro);
 
             conteudo.innerHTML = `
                 <div class="alert alert-danger mt-3">
                     <strong>Erro ao carregar a página.</strong>
                     <br>
-                    Verifique o console do navegador.
+                    ${erro.message}
                 </div>
             `;
-
         }
-
     }
 
-}
+    // ------------------------------------------------------------
+    // MENU
+    // ------------------------------------------------------------
 
+    document.querySelector(".menu")?.addEventListener("click", evento => {
+        const link = evento.target.closest("a[data-page]");
 
-// ==========================
-// MENU
-// ==========================
-
-document.querySelectorAll(".menu a").forEach(link => {
-
-    link.addEventListener("click", evento => {
+        if (!link) {
+            return;
+        }
 
         evento.preventDefault();
 
-        const pagina =
-            link.dataset.page;
+        const pagina = link.dataset.page;
 
-        if (!pagina) {
-
-            return;
-
+        if (pagina) {
+            carregarPagina(pagina);
         }
-
-        carregarPagina(pagina);
-
     });
 
-});
+    // ------------------------------------------------------------
+    // VOLTAR / AVANÇAR DO NAVEGADOR
+    // ------------------------------------------------------------
 
+    window.addEventListener("popstate", () => {
+        const pagina =
+            window.location.hash.replace("#", "") ||
+            paginaInicial;
 
-// ==========================
-// PRIMEIRA TELA
-// ==========================
+        carregarPagina(pagina, { atualizarHistorico: false });
+    });
 
-carregarPagina("dashboard");
+    // ------------------------------------------------------------
+    // PRIMEIRA TELA
+    // ------------------------------------------------------------
+
+    const paginaAtual =
+        window.location.hash.replace("#", "") ||
+        paginaInicial;
+
+    carregarPagina(paginaAtual, { atualizarHistorico: false });
+})();
