@@ -206,19 +206,21 @@
                 return;
             }
 
-            // Algumas páginas são apenas HTML e não possuem módulo JS.
-            const modulo = `assets/js/modules/${nome}.js`;
+            // Apenas estas páginas possuem módulo JavaScript próprio.
+            // Evitamos uma requisição HEAD extra em cada navegação, que pode
+            // atrasar ou falhar em alguns acessos pelo celular/túnel.
+            const paginasComModulo = new Set([
+                "jogadores",
+                "sorteio"
+            ]);
 
-            const testeModulo = await fetch(modulo, {
-                method: "HEAD",
-                cache: "no-store"
-            });
-
-            if (id !== navegacaoId) {
+            if (
+                id !== navegacaoId
+            ) {
                 return;
             }
 
-            if (testeModulo.ok) {
+            if (paginasComModulo.has(nome)) {
                 await carregarScriptPagina(nome, id);
             }
         } catch (erro) {
@@ -253,9 +255,18 @@
 
         const pagina = link.dataset.page;
 
-        if (pagina) {
-            carregarPagina(pagina);
+        if (!pagina) {
+            return;
         }
+
+        // No celular, fecha o menu imediatamente após a escolha.
+        // Assim o usuário enxerga a nova página sem precisar tocar em
+        // sincronizar/recarregar.
+        if (sidebar) {
+            sidebar.classList.remove("active");
+        }
+
+        carregarPagina(pagina);
     });
 
     // ------------------------------------------------------------
