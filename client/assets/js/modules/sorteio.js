@@ -18,6 +18,13 @@ class Sorteio {
             azul: []
         };
 
+        // ====================================================
+        // CONFIGURAÇÃO DA PELADA
+        // ====================================================
+
+        this.duracaoPelada = 60;
+        this.duracaoPartida = 7;
+
         this.inicializar();
 
     }
@@ -32,6 +39,8 @@ class Sorteio {
         console.log("⚽ Módulo Sorteio iniciado.");
 
         this.configurarEventos();
+
+        this.configurarDuracoes();
 
         await this.carregarJogadores();
 
@@ -81,6 +90,411 @@ class Sorteio {
             });
 
         }
+
+    }
+
+
+    // ========================================================
+    // CONFIGURAÇÃO DAS DURAÇÕES
+    // ========================================================
+
+    configurarDuracoes() {
+
+        const duracaoPelada =
+            document.getElementById(
+                "duracaoPelada"
+            );
+
+        const duracaoPartida =
+            document.getElementById(
+                "duracaoPartida"
+            );
+
+
+        const containerPelada =
+            document.getElementById(
+                "duracaoPeladaPersonalizadaContainer"
+            );
+
+
+        const containerPartida =
+            document.getElementById(
+                "duracaoPartidaPersonalizadaContainer"
+            );
+
+
+        const inputPelada =
+            document.getElementById(
+                "duracaoPeladaPersonalizada"
+            );
+
+
+        const inputPartida =
+            document.getElementById(
+                "duracaoPartidaPersonalizada"
+            );
+
+
+        // ----------------------------------------------------
+        // Duração da pelada
+        // ----------------------------------------------------
+
+        if (duracaoPelada) {
+
+            duracaoPelada.value = "60";
+
+
+            duracaoPelada.addEventListener(
+                "change",
+                () => {
+
+                    if (
+                        duracaoPelada.value ===
+                        "custom"
+                    ) {
+
+                        if (containerPelada) {
+
+                            containerPelada.classList.remove(
+                                "d-none"
+                            );
+
+                        }
+
+                        if (inputPelada) {
+
+                            inputPelada.focus();
+
+                        }
+
+                        return;
+
+                    }
+
+
+                    if (containerPelada) {
+
+                        containerPelada.classList.add(
+                            "d-none"
+                        );
+
+                    }
+
+
+                    const valor =
+                        Number(
+                            duracaoPelada.value
+                        );
+
+
+                    if (
+                        Number.isFinite(valor) &&
+                        valor > 0
+                    ) {
+
+                        this.duracaoPelada =
+                            valor;
+
+                    }
+
+                }
+            );
+
+        }
+
+
+        // ----------------------------------------------------
+        // Duração personalizada da pelada
+        // ----------------------------------------------------
+
+        if (inputPelada) {
+
+            inputPelada.addEventListener(
+                "input",
+                () => {
+
+                    const valor =
+                        Number(
+                            inputPelada.value
+                        );
+
+
+                    if (
+                        Number.isFinite(valor) &&
+                        valor >= 1 &&
+                        valor <= 300
+                    ) {
+
+                        this.duracaoPelada =
+                            valor;
+
+                    }
+
+                }
+            );
+
+        }
+
+
+        // ----------------------------------------------------
+        // Duração da partida
+        // ----------------------------------------------------
+
+        if (duracaoPartida) {
+
+            duracaoPartida.value = "7";
+
+
+            duracaoPartida.addEventListener(
+                "change",
+                () => {
+
+                    if (
+                        duracaoPartida.value ===
+                        "custom"
+                    ) {
+
+                        if (containerPartida) {
+
+                            containerPartida.classList.remove(
+                                "d-none"
+                            );
+
+                        }
+
+                        if (inputPartida) {
+
+                            inputPartida.focus();
+
+                        }
+
+                        return;
+
+                    }
+
+
+                    if (containerPartida) {
+
+                        containerPartida.classList.add(
+                            "d-none"
+                        );
+
+                    }
+
+
+                    const valor =
+                        Number(
+                            duracaoPartida.value
+                        );
+
+
+                    if (
+                        Number.isFinite(valor) &&
+                        valor > 0
+                    ) {
+
+                        this.duracaoPartida =
+                            valor;
+
+                    }
+
+                }
+            );
+
+        }
+
+
+        // ----------------------------------------------------
+        // Duração personalizada da partida
+        // ----------------------------------------------------
+
+        if (inputPartida) {
+
+            inputPartida.addEventListener(
+                "input",
+                () => {
+
+                    const valor =
+                        Number(
+                            inputPartida.value
+                        );
+
+
+                    if (
+                        Number.isFinite(valor) &&
+                        valor >= 1 &&
+                        valor <= 60
+                    ) {
+
+                        this.duracaoPartida =
+                            valor;
+
+                    }
+
+                }
+            );
+
+        }
+
+    }
+
+
+    // ========================================================
+    // OBTER DURAÇÃO DA PELADA
+    // ========================================================
+
+    obterDuracaoPelada() {
+
+        const select =
+            document.getElementById(
+                "duracaoPelada"
+            );
+
+
+        const input =
+            document.getElementById(
+                "duracaoPeladaPersonalizada"
+            );
+
+
+        if (!select) {
+
+            return this.duracaoPelada;
+
+        }
+
+
+        if (select.value === "custom") {
+
+            const valor =
+                Number(
+                    input?.value
+                );
+
+
+            if (
+                !Number.isFinite(valor) ||
+                valor < 1 ||
+                valor > 300
+            ) {
+
+                throw new Error(
+                    "Informe uma duração válida para a pelada entre 1 e 300 minutos."
+                );
+
+            }
+
+
+            this.duracaoPelada =
+                valor;
+
+            return valor;
+
+        }
+
+
+        const valor =
+            Number(
+                select.value
+            );
+
+
+        if (
+            !Number.isFinite(valor) ||
+            valor < 1
+        ) {
+
+            throw new Error(
+                "Selecione uma duração válida para a pelada."
+            );
+
+        }
+
+
+        this.duracaoPelada =
+            valor;
+
+        return valor;
+
+    }
+
+
+    // ========================================================
+    // OBTER DURAÇÃO DA PARTIDA
+    // ========================================================
+
+    obterDuracaoPartida() {
+
+        const select =
+            document.getElementById(
+                "duracaoPartida"
+            );
+
+
+        const input =
+            document.getElementById(
+                "duracaoPartidaPersonalizada"
+            );
+
+
+        if (!select) {
+
+            return this.duracaoPartida;
+
+        }
+
+
+        if (select.value === "custom") {
+
+            const valor =
+                Number(
+                    input?.value
+                );
+
+
+            if (
+                !Number.isFinite(valor) ||
+                valor < 1 ||
+                valor > 60
+            ) {
+
+                throw new Error(
+                    "Informe uma duração válida para a partida entre 1 e 60 minutos."
+                );
+
+            }
+
+
+            this.duracaoPartida =
+                valor;
+
+            return valor;
+
+        }
+
+
+        const valor =
+            Number(
+                select.value
+            );
+
+
+        if (
+            !Number.isFinite(valor) ||
+            valor < 1
+        ) {
+
+            throw new Error(
+                "Selecione uma duração válida para a partida."
+            );
+
+        }
+
+
+        this.duracaoPartida =
+            valor;
+
+        return valor;
 
     }
 
@@ -537,6 +951,35 @@ class Sorteio {
 
     sortear() {
 
+        // ----------------------------------------------------
+        // Validar configuração
+        // ----------------------------------------------------
+
+        let duracaoPelada;
+        let duracaoPartida;
+
+
+        try {
+
+            duracaoPelada =
+                this.obterDuracaoPelada();
+
+
+            duracaoPartida =
+                this.obterDuracaoPartida();
+
+
+        } catch (erro) {
+
+            alert(
+                erro.message
+            );
+
+            return;
+
+        }
+
+
         const total =
             this.jogadores.length;
 
@@ -630,13 +1073,22 @@ class Sorteio {
         // ----------------------------------------------------
 
         this.atualizarStatus(
-            "Times sorteados"
+            `Times sorteados • Pelada: ${duracaoPelada} min • Partida: ${duracaoPartida} min`
         );
 
 
         console.log(
             "🎲 Times sorteados:",
             this.times
+        );
+
+
+        console.log(
+            "⏱️ Configuração:",
+            {
+                duracaoPelada,
+                duracaoPartida
+            }
         );
 
     }
