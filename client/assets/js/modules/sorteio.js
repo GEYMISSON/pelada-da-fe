@@ -1067,6 +1067,15 @@ class Sorteio {
 
         this.renderizarTimes();
 
+        // ----------------------------------------------------
+        // Salvar sorteio para a tela de Partidas
+        // ----------------------------------------------------
+
+        localStorage.setItem(
+            "peladaDaFeTimes",
+            JSON.stringify(this.times)
+        );
+
 
         // ----------------------------------------------------
         // Atualizar status
