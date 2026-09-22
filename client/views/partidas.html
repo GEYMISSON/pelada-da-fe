@@ -32,25 +32,24 @@
 
 
     <!-- ===================================================== -->
-    <!-- CONFIGURAÇÃO -->
+    <!-- CONFIGURAÇÃO DA PELADA -->
     <!-- ===================================================== -->
 
     <div
         id="configuracaoPelada"
         class="card border-0 shadow-sm mb-4"
-        style="border-radius: 16px;"
     >
 
         <div class="card-header bg-white border-0 pt-4 px-4">
 
             <h5 class="fw-bold mb-1">
-                <i class="bi bi-gear-fill text-success me-2"></i>
+                <i class="bi bi-gear-fill text-primary me-2"></i>
                 Configuração da Pelada
             </h5>
 
-            <small class="text-muted">
-                Defina o tempo da pelada e a duração de cada partida.
-            </small>
+            <p class="text-muted small mb-0">
+                Defina a duração da pelada e o tempo de cada partida.
+            </p>
 
         </div>
 
@@ -59,14 +58,15 @@
 
             <div class="row g-3">
 
-                <!-- Duração total -->
+                <!-- Duração da pelada -->
 
-                <div class="col-md-4">
+                <div class="col-12 col-md-4">
 
                     <label
                         for="duracaoPelada"
                         class="form-label fw-semibold"
                     >
+                        <i class="bi bi-clock me-1"></i>
                         Duração da pelada
                     </label>
 
@@ -74,11 +74,12 @@
 
                         <input
                             type="number"
-                            id="duracaoPelada"
                             class="form-control"
+                            id="duracaoPelada"
                             value="60"
                             min="1"
-                            max="180"
+                            max="300"
+                            step="1"
                         >
 
                         <span class="input-group-text">
@@ -87,21 +88,22 @@
 
                     </div>
 
-                    <small class="text-muted">
-                        Ex.: 60 minutos.
-                    </small>
+                    <div class="form-text">
+                        Exemplo: 60 minutos.
+                    </div>
 
                 </div>
 
 
                 <!-- Duração da partida -->
 
-                <div class="col-md-4">
+                <div class="col-12 col-md-4">
 
                     <label
                         for="duracaoPartida"
                         class="form-label fw-semibold"
                     >
+                        <i class="bi bi-stopwatch me-1"></i>
                         Duração de cada partida
                     </label>
 
@@ -109,11 +111,12 @@
 
                         <input
                             type="number"
-                            id="duracaoPartida"
                             class="form-control"
+                            id="duracaoPartida"
                             value="7"
                             min="1"
-                            max="30"
+                            max="60"
+                            step="1"
                         >
 
                         <span class="input-group-text">
@@ -122,38 +125,38 @@
 
                     </div>
 
-                    <small class="text-muted">
-                        Ex.: 5, 6 ou 7 minutos.
-                    </small>
+                    <div class="form-text">
+                        Exemplo: 7 minutos.
+                    </div>
 
                 </div>
 
 
-                <!-- Informações -->
+                <!-- Estimativa -->
 
-                <div class="col-md-4">
+                <div class="col-12 col-md-4">
 
                     <label class="form-label fw-semibold">
-                        Tempo configurado
+                        <i class="bi bi-calculator me-1"></i>
+                        Partidas estimadas
                     </label>
 
                     <div
-                        class="bg-light rounded-3 p-3"
-                        style="min-height: 58px;"
+                        class="border rounded bg-light d-flex align-items-center justify-content-center"
+                        style="height: 38px;"
                     >
 
-                        <div class="d-flex justify-content-between">
+                        <strong
+                            id="partidasEstimadas"
+                            class="fs-5"
+                        >
+                            8
+                        </strong>
 
-                            <span class="text-muted">
-                                Partidas aproximadas
-                            </span>
+                    </div>
 
-                            <strong id="partidasEstimadas">
-                                8
-                            </strong>
-
-                        </div>
-
+                    <div class="form-text">
+                        Estimativa baseada no tempo configurado.
                     </div>
 
                 </div>
@@ -161,14 +164,14 @@
             </div>
 
 
-            <!-- Botão iniciar -->
+            <!-- Botões da pelada -->
 
-            <div class="mt-4 d-flex flex-wrap gap-2">
+            <div class="d-flex flex-wrap gap-2 mt-4">
 
                 <button
                     type="button"
                     id="btnIniciarPelada"
-                    class="btn btn-success px-4"
+                    class="btn btn-success"
                 >
 
                     <i class="bi bi-play-fill me-1"></i>
@@ -181,8 +184,7 @@
                 <button
                     type="button"
                     id="btnReiniciarPelada"
-                    class="btn btn-outline-secondary px-4"
-                    disabled
+                    class="btn btn-outline-danger"
                 >
 
                     <i class="bi bi-arrow-counterclockwise me-1"></i>
@@ -199,47 +201,29 @@
 
 
     <!-- ===================================================== -->
-    <!-- RESUMO -->
+    <!-- PAINEL DE TEMPOS -->
     <!-- ===================================================== -->
 
     <div class="row g-3 mb-4">
 
-        <!-- Tempo restante -->
+        <!-- Tempo restante da pelada -->
 
-        <div class="col-md-3">
+        <div class="col-12 col-md-4">
 
             <div class="card border-0 shadow-sm h-100">
 
-                <div class="card-body">
+                <div class="card-body text-center">
 
-                    <div class="d-flex align-items-center">
+                    <div class="text-muted small mb-2">
+                        <i class="bi bi-hourglass-split me-1"></i>
+                        Tempo restante da pelada
+                    </div>
 
-                        <div
-                            class="rounded-circle bg-primary bg-opacity-10
-                                   p-3 me-3"
-                        >
-
-                            <i
-                                class="bi bi-clock-fill text-primary fs-4"
-                            ></i>
-
-                        </div>
-
-                        <div>
-
-                            <small class="text-muted d-block">
-                                Tempo restante
-                            </small>
-
-                            <strong
-                                id="tempoRestantePelada"
-                                class="fs-4"
-                            >
-                                60:00
-                            </strong>
-
-                        </div>
-
+                    <div
+                        id="tempoRestantePelada"
+                        class="fw-bold display-5"
+                    >
+                        60:00
                     </div>
 
                 </div>
@@ -251,40 +235,22 @@
 
         <!-- Tempo da partida -->
 
-        <div class="col-md-3">
+        <div class="col-12 col-md-4">
 
             <div class="card border-0 shadow-sm h-100">
 
-                <div class="card-body">
+                <div class="card-body text-center">
 
-                    <div class="d-flex align-items-center">
+                    <div class="text-muted small mb-2">
+                        <i class="bi bi-stopwatch-fill me-1"></i>
+                        Tempo restante da partida
+                    </div>
 
-                        <div
-                            class="rounded-circle bg-warning bg-opacity-10
-                                   p-3 me-3"
-                        >
-
-                            <i
-                                class="bi bi-stopwatch-fill text-warning fs-4"
-                            ></i>
-
-                        </div>
-
-                        <div>
-
-                            <small class="text-muted d-block">
-                                Partida atual
-                            </small>
-
-                            <strong
-                                id="tempoRestantePartida"
-                                class="fs-4"
-                            >
-                                07:00
-                            </strong>
-
-                        </div>
-
+                    <div
+                        id="tempoRestantePartida"
+                        class="fw-bold display-5"
+                    >
+                        07:00
                     </div>
 
                 </div>
@@ -294,42 +260,24 @@
         </div>
 
 
-        <!-- Partidas -->
+        <!-- Partidas realizadas -->
 
-        <div class="col-md-3">
+        <div class="col-12 col-md-4">
 
             <div class="card border-0 shadow-sm h-100">
 
-                <div class="card-body">
+                <div class="card-body text-center">
 
-                    <div class="d-flex align-items-center">
+                    <div class="text-muted small mb-2">
+                        <i class="bi bi-list-ol me-1"></i>
+                        Partidas realizadas
+                    </div>
 
-                        <div
-                            class="rounded-circle bg-success bg-opacity-10
-                                   p-3 me-3"
-                        >
-
-                            <i
-                                class="bi bi-controller text-success fs-4"
-                            ></i>
-
-                        </div>
-
-                        <div>
-
-                            <small class="text-muted d-block">
-                                Partidas realizadas
-                            </small>
-
-                            <strong
-                                id="partidasRealizadas"
-                                class="fs-4"
-                            >
-                                0
-                            </strong>
-
-                        </div>
-
+                    <div
+                        id="partidasRealizadas"
+                        class="fw-bold display-5"
+                    >
+                        0
                     </div>
 
                 </div>
@@ -338,43 +286,39 @@
 
         </div>
 
+    </div>
 
-        <!-- Próximo -->
 
-        <div class="col-md-3">
+    <!-- ===================================================== -->
+    <!-- PRÓXIMO TIME -->
+    <!-- ===================================================== -->
 
-            <div class="card border-0 shadow-sm h-100">
+    <div class="card border-0 shadow-sm mb-4">
 
-                <div class="card-body">
+        <div class="card-body">
 
-                    <div class="d-flex align-items-center">
+            <div class="row align-items-center">
 
-                        <div
-                            class="rounded-circle bg-info bg-opacity-10
-                                   p-3 me-3"
-                        >
+                <div class="col-12 col-md-8">
 
-                            <i
-                                class="bi bi-arrow-right-circle-fill text-info fs-4"
-                            ></i>
+                    <div class="text-muted small mb-1">
+                        Próximo time
+                    </div>
 
-                        </div>
+                    <h4
+                        id="proximoTime"
+                        class="fw-bold mb-0"
+                    >
+                        Nenhum
+                    </h4>
 
-                        <div>
+                </div>
 
-                            <small class="text-muted d-block">
-                                Próximo time
-                            </small>
 
-                            <strong
-                                id="proximoTime"
-                                class="fs-5"
-                            >
-                                Aguardando
-                            </strong>
+                <div class="col-12 col-md-4 text-md-end mt-3 mt-md-0">
 
-                        </div>
-
+                    <div class="text-muted small">
+                        O vencedor permanece em campo.
                     </div>
 
                 </div>
@@ -390,37 +334,39 @@
     <!-- PARTIDA ATUAL -->
     <!-- ===================================================== -->
 
-    <div
-        class="card border-0 shadow-sm mb-4"
-        style="border-radius: 16px;"
-    >
+    <div class="card border-0 shadow-sm mb-4">
 
         <div class="card-header bg-white border-0 pt-4 px-4">
 
-            <div class="d-flex justify-content-between align-items-center">
+            <div class="d-flex flex-wrap justify-content-between align-items-center">
 
                 <div>
 
                     <h5 class="fw-bold mb-1">
-                        <i class="bi bi-trophy text-warning me-2"></i>
-                        Partida Atual
+
+                        <i class="bi bi-controller text-primary me-2"></i>
+
+                        Partida atual
+
                     </h5>
 
-                    <small
-                        id="numeroPartida"
-                        class="text-muted"
-                    >
-                        Nenhuma partida iniciada
-                    </small>
+                    <p class="text-muted small mb-0">
+
+                        Partida
+                        <strong id="numeroPartida">
+                            1
+                        </strong>
+
+                    </p>
 
                 </div>
 
 
-                <div>
+                <div class="mt-2 mt-md-0">
 
                     <span
                         id="badgePartidaStatus"
-                        class="badge bg-secondary"
+                        class="badge bg-secondary px-3 py-2"
                     >
                         Aguardando
                     </span>
@@ -434,57 +380,52 @@
 
         <div class="card-body px-4 pb-4">
 
-            <!-- Times -->
-
             <div class="row g-3 align-items-stretch">
 
+                <!-- ================================================= -->
                 <!-- TIME 1 -->
+                <!-- ================================================= -->
 
-                <div class="col-md-5">
+                <div class="col-12 col-lg-5">
 
                     <div
                         id="cardTimePartida1"
-                        class="card h-100 border-0"
-                        style="
-                            background: #fff3cd;
-                            border-radius: 16px;
-                        "
+                        class="card h-100 border-warning"
                     >
 
-                        <div class="card-body text-center">
+                        <div class="card-header bg-warning text-dark">
 
-                            <div
-                                class="rounded-circle mx-auto mb-3"
-                                style="
-                                    width: 70px;
-                                    height: 70px;
-                                    background: #ffc107;
-                                    display: flex;
-                                    align-items: center;
-                                    justify-content: center;
-                                "
-                            >
+                            <div class="d-flex justify-content-between align-items-center">
 
-                                <i
-                                    class="bi bi-people-fill text-dark fs-2"
-                                ></i>
+                                <strong>
+                                    <i class="bi bi-shield-fill me-1"></i>
+                                    Time
+                                </strong>
+
+                                <span class="badge bg-dark">
+                                    AMARELO
+                                </span>
 
                             </div>
 
+                        </div>
+
+
+                        <div class="card-body">
 
                             <h4
                                 id="nomeTimePartida1"
-                                class="fw-bold"
+                                class="fw-bold mb-3"
                             >
-                                Amarelo
+                                Aguardando
                             </h4>
 
 
                             <div
                                 id="jogadoresTimePartida1"
-                                class="text-muted small"
+                                class="small"
                             >
-                                Aguardando partida
+                                Nenhum jogador
                             </div>
 
                         </div>
@@ -494,26 +435,29 @@
                 </div>
 
 
-                <!-- VS -->
+                <!-- ================================================= -->
+                <!-- CENTRO / CRONÔMETRO -->
+                <!-- ================================================= -->
 
-                <div
-                    class="col-md-2 d-flex
-                           align-items-center
-                           justify-content-center"
-                >
+                <div class="col-12 col-lg-2">
 
-                    <div class="text-center">
+                    <div class="h-100 d-flex flex-column justify-content-center align-items-center">
+
+                        <div class="text-muted small mb-2">
+                            CRONÔMETRO
+                        </div>
+
 
                         <div
                             id="cronometroPartida"
-                            class="fw-bold text-danger"
-                            style="font-size: 32px;"
+                            class="fw-bold display-5 text-center"
                         >
                             07:00
                         </div>
 
-                        <div class="text-muted fw-semibold">
-                            VS
+
+                        <div class="text-muted small mt-2 text-center">
+                            Tempo da partida
                         </div>
 
                     </div>
@@ -521,53 +465,50 @@
                 </div>
 
 
+                <!-- ================================================= -->
                 <!-- TIME 2 -->
+                <!-- ================================================= -->
 
-                <div class="col-md-5">
+                <div class="col-12 col-lg-5">
 
                     <div
                         id="cardTimePartida2"
-                        class="card h-100 border-0"
-                        style="
-                            background: #f8d7da;
-                            border-radius: 16px;
-                        "
+                        class="card h-100 border-danger"
                     >
 
-                        <div class="card-body text-center">
+                        <div class="card-header bg-danger text-white">
 
-                            <div
-                                class="rounded-circle mx-auto mb-3"
-                                style="
-                                    width: 70px;
-                                    height: 70px;
-                                    background: #dc3545;
-                                    display: flex;
-                                    align-items: center;
-                                    justify-content: center;
-                                "
-                            >
+                            <div class="d-flex justify-content-between align-items-center">
 
-                                <i
-                                    class="bi bi-people-fill text-white fs-2"
-                                ></i>
+                                <strong>
+                                    <i class="bi bi-shield-fill me-1"></i>
+                                    Time
+                                </strong>
+
+                                <span class="badge bg-dark">
+                                    VERMELHO
+                                </span>
 
                             </div>
 
+                        </div>
+
+
+                        <div class="card-body">
 
                             <h4
                                 id="nomeTimePartida2"
-                                class="fw-bold"
+                                class="fw-bold mb-3"
                             >
-                                Vermelho
+                                Aguardando
                             </h4>
 
 
                             <div
                                 id="jogadoresTimePartida2"
-                                class="text-muted small"
+                                class="small"
                             >
-                                Aguardando partida
+                                Nenhum jogador
                             </div>
 
                         </div>
@@ -579,48 +520,16 @@
             </div>
 
 
-            <!-- Próximo time -->
+            <!-- ================================================= -->
+            <!-- CONTROLES DA PARTIDA -->
+            <!-- ================================================= -->
 
-            <div class="text-center mt-4">
-
-                <div class="text-muted small mb-1">
-                    Próximo time na fila
-                </div>
-
-                <div
-                    id="cardProximoTime"
-                    class="d-inline-block
-                           bg-primary
-                           text-white
-                           rounded-pill
-                           px-4
-                           py-2"
-                >
-
-                    <i class="bi bi-hourglass-split me-1"></i>
-
-                    Azul
-
-                </div>
-
-            </div>
-
-
-            <!-- Controles -->
-
-            <div
-                class="d-flex
-                       flex-wrap
-                       justify-content-center
-                       gap-2
-                       mt-4"
-            >
+            <div class="d-flex flex-wrap justify-content-center gap-2 mt-4">
 
                 <button
                     type="button"
                     id="btnIniciarPartida"
-                    class="btn btn-success px-4"
-                    disabled
+                    class="btn btn-primary"
                 >
 
                     <i class="bi bi-play-fill me-1"></i>
@@ -633,7 +542,7 @@
                 <button
                     type="button"
                     id="btnPausarPartida"
-                    class="btn btn-warning px-4"
+                    class="btn btn-warning"
                     disabled
                 >
 
@@ -647,7 +556,7 @@
                 <button
                     type="button"
                     id="btnFinalizarPartida"
-                    class="btn btn-danger px-4"
+                    class="btn btn-danger"
                     disabled
                 >
 
@@ -665,86 +574,316 @@
 
 
     <!-- ===================================================== -->
-    <!-- RESULTADO -->
+    <!-- ÁREA DE RESULTADO -->
     <!-- ===================================================== -->
 
     <div
         id="areaResultado"
         class="card border-0 shadow-sm mb-4 d-none"
-        style="border-radius: 16px;"
     >
 
         <div class="card-header bg-white border-0 pt-4 px-4">
 
-            <h5 class="fw-bold mb-1">
-                <i class="bi bi-flag-fill text-success me-2"></i>
-                Resultado da Partida
-            </h5>
+            <div class="d-flex flex-wrap justify-content-between align-items-center">
 
-            <small class="text-muted">
-                Informe o resultado para definir o próximo confronto.
-            </small>
+                <div>
+
+                    <h5 class="fw-bold mb-1">
+
+                        <i class="bi bi-flag-fill text-success me-2"></i>
+
+                        Resultado da partida
+
+                    </h5>
+
+                    <p class="text-muted small mb-0">
+
+                        Informe os gols marcados por cada jogador.
+
+                    </p>
+
+                </div>
+
+
+                <span class="badge bg-warning text-dark px-3 py-2 mt-2 mt-md-0">
+
+                    Sem empate
+
+                </span>
+
+            </div>
 
         </div>
 
 
         <div class="card-body px-4 pb-4">
 
-            <div class="row g-3">
 
-                <div class="col-md-4">
+            <!-- ================================================= -->
+            <!-- PLACAR -->
+            <!-- ================================================= -->
 
-                    <button
-                        type="button"
-                        id="btnVitoriaTime1"
-                        class="btn btn-warning w-100 py-3"
-                    >
+            <div class="row justify-content-center mb-4">
 
-                        <i class="bi bi-trophy-fill me-2"></i>
+                <!-- Placar Time 1 -->
 
-                        Vitória do
-                        <span id="textoVitoriaTime1">
-                            Amarelo
-                        </span>
+                <div class="col-12 col-md-5">
 
-                    </button>
+                    <div class="card border-warning">
+
+                        <div class="card-header bg-warning text-dark text-center">
+
+                            <strong id="placarNomeTime1">
+                                Time 1
+                            </strong>
+
+                        </div>
+
+
+                        <div class="card-body text-center">
+
+                            <div
+                                id="placarTime1"
+                                class="display-3 fw-bold"
+                            >
+                                0
+                            </div>
+
+                            <div class="text-muted small">
+                                gols
+                            </div>
+
+                        </div>
+
+                    </div>
 
                 </div>
 
 
-                <div class="col-md-4">
+                <!-- X -->
 
-                    <button
-                        type="button"
-                        id="btnEmpate"
-                        class="btn btn-outline-secondary w-100 py-3"
-                    >
+                <div class="col-12 col-md-2 d-flex align-items-center justify-content-center">
 
-                        <i class="bi bi-dash-circle me-2"></i>
-
-                        Empate
-
-                    </button>
+                    <span class="display-6 fw-bold text-muted">
+                        X
+                    </span>
 
                 </div>
 
 
-                <div class="col-md-4">
+                <!-- Placar Time 2 -->
 
-                    <button
-                        type="button"
-                        id="btnVitoriaTime2"
-                        class="btn btn-danger w-100 py-3"
-                    >
+                <div class="col-12 col-md-5">
 
-                        <i class="bi bi-trophy-fill me-2"></i>
+                    <div class="card border-danger">
 
-                        Vitória do
-                        <span id="textoVitoriaTime2">
-                            Vermelho
-                        </span>
+                        <div class="card-header bg-danger text-white text-center">
 
-                    </button>
+                            <strong id="placarNomeTime2">
+                                Time 2
+                            </strong>
+
+                        </div>
+
+
+                        <div class="card-body text-center">
+
+                            <div
+                                id="placarTime2"
+                                class="display-3 fw-bold"
+                            >
+                                0
+                            </div>
+
+                            <div class="text-muted small">
+                                gols
+                            </div>
+
+                        </div>
+
+                    </div>
+
+                </div>
+
+            </div>
+
+
+            <!-- ================================================= -->
+            <!-- JOGADORES / GOLS -->
+            <!-- ================================================= -->
+
+            <div class="row g-4">
+
+                <!-- ================================================= -->
+                <!-- GOLS TIME 1 -->
+                <!-- ================================================= -->
+
+                <div class="col-12 col-lg-6">
+
+                    <div class="card h-100 border-warning">
+
+                        <div class="card-header bg-warning text-dark">
+
+                            <strong>
+
+                                <i class="bi bi-people-fill me-1"></i>
+
+                                <span id="tituloGolsTime1">
+                                    Time 1
+                                </span>
+
+                            </strong>
+
+                        </div>
+
+
+                        <div class="card-body">
+
+                            <div
+                                id="listaGolsTime1"
+                                class="d-flex flex-column gap-2"
+                            >
+
+                                <!--
+                                    Os jogadores serão inseridos
+                                    dinamicamente pelo partidas.js.
+                                -->
+
+                            </div>
+
+                        </div>
+
+                    </div>
+
+                </div>
+
+
+                <!-- ================================================= -->
+                <!-- GOLS TIME 2 -->
+                <!-- ================================================= -->
+
+                <div class="col-12 col-lg-6">
+
+                    <div class="card h-100 border-danger">
+
+                        <div class="card-header bg-danger text-white">
+
+                            <strong>
+
+                                <i class="bi bi-people-fill me-1"></i>
+
+                                <span id="tituloGolsTime2">
+                                    Time 2
+                                </span>
+
+                            </strong>
+
+                        </div>
+
+
+                        <div class="card-body">
+
+                            <div
+                                id="listaGolsTime2"
+                                class="d-flex flex-column gap-2"
+                            >
+
+                                <!--
+                                    Os jogadores serão inseridos
+                                    dinamicamente pelo partidas.js.
+                                -->
+
+                            </div>
+
+                        </div>
+
+                    </div>
+
+                </div>
+
+            </div>
+
+
+            <!-- ================================================= -->
+            <!-- MENSAGEM DO RESULTADO -->
+            <!-- ================================================= -->
+
+            <div
+                id="mensagemResultado"
+                class="alert alert-info mt-4 mb-0 d-none"
+            >
+                Informe os gols de cada jogador.
+            </div>
+
+
+            <!-- ================================================= -->
+            <!-- CONFIRMAR RESULTADO -->
+            <!-- ================================================= -->
+
+            <div class="d-flex justify-content-center mt-4">
+
+                <button
+                    type="button"
+                    id="btnConfirmarResultado"
+                    class="btn btn-success btn-lg px-4"
+                >
+
+                    <i class="bi bi-check-circle-fill me-1"></i>
+
+                    Confirmar Resultado
+
+                </button>
+
+            </div>
+
+
+        </div>
+
+    </div>
+
+
+    <!-- ===================================================== -->
+    <!-- RESUMO DA REGRA -->
+    <!-- ===================================================== -->
+
+    <div class="card border-0 shadow-sm mb-4">
+
+        <div class="card-body">
+
+            <div class="d-flex align-items-start">
+
+                <div class="me-3">
+
+                    <i
+                        class="bi bi-info-circle-fill text-primary fs-4"
+                    ></i>
+
+                </div>
+
+
+                <div>
+
+                    <h6 class="fw-bold mb-2">
+                        Regra da Pelada
+                    </h6>
+
+                    <p class="mb-1 text-muted">
+
+                        O time vencedor permanece em quadra.
+
+                    </p>
+
+                    <p class="mb-1 text-muted">
+
+                        O time perdedor sai e vai para o final da fila.
+
+                    </p>
+
+                    <p class="mb-0 text-muted">
+
+                        O próximo time da fila entra para a próxima partida.
+
+                    </p>
 
                 </div>
 
@@ -759,34 +898,36 @@
     <!-- HISTÓRICO -->
     <!-- ===================================================== -->
 
-    <div
-        class="card border-0 shadow-sm mb-4"
-        style="border-radius: 16px;"
-    >
+    <div class="card border-0 shadow-sm mb-4">
 
         <div class="card-header bg-white border-0 pt-4 px-4">
 
-            <div class="d-flex justify-content-between align-items-center">
+            <div class="d-flex flex-wrap justify-content-between align-items-center">
 
                 <div>
 
                     <h5 class="fw-bold mb-1">
+
                         <i class="bi bi-clock-history text-primary me-2"></i>
-                        Histórico da Pelada
+
+                        Histórico das Partidas
+
                     </h5>
 
-                    <small class="text-muted">
-                        Partidas realizadas nesta sessão.
-                    </small>
+                    <p class="text-muted small mb-0">
+
+                        Resultados registrados durante a pelada.
+
+                    </p>
 
                 </div>
 
 
                 <span
                     id="badgeHistorico"
-                    class="badge bg-primary"
+                    class="badge bg-secondary mt-2 mt-md-0"
                 >
-                    0
+                    0 partidas
                 </span>
 
             </div>
@@ -794,28 +935,69 @@
         </div>
 
 
-        <div class="card-body p-0">
+        <div class="card-body px-4 pb-4">
 
-            <div
-                id="historicoPartidas"
-                class="table-responsive"
-            >
+            <div class="table-responsive">
 
-                <div
-                    class="text-center
-                           text-muted
-                           py-5"
-                >
+                <table class="table table-hover align-middle mb-0">
 
-                    <i
-                        class="bi bi-clock-history fs-1 d-block mb-3"
-                    ></i>
+                    <thead>
 
-                    <p class="mb-0">
-                        Nenhuma partida realizada ainda.
-                    </p>
+                        <tr>
 
-                </div>
+                            <th>
+                                #
+                            </th>
+
+                            <th>
+                                Time 1
+                            </th>
+
+                            <th class="text-center">
+                                Placar
+                            </th>
+
+                            <th>
+                                Time 2
+                            </th>
+
+                            <th>
+                                Vencedor
+                            </th>
+
+                            <th>
+                                Duração
+                            </th>
+
+                            <th>
+                                Data
+                            </th>
+
+                        </tr>
+
+                    </thead>
+
+
+                    <tbody id="historicoPartidas">
+
+                        <tr>
+
+                            <td
+                                colspan="7"
+                                class="text-center text-muted py-4"
+                            >
+
+                                <i class="bi bi-inbox fs-3 d-block mb-2"></i>
+
+                                Nenhuma partida registrada ainda.
+
+                            </td>
+
+                        </tr>
+
+                    </tbody>
+
+                </table>
 
             </div>
 
@@ -823,40 +1005,5 @@
 
     </div>
 
-
-    <!-- ===================================================== -->
-    <!-- INFORMAÇÃO DA REGRA -->
-    <!-- ===================================================== -->
-
-    <div class="alert alert-info border-0 shadow-sm">
-
-        <div class="d-flex">
-
-            <i
-                class="bi bi-info-circle-fill fs-4 me-3"
-            ></i>
-
-            <div>
-
-                <strong>
-                    Regra da Pelada
-                </strong>
-
-                <div class="small mt-1">
-
-                    O time vencedor continua em campo
-                    e enfrenta o próximo time da fila.
-
-                    Em caso de empate,
-                    os dois times saem e o próximo time
-                    entra para a partida seguinte.
-
-                </div>
-
-            </div>
-
-        </div>
-
-    </div>
 
 </div>

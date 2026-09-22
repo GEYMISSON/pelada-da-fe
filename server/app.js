@@ -2,29 +2,91 @@ const express = require("express");
 const cors = require("cors");
 const path = require("path");
 
-const jogadorRoutes = require("./routes/jogadorRoutes");
+const jogadorRoutes =
+    require("./routes/jogadorRoutes");
 
-const app = express();
+const partidaRoutes =
+    require("./routes/partidaRoutes");
+
+
+const app =
+    express();
+
+
+// ============================================================
+// MIDDLEWARES
+// ============================================================
 
 app.use(cors());
 
-app.use(express.json({
-    limit: "10mb"
-}));
 
-app.use(express.urlencoded({
-    limit: "10mb",
-    extended: true
-}));
+app.use(
+    express.json({
+        limit: "10mb"
+    })
+);
 
-app.use("/api/jogadores", jogadorRoutes);
 
-// Servir arquivos estáticos da pasta client
-app.use(express.static(path.join(__dirname, "../client")));
+app.use(
+    express.urlencoded({
+        limit: "10mb",
+        extended: true
+    })
+);
 
-// Página principal
-app.get('/', (req, res) => {
-    res.sendFile(path.join(__dirname, "../client/index.html"));
-});
 
-module.exports = app;
+// ============================================================
+// ROTAS DA API
+// ============================================================
+
+app.use(
+    "/api/jogadores",
+    jogadorRoutes
+);
+
+
+app.use(
+    "/api/partidas",
+    partidaRoutes
+);
+
+
+// ============================================================
+// ARQUIVOS DO CLIENTE
+// ============================================================
+
+app.use(
+    express.static(
+        path.join(
+            __dirname,
+            "../client"
+        )
+    )
+);
+
+
+// ============================================================
+// PÁGINA PRINCIPAL
+// ============================================================
+
+app.get(
+    "/",
+    (req, res) => {
+
+        res.sendFile(
+            path.join(
+                __dirname,
+                "../client/index.html"
+            )
+        );
+
+    }
+);
+
+
+// ============================================================
+// EXPORTAR
+// ============================================================
+
+module.exports =
+    app;
