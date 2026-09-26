@@ -1,39 +1,40 @@
 const mongoose = require("mongoose");
 
-const golSchema = new mongoose.Schema({
+const golSchema = new mongoose.Schema(
+    {
+        partida: {
+            type: mongoose.Schema.Types.ObjectId,
+            ref: "Partida",
+            required: true
+        },
 
-    jogador: {
+        jogador: {
+            type: mongoose.Schema.Types.ObjectId,
+            ref: "Jogador",
+            required: true
+        },
 
-        type: mongoose.Schema.Types.ObjectId,
+        nomeJogador: {
+            type: String,
+            required: true,
+            trim: true
+        },
 
-        ref: "Jogador"
+        time: {
+            type: String,
+            enum: ["Amarelo", "Vermelho", "Azul"],
+            required: true
+        },
 
+        minuto: {
+            type: Number,
+            required: false,
+            min: 0
+        }
     },
-
-    partida: {
-
-        type: mongoose.Schema.Types.ObjectId,
-
-        ref: "Partida"
-
-    },
-
-    quantidade: {
-
-        type: Number,
-
-        default: 1
-
-    },
-
-    criadoEm: {
-
-        type: Date,
-
-        default: Date.now
-
+    {
+        timestamps: true
     }
-
-});
+);
 
 module.exports = mongoose.model("Gol", golSchema);

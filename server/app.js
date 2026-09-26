@@ -8,6 +8,9 @@ const jogadorRoutes =
 const partidaRoutes =
     require("./routes/partidaRoutes");
 
+const golRoutes = 
+    require("./routes/golRoutes");
+
 
 const app =
     express();
@@ -49,6 +52,10 @@ app.use(
     "/api/partidas",
     partidaRoutes
 );
+
+app.use(
+    "/api/gols", 
+    golRoutes);
 
 
 // ============================================================

@@ -1,0 +1,405 @@
+<div class="container-fluid py-3">
+
+    <!-- CABEÇALHO -->
+    <div class="d-flex flex-wrap justify-content-between align-items-center mb-4 gap-2">
+
+        <div>
+            <h2 class="fw-bold mb-1">
+                Dashboard
+            </h2>
+
+            <p class="text-muted mb-0">
+                Visão geral da Pelada da Fé
+            </p>
+        </div>
+
+        <div>
+            <span
+                id="statusDashboard"
+                class="badge bg-secondary"
+            >
+                Carregando...
+            </span>
+        </div>
+
+    </div>
+
+
+    <!-- ================================ -->
+    <!-- CARDS PRINCIPAIS -->
+    <!-- ================================ -->
+
+    <div class="row g-3 mb-4">
+
+        <!-- JOGADORES -->
+        <div class="col-6 col-xl-3">
+
+            <div class="card border-0 shadow-sm h-100">
+
+                <div class="card-body">
+
+                    <div class="d-flex justify-content-between align-items-center">
+
+                        <div>
+
+                            <small class="text-muted">
+                                Jogadores ativos
+                            </small>
+
+                            <h2
+                                id="dashboardTotalJogadores"
+                                class="fw-bold mb-0"
+                            >
+                                0
+                            </h2>
+
+                        </div>
+
+                        <div
+                            class="rounded-circle bg-primary bg-opacity-10
+                                   d-flex align-items-center justify-content-center"
+                            style="width:52px;height:52px;"
+                        >
+                            <i class="bi bi-people-fill text-primary fs-4"></i>
+                        </div>
+
+                    </div>
+
+                </div>
+
+            </div>
+
+        </div>
+
+
+        <!-- PARTIDAS -->
+        <div class="col-6 col-xl-3">
+
+            <div class="card border-0 shadow-sm h-100">
+
+                <div class="card-body">
+
+                    <div class="d-flex justify-content-between align-items-center">
+
+                        <div>
+
+                            <small class="text-muted">
+                                Partidas finalizadas
+                            </small>
+
+                            <h2
+                                id="dashboardTotalPartidas"
+                                class="fw-bold mb-0"
+                            >
+                                0
+                            </h2>
+
+                        </div>
+
+                        <div
+                            class="rounded-circle bg-success bg-opacity-10
+                                   d-flex align-items-center justify-content-center"
+                            style="width:52px;height:52px;"
+                        >
+                            <i class="bi bi-controller text-success fs-4"></i>
+                        </div>
+
+                    </div>
+
+                </div>
+
+            </div>
+
+        </div>
+
+
+        <!-- GOLS -->
+        <div class="col-6 col-xl-3">
+
+            <div class="card border-0 shadow-sm h-100">
+
+                <div class="card-body">
+
+                    <div class="d-flex justify-content-between align-items-center">
+
+                        <div>
+
+                            <small class="text-muted">
+                                Total de gols
+                            </small>
+
+                            <h2
+                                id="dashboardTotalGols"
+                                class="fw-bold mb-0"
+                            >
+                                0
+                            </h2>
+
+                        </div>
+
+                        <div
+                            class="rounded-circle bg-warning bg-opacity-10
+                                   d-flex align-items-center justify-content-center"
+                            style="width:52px;height:52px;"
+                        >
+                            <i class="bi bi-trophy-fill text-warning fs-4"></i>
+                        </div>
+
+                    </div>
+
+                </div>
+
+            </div>
+
+        </div>
+
+
+        <!-- ARTILHEIRO -->
+        <div class="col-6 col-xl-3">
+
+            <div class="card border-0 shadow-sm h-100">
+
+                <div class="card-body">
+
+                    <div class="d-flex justify-content-between align-items-center">
+
+                        <div class="overflow-hidden">
+
+                            <small class="text-muted">
+                                Artilheiro
+                            </small>
+
+                            <h4
+                                id="dashboardArtilheiro"
+                                class="fw-bold mb-0 text-truncate"
+                            >
+                                ---
+                            </h4>
+
+                            <small
+                                id="dashboardGolsArtilheiro"
+                                class="text-muted"
+                            >
+                                0 gols
+                            </small>
+
+                        </div>
+
+                        <div
+                            class="rounded-circle bg-danger bg-opacity-10
+                                   d-flex align-items-center justify-content-center"
+                            style="width:52px;height:52px;"
+                        >
+                            <i class="bi bi-star-fill text-danger fs-4"></i>
+                        </div>
+
+                    </div>
+
+                </div>
+
+            </div>
+
+        </div>
+
+    </div>
+
+
+
+    <!-- ================================ -->
+    <!-- GRÁFICOS -->
+    <!-- ================================ -->
+
+    <div class="row g-3 mb-4">
+
+
+        <!-- GOLS POR TIME -->
+        <div class="col-lg-6">
+
+            <div class="card border-0 shadow-sm h-100">
+
+                <div class="card-header bg-white border-0 pt-3">
+
+                    <h5 class="fw-bold mb-0">
+                        Gols por time
+                    </h5>
+
+                    <small class="text-muted">
+                        Total de gols marcados
+                    </small>
+
+                </div>
+
+                <div class="card-body">
+
+                    <div id="graficoGolsTimes">
+
+                        <div class="text-center text-muted py-4">
+                            Carregando...
+                        </div>
+
+                    </div>
+
+                </div>
+
+            </div>
+
+        </div>
+
+
+        <!-- VITÓRIAS E DERROTAS -->
+        <div class="col-lg-6">
+
+            <div class="card border-0 shadow-sm h-100">
+
+                <div class="card-header bg-white border-0 pt-3">
+
+                    <h5 class="fw-bold mb-0">
+                        Desempenho dos times
+                    </h5>
+
+                    <small class="text-muted">
+                        Vitórias e derrotas nas partidas
+                    </small>
+
+                </div>
+
+                <div class="card-body">
+
+                    <div id="graficoDesempenhoTimes">
+
+                        <div class="text-center text-muted py-4">
+                            Carregando...
+                        </div>
+
+                    </div>
+
+                </div>
+
+            </div>
+
+        </div>
+
+    </div>
+
+
+
+    <!-- ================================ -->
+    <!-- RANKING + ÚLTIMAS PARTIDAS -->
+    <!-- ================================ -->
+
+    <div class="row g-3 mb-4">
+
+
+        <!-- ARTILHEIROS -->
+        <div class="col-lg-6">
+
+            <div class="card border-0 shadow-sm h-100">
+
+                <div class="card-header bg-white border-0 pt-3">
+
+                    <h5 class="fw-bold mb-0">
+                        Top 5 artilheiros
+                    </h5>
+
+                    <small class="text-muted">
+                        Jogadores com mais gols
+                    </small>
+
+                </div>
+
+                <div class="card-body">
+
+                    <div id="rankingArtilheiros">
+
+                        <div class="text-center text-muted py-4">
+                            Carregando...
+                        </div>
+
+                    </div>
+
+                </div>
+
+            </div>
+
+        </div>
+
+
+        <!-- ÚLTIMAS PARTIDAS -->
+        <div class="col-lg-6">
+
+            <div class="card border-0 shadow-sm h-100">
+
+                <div class="card-header bg-white border-0 pt-3">
+
+                    <h5 class="fw-bold mb-0">
+                        Últimas partidas
+                    </h5>
+
+                    <small class="text-muted">
+                        Partidas mais recentes
+                    </small>
+
+                </div>
+
+                <div class="card-body">
+
+                    <div id="ultimasPartidas">
+
+                        <div class="text-center text-muted py-4">
+                            Carregando...
+                        </div>
+
+                    </div>
+
+                </div>
+
+            </div>
+
+        </div>
+
+    </div>
+
+
+
+    <!-- ================================ -->
+    <!-- RESUMO -->
+    <!-- ================================ -->
+
+    <div class="card border-0 shadow-sm">
+
+        <div class="card-body">
+
+            <div class="d-flex flex-wrap justify-content-between align-items-center gap-2">
+
+                <div>
+
+                    <h5 class="fw-bold mb-1">
+                        Resumo da pelada
+                    </h5>
+
+                    <small class="text-muted">
+                        Informações atualizadas diretamente do banco de dados.
+                    </small>
+
+                </div>
+
+                <div>
+
+                    <button
+                        type="button"
+                        id="btnAtualizarDashboard"
+                        class="btn btn-outline-primary"
+                    >
+                        <i class="bi bi-arrow-clockwise me-1"></i>
+                        Atualizar
+                    </button>
+
+                </div>
+
+            </div>
+
+        </div>
+
+    </div>
+
+</div>

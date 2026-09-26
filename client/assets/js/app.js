@@ -361,9 +361,13 @@
 
             const paginasComModulo =
                 new Set([
+                    "dashboard",
                     "jogadores",
                     "sorteio",
-                    "partidas"
+                    "partidas",
+                    "artilharia",
+                    "estatisticas",
+                    "historico"
                 ]);
 
             if (

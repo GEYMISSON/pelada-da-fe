@@ -1,24 +1,11 @@
 (function () {
 
-    // ============================================================
-    // PELADA DA FÉ
-    // MÓDULO: CONTROLE DE PARTIDAS
-    // ============================================================
-
     class Partidas {
 
         constructor() {
 
-            // ----------------------------------------------------
-            // CONFIGURAÇÕES
-            // ----------------------------------------------------
-
             this.duracaoPelada = 60 * 60;
             this.duracaoPartida = 7 * 60;
-
-            // ----------------------------------------------------
-            // ESTADO DA PELADA
-            // ----------------------------------------------------
 
             this.peladaIniciada = false;
             this.partidaIniciada = false;
@@ -26,12 +13,7 @@
             this.peladaFinalizada = false;
             this.resultadoPendente = false;
 
-            // Evita dois cliques no botão de confirmar
             this.salvandoResultado = false;
-
-            // ----------------------------------------------------
-            // CRONÔMETROS
-            // ----------------------------------------------------
 
             this.intervaloPelada = null;
             this.intervaloPartida = null;
@@ -39,19 +21,10 @@
             this.tempoRestantePelada = this.duracaoPelada;
             this.tempoRestantePartida = this.duracaoPartida;
 
-            // ----------------------------------------------------
-            // PARTIDAS
-            // ----------------------------------------------------
-
             this.partidasRealizadas = 0;
             this.historico = [];
 
-            // ----------------------------------------------------
-            // TIMES
-            // ----------------------------------------------------
-
             this.times = {
-
                 amarelo: {
                     nome: "Amarelo",
                     jogadores: []
@@ -66,12 +39,7 @@
                     nome: "Azul",
                     jogadores: []
                 }
-
             };
-
-            // ----------------------------------------------------
-            // FILA
-            // ----------------------------------------------------
 
             this.filaTimes = [];
 
@@ -79,32 +47,37 @@
             this.time2 = null;
             this.proximoTime = null;
 
-            // ----------------------------------------------------
-            // GOLS DA PARTIDA ATUAL
-            // ----------------------------------------------------
-
             this.golsPartida = {
                 time1: {},
                 time2: {}
             };
 
-            // ----------------------------------------------------
-            // CONTROLE DA PARTIDA ATUAL
-            // ----------------------------------------------------
+            /*
+             * Eventos individuais dos gols.
+             *
+             * Cada gol fica registrado aqui durante a partida.
+             * Quando o resultado for confirmado, esses eventos
+             * serão enviados para /api/gols.
+             */
+            this.eventosGolsPartida = {
+                time1: [],
+                time2: []
+            };
+
+            /*
+             * Guarda o ID da partida criada no MongoDB.
+             *
+             * Isso permite tentar salvar os gols novamente
+             * sem criar uma segunda partida caso aconteça
+             * algum erro durante o salvamento dos gols.
+             */
+            this.partidaBancoIdAtual = null;
 
             this.iniciadaEm = null;
-
-            // ----------------------------------------------------
-            // INICIALIZAÇÃO
-            // ----------------------------------------------------
 
             this.inicializar();
         }
 
-
-        // ========================================================
-        // INICIALIZAR
-        // ========================================================
 
         inicializar() {
 
@@ -122,7 +95,9 @@
 
             this.atualizarCronometroPartida();
 
-            this.atualizarStatus("Pelada não iniciada");
+            this.atualizarStatus(
+                "Pelada não iniciada"
+            );
 
             this.atualizarBadgePartida(
                 "Aguardando",
@@ -133,40 +108,48 @@
         }
 
 
-        // ========================================================
-        // EVENTOS
-        // ========================================================
-
         configurarEventos() {
 
             const btnIniciarPelada =
-                document.getElementById("btnIniciarPelada");
+                document.getElementById(
+                    "btnIniciarPelada"
+                );
 
             const btnReiniciarPelada =
-                document.getElementById("btnReiniciarPelada");
+                document.getElementById(
+                    "btnReiniciarPelada"
+                );
 
             const btnIniciarPartida =
-                document.getElementById("btnIniciarPartida");
+                document.getElementById(
+                    "btnIniciarPartida"
+                );
 
             const btnPausarPartida =
-                document.getElementById("btnPausarPartida");
+                document.getElementById(
+                    "btnPausarPartida"
+                );
 
             const btnFinalizarPartida =
-                document.getElementById("btnFinalizarPartida");
+                document.getElementById(
+                    "btnFinalizarPartida"
+                );
 
             const btnConfirmarResultado =
-                document.getElementById("btnConfirmarResultado");
+                document.getElementById(
+                    "btnConfirmarResultado"
+                );
 
             const duracaoPelada =
-                document.getElementById("duracaoPelada");
+                document.getElementById(
+                    "duracaoPelada"
+                );
 
             const duracaoPartida =
-                document.getElementById("duracaoPartida");
+                document.getElementById(
+                    "duracaoPartida"
+                );
 
-
-            // ----------------------------------------------------
-            // DURAÇÃO DA PELADA
-            // ----------------------------------------------------
 
             if (duracaoPelada) {
 
@@ -189,10 +172,6 @@
             }
 
 
-            // ----------------------------------------------------
-            // DURAÇÃO DA PARTIDA
-            // ----------------------------------------------------
-
             if (duracaoPartida) {
 
                 duracaoPartida.addEventListener(
@@ -214,10 +193,6 @@
             }
 
 
-            // ----------------------------------------------------
-            // INICIAR PELADA
-            // ----------------------------------------------------
-
             if (btnIniciarPelada) {
 
                 btnIniciarPelada.addEventListener(
@@ -229,10 +204,6 @@
 
             }
 
-
-            // ----------------------------------------------------
-            // REINICIAR PELADA
-            // ----------------------------------------------------
 
             if (btnReiniciarPelada) {
 
@@ -246,10 +217,6 @@
             }
 
 
-            // ----------------------------------------------------
-            // INICIAR PARTIDA
-            // ----------------------------------------------------
-
             if (btnIniciarPartida) {
 
                 btnIniciarPartida.addEventListener(
@@ -261,10 +228,6 @@
 
             }
 
-
-            // ----------------------------------------------------
-            // PAUSAR PARTIDA
-            // ----------------------------------------------------
 
             if (btnPausarPartida) {
 
@@ -278,10 +241,6 @@
             }
 
 
-            // ----------------------------------------------------
-            // FINALIZAR PARTIDA
-            // ----------------------------------------------------
-
             if (btnFinalizarPartida) {
 
                 btnFinalizarPartida.addEventListener(
@@ -293,10 +252,6 @@
 
             }
 
-
-            // ----------------------------------------------------
-            // CONFIRMAR RESULTADO
-            // ----------------------------------------------------
 
             if (btnConfirmarResultado) {
 
@@ -310,12 +265,10 @@
             }
 
 
-            // ----------------------------------------------------
-            // BOTÕES + E -
-            // ----------------------------------------------------
-
             const areaResultado =
-                document.getElementById("areaResultado");
+                document.getElementById(
+                    "areaResultado"
+                );
 
             if (areaResultado) {
 
@@ -361,10 +314,6 @@
         }
 
 
-        // ========================================================
-        // CARREGAR TIMES DO SORTEIO
-        // ========================================================
-
         carregarTimesDoSorteio() {
 
             try {
@@ -405,7 +354,9 @@
                 }
 
                 this.times.amarelo.jogadores =
-                    Array.isArray(times.amarelo)
+                    Array.isArray(
+                        times.amarelo
+                    )
                         ? [...times.amarelo]
                         : (
                             Array.isArray(
@@ -415,8 +366,11 @@
                                 : []
                         );
 
+
                 this.times.vermelho.jogadores =
-                    Array.isArray(times.vermelho)
+                    Array.isArray(
+                        times.vermelho
+                    )
                         ? [...times.vermelho]
                         : (
                             Array.isArray(
@@ -426,8 +380,11 @@
                                 : []
                         );
 
+
                 this.times.azul.jogadores =
-                    Array.isArray(times.azul)
+                    Array.isArray(
+                        times.azul
+                    )
                         ? [...times.azul]
                         : (
                             Array.isArray(
@@ -436,6 +393,7 @@
                                 ? [...times.azul.jogadores]
                                 : []
                         );
+
 
                 console.log(
                     "✅ Times carregados:",
@@ -459,10 +417,6 @@
 
         }
 
-
-        // ========================================================
-        // INICIAR PELADA
-        // ========================================================
 
         iniciarPelada() {
 
@@ -530,16 +484,11 @@
             this.partidasRealizadas =
                 0;
 
-            this.historico =
-                [];
+            this.historico = [];
 
             this.limparGolsPartida();
 
             this.iniciadaEm = null;
-
-            // ----------------------------------------------------
-            // FILA INICIAL
-            // ----------------------------------------------------
 
             this.filaTimes = [
                 "amarelo",
@@ -577,10 +526,6 @@
 
         }
 
-
-        // ========================================================
-        // CRONÔMETRO DA PELADA
-        // ========================================================
 
         iniciarCronometroPelada() {
 
@@ -624,10 +569,6 @@
         }
 
 
-        // ========================================================
-        // PARAR CRONÔMETRO DA PELADA
-        // ========================================================
-
         pararCronometroPelada() {
 
             if (this.intervaloPelada) {
@@ -642,10 +583,6 @@
 
         }
 
-
-        // ========================================================
-        // INICIAR PARTIDA
-        // ========================================================
 
         iniciarPartida() {
 
@@ -751,10 +688,6 @@
         }
 
 
-        // ========================================================
-        // CRONÔMETRO DA PARTIDA
-        // ========================================================
-
         iniciarCronometroPartida() {
 
             this.pararCronometroPartida();
@@ -797,10 +730,6 @@
         }
 
 
-        // ========================================================
-        // PARAR CRONÔMETRO DA PARTIDA
-        // ========================================================
-
         pararCronometroPartida() {
 
             if (this.intervaloPartida) {
@@ -815,10 +744,6 @@
 
         }
 
-
-        // ========================================================
-        // PAUSAR PARTIDA
-        // ========================================================
 
         pausarPartida() {
 
@@ -858,10 +783,6 @@
         }
 
 
-        // ========================================================
-        // FINALIZAR PARTIDA MANUALMENTE
-        // ========================================================
-
         finalizarPartidaManual() {
 
             if (!this.partidaIniciada) {
@@ -894,10 +815,6 @@
 
         }
 
-
-        // ========================================================
-        // FINALIZAR POR TEMPO
-        // ========================================================
 
         finalizarPartidaPorTempo() {
 
@@ -932,10 +849,6 @@
         }
 
 
-        // ========================================================
-        // GOLS
-        // ========================================================
-
         limparGolsPartida() {
 
             this.golsPartida = {
@@ -943,12 +856,16 @@
                 time2: {}
             };
 
+            this.eventosGolsPartida = {
+                time1: [],
+                time2: []
+            };
+
+            this.partidaBancoIdAtual =
+                null;
+
         }
 
-
-        // ========================================================
-        // ALTERAR GOL DO JOGADOR
-        // ========================================================
 
         alterarGolJogador(
             time,
@@ -965,23 +882,161 @@
                     this.golsPartida[time][jogadorId] || 0
                 );
 
-            const novoValor =
-                Math.max(
-                    0,
-                    atual + quantidade
-                );
 
-            this.golsPartida[time][jogadorId] =
-                novoValor;
+            if (quantidade > 0) {
+
+                if (!this.ehObjectIdMongo(jogadorId)) {
+
+                    this.mostrarErro(
+                        "Este jogador não possui um ID válido do MongoDB."
+                    );
+
+                    return;
+                }
+
+
+                const jogadores =
+                    this.obterJogadoresDoTime(
+                        time === "time1"
+                            ? this.time1
+                            : this.time2
+                    );
+
+
+                const jogadorEncontrado =
+                    jogadores.find(
+                        (
+                            jogador,
+                            indice
+                        ) =>
+                            this.obterIdJogador(
+                                jogador,
+                                indice
+                            ) === String(jogadorId)
+                    );
+
+
+                if (!jogadorEncontrado) {
+
+                    this.mostrarErro(
+                        "Não foi possível localizar o jogador selecionado."
+                    );
+
+                    return;
+                }
+
+
+                const novoValor =
+                    atual + quantidade;
+
+                this.golsPartida[time][jogadorId] =
+                    novoValor;
+
+
+                const duracaoAtual =
+                    this.obterDuracaoPartida();
+
+                const segundosDecorridos =
+                    Math.max(
+                        0,
+                        duracaoAtual -
+                        this.tempoRestantePartida
+                    );
+
+
+                const minuto =
+                    Math.floor(
+                        segundosDecorridos / 60
+                    );
+
+
+                this.eventosGolsPartida[time].push({
+
+                    jogadorId:
+                        String(jogadorId),
+
+                    nomeJogador:
+                        this.obterNomeJogador(
+                            jogadorEncontrado
+                        ),
+
+                    time:
+                        this.obterNomeTime(
+                            time === "time1"
+                                ? this.time1
+                                : this.time2
+                        ),
+
+                    minuto,
+
+                    salvo:
+                        false
+
+                });
+
+            } else if (quantidade < 0) {
+
+                if (atual <= 0) {
+                    return;
+                }
+
+
+                const eventos =
+                    this.eventosGolsPartida[time] || [];
+
+
+                let indiceEvento =
+                    -1;
+
+
+                for (
+                    let indice = eventos.length - 1;
+                    indice >= 0;
+                    indice--
+                ) {
+
+                    if (
+                        String(
+                            eventos[indice]?.jogadorId
+                        ) === String(jogadorId) &&
+                        !eventos[indice]?.salvo
+                    ) {
+
+                        indiceEvento =
+                            indice;
+
+                        break;
+                    }
+
+                }
+
+
+                if (indiceEvento >= 0) {
+
+                    eventos.splice(
+                        indiceEvento,
+                        1
+                    );
+
+                }
+
+
+                const novoValor =
+                    Math.max(
+                        0,
+                        atual + quantidade
+                    );
+
+                this.golsPartida[time][jogadorId] =
+                    novoValor;
+
+            }
+
 
             this.renderizarAreaResultado();
 
         }
 
-
-        // ========================================================
-        // OBTER JOGADORES DO TIME
-        // ========================================================
 
         obterJogadoresDoTime(
             codigoTime
@@ -1004,10 +1059,6 @@
         }
 
 
-        // ========================================================
-        // ID DO JOGADOR
-        // ========================================================
-
         obterIdJogador(
             jogador,
             indice
@@ -1018,6 +1069,7 @@
             }
 
             return String(
+
                 jogador._id ||
                 jogador.id ||
                 jogador.codigo ||
@@ -1025,14 +1077,11 @@
                 jogador.nome ||
                 jogador.name ||
                 indice
+
             );
 
         }
 
-
-        // ========================================================
-        // VERIFICAR SE É OBJECTID DO MONGODB
-        // ========================================================
 
         ehObjectIdMongo(
             valor
@@ -1044,10 +1093,6 @@
 
         }
 
-
-        // ========================================================
-        // NOME DO JOGADOR
-        // ========================================================
 
         obterNomeJogador(
             jogador
@@ -1067,10 +1112,6 @@
         }
 
 
-        // ========================================================
-        // NOME DO TIME
-        // ========================================================
-
         obterNomeTime(
             codigoTime
         ) {
@@ -1086,10 +1127,6 @@
 
         }
 
-
-        // ========================================================
-        // CALCULAR GOLS
-        // ========================================================
 
         calcularTotalGols(
             time
@@ -1118,10 +1155,6 @@
 
         }
 
-
-        // ========================================================
-        // OBTER GOLS DOS JOGADORES
-        // ========================================================
 
         obterGolsJogadores(
             time
@@ -1152,10 +1185,6 @@
         }
 
 
-        // ========================================================
-        // GOLS DETALHADOS
-        // ========================================================
-
         obterGolsDetalhados(
             time
         ) {
@@ -1169,6 +1198,7 @@
                         : this.time2
                 );
 
+
             jogadores.forEach(
                 (
                     jogador,
@@ -1181,10 +1211,12 @@
                             indice
                         );
 
+
                     const gols =
                         Number(
                             this.golsPartida[time]?.[id] || 0
                         );
+
 
                     if (gols > 0) {
 
@@ -1208,14 +1240,171 @@
                 }
             );
 
+
             return resultado;
 
         }
 
 
-        // ========================================================
-        // CONFIRMAR RESULTADO
-        // ========================================================
+        async salvarGolsNoBanco(
+            partidaId
+        ) {
+
+            if (!this.ehObjectIdMongo(partidaId)) {
+
+                throw new Error(
+                    "A partida salva não retornou um ID válido do MongoDB."
+                );
+
+            }
+
+
+            const eventos = [
+
+                ...(this.eventosGolsPartida.time1 || []),
+
+                ...(this.eventosGolsPartida.time2 || [])
+
+            ];
+
+
+            const eventosPendentes =
+                eventos.filter(
+                    evento =>
+                        !evento.salvo
+                );
+
+
+            if (!eventosPendentes.length) {
+                return [];
+            }
+
+
+            const resultados = [];
+
+
+            for (
+                const evento of eventosPendentes
+            ) {
+
+                if (
+                    !this.ehObjectIdMongo(
+                        evento.jogadorId
+                    )
+                ) {
+
+                    throw new Error(
+                        `O jogador "${evento.nomeJogador}" não possui um ID válido do MongoDB.`
+                    );
+
+                }
+
+
+                const payload = {
+
+                    partida:
+                        partidaId,
+
+                    jogador:
+                        evento.jogadorId,
+
+                    nomeJogador:
+                        evento.nomeJogador,
+
+                    time:
+                        evento.time,
+
+                    minuto:
+                        Number(
+                            evento.minuto ?? 0
+                        )
+
+                };
+
+
+                console.log(
+                    "📤 Enviando gol para /api/gols:",
+                    payload
+                );
+
+
+                const resposta =
+                    await fetch(
+                        "/api/gols",
+                        {
+                            method: "POST",
+
+                            headers: {
+                                "Content-Type":
+                                    "application/json"
+                            },
+
+                            body:
+                                JSON.stringify(
+                                    payload
+                                )
+                        }
+                    );
+
+
+                let dados = null;
+
+
+                try {
+
+                    dados =
+                        await resposta.json();
+
+                } catch (erro) {
+
+                    dados = null;
+
+                }
+
+
+                if (!resposta.ok) {
+
+                    const mensagem =
+                        dados?.erro ||
+                        dados?.message ||
+                        "O servidor recusou o salvamento do gol.";
+
+
+                    const detalhes =
+                        dados?.detalhes
+                            ? ` ${dados.detalhes}`
+                            : "";
+
+
+                    throw new Error(
+                        mensagem + detalhes
+                    );
+
+                }
+
+
+                evento.salvo =
+                    true;
+
+
+                resultados.push(
+                    dados?.gol ||
+                    dados
+                );
+
+
+                console.log(
+                    "✅ Gol salvo no MongoDB:",
+                    dados?.gol || dados
+                );
+
+            }
+
+
+            return resultados;
+
+        }
+
 
         async confirmarResultado() {
 
@@ -1234,16 +1423,17 @@
                 return;
             }
 
+
             const golsTime1 =
-                this.calcularTotalGols("time1");
+                this.calcularTotalGols(
+                    "time1"
+                );
 
             const golsTime2 =
-                this.calcularTotalGols("time2");
+                this.calcularTotalGols(
+                    "time2"
+                );
 
-
-            // ----------------------------------------------------
-            // NÃO PERMITIR EMPATE
-            // ----------------------------------------------------
 
             if (
                 golsTime1 === golsTime2
@@ -1258,42 +1448,44 @@
             }
 
 
-            // ----------------------------------------------------
-            // GUARDAR OS TIMES ANTES DA ROTAÇÃO
-            // ----------------------------------------------------
-
             const time1Jogado =
                 this.time1;
 
             const time2Jogado =
                 this.time2;
 
+
             const vencedor =
                 golsTime1 > golsTime2
                     ? time1Jogado
                     : time2Jogado;
+
 
             const perdedor =
                 golsTime1 > golsTime2
                     ? time2Jogado
                     : time1Jogado;
 
+
             const proximoTimeAntesDaRotacao =
                 this.proximoTime;
 
+
             const golsTime1Detalhados =
-                this.obterGolsDetalhados("time1");
+                this.obterGolsDetalhados(
+                    "time1"
+                );
+
 
             const golsTime2Detalhados =
-                this.obterGolsDetalhados("time2");
+                this.obterGolsDetalhados(
+                    "time2"
+                );
 
-
-            // ----------------------------------------------------
-            // DURAÇÃO REAL DA PARTIDA
-            // ----------------------------------------------------
 
             const duracaoConfigurada =
                 this.obterDuracaoPartida();
+
 
             const duracaoDecorrida =
                 Math.max(
@@ -1302,10 +1494,6 @@
                     this.tempoRestantePartida
                 );
 
-
-            // ----------------------------------------------------
-            // REGISTRO LOCAL
-            // ----------------------------------------------------
 
             const registro = {
 
@@ -1352,10 +1540,6 @@
             };
 
 
-            // ----------------------------------------------------
-            // SALVAR NO MONGODB
-            // ----------------------------------------------------
-
             this.salvandoResultado =
                 true;
 
@@ -1370,17 +1554,63 @@
                 "bg-info text-dark"
             );
 
+
             try {
 
-                const partidaSalva =
-                    await this.salvarPartidaNoBanco(
-                        registro
+                let partidaSalva = null;
+
+
+                if (!this.partidaBancoIdAtual) {
+
+                    partidaSalva =
+                        await this.salvarPartidaNoBanco(
+                            registro
+                        );
+
+
+                    this.partidaBancoIdAtual =
+                        partidaSalva?._id ||
+                        partidaSalva?.id ||
+                        null;
+
+
+                    if (
+                        !this.ehObjectIdMongo(
+                            this.partidaBancoIdAtual
+                        )
+                    ) {
+
+                        throw new Error(
+                            "A partida foi salva, mas o servidor não retornou um ID válido."
+                        );
+
+                    }
+
+
+                    console.log(
+                        "✅ Partida salva no MongoDB:",
+                        partidaSalva
                     );
 
-                console.log(
-                    "✅ Partida salva no MongoDB:",
-                    partidaSalva
+                } else {
+
+                    console.log(
+                        "♻️ Reutilizando partida já salva:",
+                        this.partidaBancoIdAtual
+                    );
+
+                }
+
+
+                await this.salvarGolsNoBanco(
+                    this.partidaBancoIdAtual
                 );
+
+
+                console.log(
+                    "✅ Gols da partida sincronizados com o MongoDB."
+                );
+
 
             } catch (erro) {
 
@@ -1389,22 +1619,27 @@
                     erro
                 );
 
+
                 this.salvandoResultado =
                     false;
+
 
                 this.atualizarStatus(
                     "Erro ao salvar resultado"
                 );
+
 
                 this.atualizarBadgePartida(
                     "Erro ao salvar",
                     "bg-danger"
                 );
 
+
                 this.mostrarErro(
                     erro.message ||
-                    "Não foi possível salvar a partida no banco de dados."
+                    "Não foi possível salvar a partida e os gols no banco de dados."
                 );
+
 
                 this.atualizarBotoes();
 
@@ -1412,27 +1647,17 @@
             }
 
 
-            // ----------------------------------------------------
-            // SALVAMENTO LOCAL DO HISTÓRICO
-            // ----------------------------------------------------
-
             this.partidasRealizadas++;
+
 
             registro.numero =
                 this.partidasRealizadas;
+
 
             this.historico.push(
                 registro
             );
 
-
-            // ----------------------------------------------------
-            // REGRA:
-            //
-            // VENCEDOR PERMANECE
-            // PRÓXIMO ENTRA
-            // PERDEDOR VAI PARA O FIM
-            // ----------------------------------------------------
 
             const timeVencedor =
                 vencedor;
@@ -1444,15 +1669,12 @@
                 proximoTimeAntesDaRotacao;
 
 
-            // ----------------------------------------------------
-            // ROTAÇÃO
-            // ----------------------------------------------------
-
             this.time1 =
                 timeVencedor;
 
             this.time2 =
                 proximo;
+
 
             if (timePerdedor) {
 
@@ -1462,13 +1684,10 @@
 
             }
 
+
             this.proximoTime =
                 this.filaTimes.shift();
 
-
-            // ----------------------------------------------------
-            // LIMPAR ESTADO DA PARTIDA
-            // ----------------------------------------------------
 
             this.resultadoPendente =
                 false;
@@ -1479,23 +1698,22 @@
             this.iniciadaEm =
                 null;
 
+
             this.limparGolsPartida();
 
             this.ocultarAreaResultado();
 
 
-            // ----------------------------------------------------
-            // ATUALIZAR TELA
-            // ----------------------------------------------------
-
             this.atualizarStatus(
                 `Vitória do ${this.obterNomeTime(vencedor)}`
             );
+
 
             this.atualizarBadgePartida(
                 "Resultado confirmado",
                 "bg-success"
             );
+
 
             this.atualizarTela();
 
@@ -1503,10 +1721,6 @@
 
             this.atualizarBotoes();
 
-
-            // ----------------------------------------------------
-            // MENSAGEM
-            // ----------------------------------------------------
 
             const nomeTime1Jogado =
                 this.obterNomeTime(
@@ -1523,15 +1737,12 @@
                     vencedor
                 );
 
+
             this.mostrarMensagemResultado(
                 `Vitória do ${nomeVencedor} por ${golsTime1} x ${golsTime2}.`,
                 "success"
             );
 
-
-            // ----------------------------------------------------
-            // LOG CORRETO
-            // ----------------------------------------------------
 
             console.log(
                 "🏆 Resultado:",
@@ -1547,10 +1758,6 @@
         }
 
 
-        // ========================================================
-        // SALVAR PARTIDA NO MONGODB
-        // ========================================================
-
         async salvarPartidaNoBanco(
             registro
         ) {
@@ -1565,10 +1772,6 @@
                     registro.time2
                 );
 
-
-            // ----------------------------------------------------
-            // PEGAR SOMENTE IDs VÁLIDOS DO MONGODB
-            // ----------------------------------------------------
 
             const idsTimeA =
                 jogadoresTimeA
@@ -1605,10 +1808,6 @@
                             this.ehObjectIdMongo(id)
                     );
 
-
-            // ----------------------------------------------------
-            // MONTAR PAYLOAD
-            // ----------------------------------------------------
 
             const payload = {
 
@@ -1675,10 +1874,6 @@
             );
 
 
-            // ----------------------------------------------------
-            // REQUISIÇÃO
-            // ----------------------------------------------------
-
             const resposta =
                 await fetch(
                     "/api/partidas",
@@ -1698,11 +1893,8 @@
                 );
 
 
-            // ----------------------------------------------------
-            // TENTAR LER RESPOSTA
-            // ----------------------------------------------------
-
             let dados = null;
+
 
             try {
 
@@ -1716,10 +1908,6 @@
             }
 
 
-            // ----------------------------------------------------
-            // ERRO HTTP
-            // ----------------------------------------------------
-
             if (!resposta.ok) {
 
                 const mensagem =
@@ -1727,10 +1915,12 @@
                     dados?.message ||
                     "O servidor recusou o salvamento da partida.";
 
+
                 const detalhes =
                     dados?.detalhes
                         ? ` ${dados.detalhes}`
                         : "";
+
 
                 throw new Error(
                     mensagem + detalhes
@@ -1739,10 +1929,6 @@
             }
 
 
-            // ----------------------------------------------------
-            // RETORNAR PARTIDA SALVA
-            // ----------------------------------------------------
-
             return (
                 dados?.partida ||
                 dados
@@ -1750,10 +1936,6 @@
 
         }
 
-
-        // ========================================================
-        // RENDERIZAR ÁREA DE RESULTADO
-        // ========================================================
 
         renderizarAreaResultado() {
 
@@ -1766,9 +1948,11 @@
                 return;
             }
 
+
             area.classList.remove(
                 "d-none"
             );
+
 
             const nomeTime1 =
                 this.obterNomeTime(
@@ -1780,6 +1964,7 @@
                     this.time2
                 );
 
+
             const golsTime1 =
                 this.calcularTotalGols(
                     "time1"
@@ -1789,6 +1974,7 @@
                 this.calcularTotalGols(
                     "time2"
                 );
+
 
             const placarNomeTime1 =
                 document.getElementById(
@@ -1868,6 +2054,7 @@
                     "btnConfirmarResultado"
                 );
 
+
             if (btnConfirmarResultado) {
 
                 btnConfirmarResultado.disabled =
@@ -1882,11 +2069,13 @@
                     "mensagemResultado"
                 );
 
+
             if (mensagem) {
 
                 mensagem.classList.remove(
                     "d-none"
                 );
+
 
                 if (
                     golsTime1 === golsTime2
@@ -1927,10 +2116,6 @@
         }
 
 
-        // ========================================================
-        // RENDERIZAR LISTA DE GOLS
-        // ========================================================
-
         renderizarListaGols(
             time,
             elementoId
@@ -1945,12 +2130,14 @@
                 return;
             }
 
+
             const jogadores =
                 this.obterJogadoresDoTime(
                     time === "time1"
                         ? this.time1
                         : this.time2
                 );
+
 
             if (!jogadores.length) {
 
@@ -1962,6 +2149,7 @@
 
                 return;
             }
+
 
             elemento.innerHTML =
                 jogadores
@@ -1986,6 +2174,7 @@
                                 Number(
                                     this.golsPartida[time]?.[id] || 0
                                 );
+
 
                             return `
                                 <div
@@ -2049,10 +2238,6 @@
         }
 
 
-        // ========================================================
-        // OCULTAR ÁREA DE RESULTADO
-        // ========================================================
-
         ocultarAreaResultado() {
 
             const area =
@@ -2070,10 +2255,6 @@
 
         }
 
-
-        // ========================================================
-        // MENSAGEM DO RESULTADO
-        // ========================================================
 
         mostrarMensagemResultado(
             mensagem,
@@ -2101,10 +2282,6 @@
 
         }
 
-
-        // ========================================================
-        // ESTIMATIVA DE PARTIDAS
-        // ========================================================
 
         atualizarEstimativa() {
 
@@ -2134,6 +2311,7 @@
                 return;
             }
 
+
             const estimativa =
                 Math.floor(
                     total / partida
@@ -2144,10 +2322,6 @@
 
         }
 
-
-        // ========================================================
-        // DURAÇÃO DA PELADA
-        // ========================================================
 
         obterDuracaoPelada() {
 
@@ -2176,10 +2350,6 @@
         }
 
 
-        // ========================================================
-        // DURAÇÃO DA PARTIDA
-        // ========================================================
-
         obterDuracaoPartida() {
 
             const elemento =
@@ -2207,10 +2377,6 @@
         }
 
 
-        // ========================================================
-        // CRONÔMETRO PELADA
-        // ========================================================
-
         atualizarCronometroPelada() {
 
             const elementos = [
@@ -2220,6 +2386,7 @@
                 )
 
             ];
+
 
             elementos.forEach(
                 elemento => {
@@ -2239,10 +2406,6 @@
         }
 
 
-        // ========================================================
-        // CRONÔMETRO PARTIDA
-        // ========================================================
-
         atualizarCronometroPartida() {
 
             const elementos = [
@@ -2256,6 +2419,7 @@
                 )
 
             ];
+
 
             elementos.forEach(
                 elemento => {
@@ -2275,10 +2439,6 @@
         }
 
 
-        // ========================================================
-        // FORMATAR TEMPO
-        // ========================================================
-
         formatarTempo(
             segundos
         ) {
@@ -2291,10 +2451,12 @@
                     )
                 );
 
+
             const horas =
                 Math.floor(
                     segundos / 3600
                 );
+
 
             const minutos =
                 Math.floor(
@@ -2303,38 +2465,47 @@
                     ) / 60
                 );
 
+
             const segundosRestantes =
                 segundos % 60;
+
 
             if (horas > 0) {
 
                 return (
+
                     String(horas)
                         .padStart(2, "0") +
+
                     ":" +
+
                     String(minutos)
                         .padStart(2, "0") +
+
                     ":" +
+
                     String(segundosRestantes)
                         .padStart(2, "0")
+
                 );
 
             }
 
+
             return (
+
                 String(minutos)
                     .padStart(2, "0") +
+
                 ":" +
+
                 String(segundosRestantes)
                     .padStart(2, "0")
+
             );
 
         }
 
-
-        // ========================================================
-        // ATUALIZAR STATUS
-        // ========================================================
 
         atualizarStatus(
             texto
@@ -2354,10 +2525,6 @@
 
         }
 
-
-        // ========================================================
-        // ATUALIZAR BADGE
-        // ========================================================
 
         atualizarBadgePartida(
             texto,
@@ -2382,20 +2549,13 @@
         }
 
 
-        // ========================================================
-        // ATUALIZAR TELA
-        // ========================================================
-
         atualizarTela() {
-
-            // ----------------------------------------------------
-            // PRÓXIMO TIME
-            // ----------------------------------------------------
 
             const proximoTime =
                 document.getElementById(
                     "proximoTime"
                 );
+
 
             if (proximoTime) {
 
@@ -2407,14 +2567,11 @@
             }
 
 
-            // ----------------------------------------------------
-            // NOME TIME 1
-            // ----------------------------------------------------
-
             const nomeTime1 =
                 document.getElementById(
                     "nomeTimePartida1"
                 );
+
 
             if (nomeTime1) {
 
@@ -2426,14 +2583,11 @@
             }
 
 
-            // ----------------------------------------------------
-            // NOME TIME 2
-            // ----------------------------------------------------
-
             const nomeTime2 =
                 document.getElementById(
                     "nomeTimePartida2"
                 );
+
 
             if (nomeTime2) {
 
@@ -2445,19 +2599,11 @@
             }
 
 
-            // ----------------------------------------------------
-            // JOGADORES TIME 1
-            // ----------------------------------------------------
-
             this.renderizarJogadoresTela(
                 this.time1,
                 "jogadoresTimePartida1"
             );
 
-
-            // ----------------------------------------------------
-            // JOGADORES TIME 2
-            // ----------------------------------------------------
 
             this.renderizarJogadoresTela(
                 this.time2,
@@ -2465,14 +2611,11 @@
             );
 
 
-            // ----------------------------------------------------
-            // NÚMERO DA PARTIDA
-            // ----------------------------------------------------
-
             const numeroPartida =
                 document.getElementById(
                     "numeroPartida"
                 );
+
 
             if (numeroPartida) {
 
@@ -2482,14 +2625,11 @@
             }
 
 
-            // ----------------------------------------------------
-            // PARTIDAS REALIZADAS
-            // ----------------------------------------------------
-
             const partidasRealizadas =
                 document.getElementById(
                     "partidasRealizadas"
                 );
+
 
             if (partidasRealizadas) {
 
@@ -2497,6 +2637,7 @@
                     this.partidasRealizadas;
 
             }
+
 
             this.atualizarCronometroPelada();
 
@@ -2506,10 +2647,6 @@
 
         }
 
-
-        // ========================================================
-        // RENDERIZAR JOGADORES DA PARTIDA
-        // ========================================================
 
         renderizarJogadoresTela(
             codigoTime,
@@ -2521,14 +2658,17 @@
                     elementoId
                 );
 
+
             if (!elemento) {
                 return;
             }
+
 
             const jogadores =
                 this.obterJogadoresDoTime(
                     codigoTime
                 );
+
 
             if (!jogadores.length) {
 
@@ -2540,6 +2680,7 @@
 
                 return;
             }
+
 
             elemento.innerHTML =
                 `
@@ -2572,10 +2713,6 @@
         }
 
 
-        // ========================================================
-        // RENDERIZAR HISTÓRICO
-        // ========================================================
-
         renderizarHistorico() {
 
             const elemento =
@@ -2583,14 +2720,17 @@
                     "historicoPartidas"
                 );
 
+
             if (!elemento) {
                 return;
             }
+
 
             const badgeHistorico =
                 document.getElementById(
                     "badgeHistorico"
                 );
+
 
             if (badgeHistorico) {
 
@@ -2660,6 +2800,7 @@
                                     partida.duracao
                                 );
 
+
                             return `
                                 <tr>
 
@@ -2719,10 +2860,6 @@
         }
 
 
-        // ========================================================
-        // FORMATAR DATA
-        // ========================================================
-
         formatarData(
             data
         ) {
@@ -2748,10 +2885,6 @@
         }
 
 
-        // ========================================================
-        // REINICIAR PELADA
-        // ========================================================
-
         reiniciarPelada() {
 
             const confirmar =
@@ -2759,9 +2892,11 @@
                     "Deseja realmente reiniciar a pelada? O histórico exibido será perdido."
                 );
 
+
             if (!confirmar) {
                 return;
             }
+
 
             this.pararCronometroPelada();
 
@@ -2799,7 +2934,6 @@
 
             this.limparGolsPartida();
 
-            // Recarrega os times atuais do sorteio
             this.carregarTimesDoSorteio();
 
             this.filaTimes = [
@@ -2841,10 +2975,6 @@
 
         }
 
-
-        // ========================================================
-        // FINALIZAR PELADA
-        // ========================================================
 
         finalizarPelada(
             mensagem
@@ -2892,10 +3022,6 @@
 
         }
 
-
-        // ========================================================
-        // ATUALIZAR BOTÕES
-        // ========================================================
 
         atualizarBotoes() {
 
@@ -2964,6 +3090,7 @@
                 btnPausarPartida.disabled =
                     !this.partidaIniciada;
 
+
                 if (this.partidaPausada) {
 
                     btnPausarPartida.innerHTML = `
@@ -2997,6 +3124,7 @@
                     !this.resultadoPendente ||
                     this.salvandoResultado;
 
+
                 if (this.salvandoResultado) {
 
                     btnConfirmarResultado.innerHTML = `
@@ -3021,10 +3149,6 @@
         }
 
 
-        // ========================================================
-        // ESCAPAR HTML
-        // ========================================================
-
         escaparHtml(
             valor
         ) {
@@ -3042,10 +3166,6 @@
         }
 
 
-        // ========================================================
-        // ERRO
-        // ========================================================
-
         mostrarErro(
             mensagem
         ) {
@@ -3053,6 +3173,7 @@
             console.error(
                 mensagem
             );
+
 
             if (
                 typeof toast === "function"
@@ -3065,6 +3186,7 @@
 
                 return;
             }
+
 
             if (
                 typeof Swal !== "undefined"
@@ -3083,16 +3205,13 @@
                 return;
             }
 
+
             alert(
                 mensagem
             );
 
         }
 
-
-        // ========================================================
-        // DESTROY
-        // ========================================================
 
         destroy() {
 
@@ -3108,10 +3227,6 @@
 
     }
 
-
-    // ============================================================
-    // INICIAR
-    // ============================================================
 
     window.Partidas =
         new Partidas();
