@@ -8,12 +8,14 @@ const jogadorRoutes =
 const partidaRoutes =
     require("./routes/partidaRoutes");
 
-const golRoutes = 
+const golRoutes =
     require("./routes/golRoutes");
 
+const peladaRoutes =
+    require("./routes/peladaRoutes");
 
-const app =
-    express();
+
+const app = express();
 
 
 // ============================================================
@@ -53,13 +55,21 @@ app.use(
     partidaRoutes
 );
 
+
 app.use(
-    "/api/gols", 
-    golRoutes);
+    "/api/gols",
+    golRoutes
+);
+
+
+app.use(
+    "/api/peladas",
+    peladaRoutes
+);
 
 
 // ============================================================
-// ARQUIVOS DO CLIENTE
+// ARQUIVOS ESTÁTICOS
 // ============================================================
 
 app.use(
@@ -91,9 +101,4 @@ app.get(
 );
 
 
-// ============================================================
-// EXPORTAR
-// ============================================================
-
-module.exports =
-    app;
+module.exports = app;

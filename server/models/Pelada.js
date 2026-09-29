@@ -1,25 +1,79 @@
 const mongoose = require("mongoose");
 
-const peladaSchema = new mongoose.Schema({
+const peladaSchema = new mongoose.Schema(
+    {
+        nome: {
+            type: String,
+            default: "Pelada da Fé",
+            trim: true,
+            maxlength: 100
+        },
 
-    data: Date,
+        data: {
+            type: Date,
+            required: true
+        },
 
-    local: String,
+        horario: {
+            type: String,
+            required: true,
+            trim: true
+        },
 
-    observacoes: String,
+        local: {
+            type: String,
+            trim: true,
+            maxlength: 150
+        },
 
-    quantidadeTimes: Number,
+        descricao: {
+            type: String,
+            trim: true,
+            maxlength: 500
+        },
 
-    status: {
-        type: String,
-        default: "Aberta"
+        observacoes: {
+            type: String,
+            trim: true,
+            maxlength: 1000
+        },
+
+        quantidadeTimes: {
+            type: Number,
+            default: 3,
+            min: 2,
+            max: 10
+        },
+
+        duracaoMinutos: {
+            type: Number,
+            default: 60,
+            min: 1,
+            max: 720
+        },
+
+        status: {
+            type: String,
+            enum: [
+                "Agendada",
+                "Em andamento",
+                "Finalizada",
+                "Cancelada"
+            ],
+            default: "Agendada"
+        },
+
+        criadaEm: {
+            type: Date,
+            default: Date.now
+        }
     },
-
-    criadaEm: {
-        type: Date,
-        default: Date.now
+    {
+        timestamps: true
     }
+);
 
-});
-
-module.exports = mongoose.model("Pelada", peladaSchema);
+module.exports = mongoose.model(
+    "Pelada",
+    peladaSchema
+);

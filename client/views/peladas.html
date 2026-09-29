@@ -1,0 +1,932 @@
+<div class="container-fluid py-3">
+
+    <!-- ===================================================== -->
+    <!-- CABEÇALHO -->
+    <!-- ===================================================== -->
+
+    <div
+        class="d-flex flex-wrap
+               justify-content-between
+               align-items-center
+               gap-2
+               mb-4"
+    >
+
+        <div>
+
+            <h2 class="fw-bold mb-1">
+                Peladas
+            </h2>
+
+            <p class="text-muted mb-0">
+                Cadastro e histórico das peladas realizadas
+            </p>
+
+        </div>
+
+
+        <button
+            type="button"
+            id="btnNovaPelada"
+            class="btn btn-success"
+        >
+
+            <i class="bi bi-plus-circle me-1"></i>
+
+            Nova Pelada
+
+        </button>
+
+    </div>
+
+
+
+    <!-- ===================================================== -->
+    <!-- RESUMO -->
+    <!-- ===================================================== -->
+
+    <div class="row g-3 mb-4">
+
+
+        <!-- TOTAL -->
+        <div class="col-6 col-xl-3">
+
+            <div class="card border-0 shadow-sm h-100">
+
+                <div class="card-body">
+
+                    <div
+                        class="d-flex
+                               justify-content-between
+                               align-items-center"
+                    >
+
+                        <div>
+
+                            <small class="text-muted">
+                                Total de peladas
+                            </small>
+
+                            <h3
+                                id="totalPeladas"
+                                class="fw-bold mb-0"
+                            >
+                                0
+                            </h3>
+
+                        </div>
+
+
+                        <div
+                            class="rounded-circle
+                                   bg-primary
+                                   bg-opacity-10
+                                   d-flex
+                                   align-items-center
+                                   justify-content-center"
+                            style="
+                                width:52px;
+                                height:52px;
+                            "
+                        >
+
+                            <i
+                                class="bi bi-calendar-event
+                                       text-primary
+                                       fs-4"
+                            ></i>
+
+                        </div>
+
+                    </div>
+
+                </div>
+
+            </div>
+
+        </div>
+
+
+
+        <!-- AGENDADAS -->
+        <div class="col-6 col-xl-3">
+
+            <div class="card border-0 shadow-sm h-100">
+
+                <div class="card-body">
+
+                    <div
+                        class="d-flex
+                               justify-content-between
+                               align-items-center"
+                    >
+
+                        <div>
+
+                            <small class="text-muted">
+                                Agendadas
+                            </small>
+
+                            <h3
+                                id="totalPeladasAgendadas"
+                                class="fw-bold mb-0"
+                            >
+                                0
+                            </h3>
+
+                        </div>
+
+
+                        <div
+                            class="rounded-circle
+                                   bg-warning
+                                   bg-opacity-10
+                                   d-flex
+                                   align-items-center
+                                   justify-content-center"
+                            style="
+                                width:52px;
+                                height:52px;
+                            "
+                        >
+
+                            <i
+                                class="bi bi-calendar-check
+                                       text-warning
+                                       fs-4"
+                            ></i>
+
+                        </div>
+
+                    </div>
+
+                </div>
+
+            </div>
+
+        </div>
+
+
+
+        <!-- FINALIZADAS -->
+        <div class="col-6 col-xl-3">
+
+            <div class="card border-0 shadow-sm h-100">
+
+                <div class="card-body">
+
+                    <div
+                        class="d-flex
+                               justify-content-between
+                               align-items-center"
+                    >
+
+                        <div>
+
+                            <small class="text-muted">
+                                Finalizadas
+                            </small>
+
+                            <h3
+                                id="totalPeladasFinalizadas"
+                                class="fw-bold mb-0"
+                            >
+                                0
+                            </h3>
+
+                        </div>
+
+
+                        <div
+                            class="rounded-circle
+                                   bg-success
+                                   bg-opacity-10
+                                   d-flex
+                                   align-items-center
+                                   justify-content-center"
+                            style="
+                                width:52px;
+                                height:52px;
+                            "
+                        >
+
+                            <i
+                                class="bi bi-check-circle
+                                       text-success
+                                       fs-4"
+                            ></i>
+
+                        </div>
+
+                    </div>
+
+                </div>
+
+            </div>
+
+        </div>
+
+
+
+        <!-- PARTIDAS -->
+        <div class="col-6 col-xl-3">
+
+            <div class="card border-0 shadow-sm h-100">
+
+                <div class="card-body">
+
+                    <div
+                        class="d-flex
+                               justify-content-between
+                               align-items-center"
+                    >
+
+                        <div>
+
+                            <small class="text-muted">
+                                Partidas realizadas
+                            </small>
+
+                            <h3
+                                id="totalPartidasPeladas"
+                                class="fw-bold mb-0"
+                            >
+                                0
+                            </h3>
+
+                        </div>
+
+
+                        <div
+                            class="rounded-circle
+                                   bg-danger
+                                   bg-opacity-10
+                                   d-flex
+                                   align-items-center
+                                   justify-content-center"
+                            style="
+                                width:52px;
+                                height:52px;
+                            "
+                        >
+
+                            <i
+                                class="bi bi-trophy
+                                       text-danger
+                                       fs-4"
+                            ></i>
+
+                        </div>
+
+                    </div>
+
+                </div>
+
+            </div>
+
+        </div>
+
+    </div>
+
+
+
+    <!-- ===================================================== -->
+    <!-- FILTROS -->
+    <!-- ===================================================== -->
+
+    <div class="card border-0 shadow-sm mb-4">
+
+        <div class="card-body">
+
+            <div class="row g-3 align-items-end">
+
+                <div class="col-lg-5">
+
+                    <label
+                        for="pesquisaPelada"
+                        class="form-label fw-semibold"
+                    >
+                        Pesquisar
+                    </label>
+
+                    <div class="input-group">
+
+                        <span class="input-group-text">
+                            <i class="bi bi-search"></i>
+                        </span>
+
+                        <input
+                            type="text"
+                            id="pesquisaPelada"
+                            class="form-control"
+                            placeholder="Nome, local ou descrição..."
+                        >
+
+                    </div>
+
+                </div>
+
+
+                <div class="col-md-4 col-lg-3">
+
+                    <label
+                        for="filtroStatusPelada"
+                        class="form-label fw-semibold"
+                    >
+                        Status
+                    </label>
+
+                    <select
+                        id="filtroStatusPelada"
+                        class="form-select"
+                    >
+
+                        <option value="">
+                            Todos
+                        </option>
+
+                        <option value="Agendada">
+                            Agendada
+                        </option>
+
+                        <option value="Em andamento">
+                            Em andamento
+                        </option>
+
+                        <option value="Finalizada">
+                            Finalizada
+                        </option>
+
+                        <option value="Cancelada">
+                            Cancelada
+                        </option>
+
+                    </select>
+
+                </div>
+
+
+                <div class="col-md-4 col-lg-2">
+
+                    <label
+                        for="filtroDataPelada"
+                        class="form-label fw-semibold"
+                    >
+                        Data
+                    </label>
+
+                    <input
+                        type="date"
+                        id="filtroDataPelada"
+                        class="form-control"
+                    >
+
+                </div>
+
+
+                <div class="col-md-4 col-lg-2">
+
+                    <button
+                        type="button"
+                        id="btnLimparFiltrosPelada"
+                        class="btn btn-outline-secondary w-100"
+                    >
+
+                        <i
+                            class="bi bi-x-circle me-1"
+                        ></i>
+
+                        Limpar
+
+                    </button>
+
+                </div>
+
+            </div>
+
+        </div>
+
+    </div>
+
+
+
+    <!-- ===================================================== -->
+    <!-- STATUS -->
+    <!-- ===================================================== -->
+
+    <div
+        id="statusPeladas"
+        class="alert alert-light border d-none"
+    ></div>
+
+
+
+    <!-- ===================================================== -->
+    <!-- LISTAGEM -->
+    <!-- ===================================================== -->
+
+    <div class="card border-0 shadow-sm">
+
+        <div
+            class="card-header
+                   bg-white
+                   border-0
+                   pt-3"
+        >
+
+            <div
+                class="d-flex
+                       justify-content-between
+                       align-items-center"
+            >
+
+                <div>
+
+                    <h5 class="fw-bold mb-0">
+                        Lista de peladas
+                    </h5>
+
+                    <small class="text-muted">
+                        Peladas cadastradas no sistema
+                    </small>
+
+                </div>
+
+
+                <span
+                    id="badgePeladas"
+                    class="badge bg-secondary"
+                >
+                    0
+                </span>
+
+            </div>
+
+        </div>
+
+
+        <div class="card-body p-0">
+
+            <div class="table-responsive">
+
+                <table
+                    class="table
+                           table-hover
+                           align-middle
+                           mb-0"
+                >
+
+                    <thead class="table-light">
+
+                        <tr>
+
+                            <th>
+                                Data
+                            </th>
+
+                            <th>
+                                Pelada
+                            </th>
+
+                            <th>
+                                Horário
+                            </th>
+
+                            <th>
+                                Local
+                            </th>
+
+                            <th>
+                                Times
+                            </th>
+
+                            <th>
+                                Partidas
+                            </th>
+
+                            <th>
+                                Status
+                            </th>
+
+                            <th
+                                class="text-end"
+                            >
+                                Ações
+                            </th>
+
+                        </tr>
+
+                    </thead>
+
+
+                    <tbody id="listaPeladas">
+
+                        <tr>
+
+                            <td
+                                colspan="8"
+                                class="text-center
+                                       text-muted
+                                       py-5"
+                            >
+
+                                <div
+                                    class="spinner-border
+                                           spinner-border-sm
+                                           me-2"
+                                    role="status"
+                                ></div>
+
+                                Carregando peladas...
+
+                            </td>
+
+                        </tr>
+
+                    </tbody>
+
+                </table>
+
+            </div>
+
+        </div>
+
+    </div>
+
+
+
+    <!-- ===================================================== -->
+    <!-- MODAL CADASTRO -->
+    <!-- ===================================================== -->
+
+    <div
+        class="modal fade"
+        id="modalPelada"
+        tabindex="-1"
+        aria-hidden="true"
+    >
+
+        <div
+            class="modal-dialog
+                   modal-lg
+                   modal-dialog-centered"
+        >
+
+            <div class="modal-content">
+
+                <div class="modal-header">
+
+                    <h5
+                        id="tituloModalPelada"
+                        class="modal-title fw-bold"
+                    >
+                        Nova Pelada
+                    </h5>
+
+                    <button
+                        type="button"
+                        class="btn-close"
+                        data-bs-dismiss="modal"
+                        aria-label="Fechar"
+                    ></button>
+
+                </div>
+
+
+                <div class="modal-body">
+
+                    <form
+                        id="formPelada"
+                        novalidate
+                    >
+
+                        <input
+                            type="hidden"
+                            id="peladaId"
+                        >
+
+
+                        <div class="row g-3">
+
+
+                            <!-- NOME -->
+                            <div class="col-md-8">
+
+                                <label
+                                    for="nomePelada"
+                                    class="form-label fw-semibold"
+                                >
+                                    Nome da pelada
+                                </label>
+
+                                <input
+                                    type="text"
+                                    id="nomePelada"
+                                    class="form-control"
+                                    maxlength="100"
+                                    value="Pelada da Fé"
+                                    required
+                                >
+
+                            </div>
+
+
+                            <!-- STATUS -->
+                            <div class="col-md-4">
+
+                                <label
+                                    for="statusPelada"
+                                    class="form-label fw-semibold"
+                                >
+                                    Status
+                                </label>
+
+                                <select
+                                    id="statusPelada"
+                                    class="form-select"
+                                    required
+                                >
+
+                                    <option value="Agendada">
+                                        Agendada
+                                    </option>
+
+                                    <option value="Em andamento">
+                                        Em andamento
+                                    </option>
+
+                                    <option value="Finalizada">
+                                        Finalizada
+                                    </option>
+
+                                    <option value="Cancelada">
+                                        Cancelada
+                                    </option>
+
+                                </select>
+
+                            </div>
+
+
+                            <!-- DATA -->
+                            <div class="col-md-4">
+
+                                <label
+                                    for="dataPelada"
+                                    class="form-label fw-semibold"
+                                >
+                                    Data
+                                </label>
+
+                                <input
+                                    type="date"
+                                    id="dataPelada"
+                                    class="form-control"
+                                    required
+                                >
+
+                            </div>
+
+
+                            <!-- HORÁRIO -->
+                            <div class="col-md-4">
+
+                                <label
+                                    for="horarioPelada"
+                                    class="form-label fw-semibold"
+                                >
+                                    Horário
+                                </label>
+
+                                <input
+                                    type="time"
+                                    id="horarioPelada"
+                                    class="form-control"
+                                    required
+                                >
+
+                            </div>
+
+
+                            <!-- TIMES -->
+                            <div class="col-md-4">
+
+                                <label
+                                    for="quantidadeTimes"
+                                    class="form-label fw-semibold"
+                                >
+                                    Quantidade de times
+                                </label>
+
+                                <input
+                                    type="number"
+                                    id="quantidadeTimes"
+                                    class="form-control"
+                                    min="2"
+                                    max="10"
+                                    value="3"
+                                    required
+                                >
+
+                            </div>
+
+
+                            <!-- DURAÇÃO -->
+                            <div class="col-md-4">
+
+                                <label
+                                    for="duracaoMinutos"
+                                    class="form-label fw-semibold"
+                                >
+                                    Duração da pelada
+                                </label>
+
+                                <div class="input-group">
+
+                                    <input
+                                        type="number"
+                                        id="duracaoMinutos"
+                                        class="form-control"
+                                        min="1"
+                                        max="720"
+                                        value="60"
+                                        required
+                                    >
+
+                                    <span
+                                        class="input-group-text"
+                                    >
+                                        min
+                                    </span>
+
+                                </div>
+
+                            </div>
+
+
+                            <!-- LOCAL -->
+                            <div class="col-md-8">
+
+                                <label
+                                    for="localPelada"
+                                    class="form-label fw-semibold"
+                                >
+                                    Local
+                                </label>
+
+                                <input
+                                    type="text"
+                                    id="localPelada"
+                                    class="form-control"
+                                    maxlength="150"
+                                    placeholder="Ex.: Quadra do Bairro"
+                                >
+
+                            </div>
+
+
+                            <!-- DESCRIÇÃO -->
+                            <div class="col-12">
+
+                                <label
+                                    for="descricaoPelada"
+                                    class="form-label fw-semibold"
+                                >
+                                    Descrição
+                                </label>
+
+                                <textarea
+                                    id="descricaoPelada"
+                                    class="form-control"
+                                    rows="2"
+                                    maxlength="500"
+                                    placeholder="Descrição da pelada..."
+                                ></textarea>
+
+                            </div>
+
+
+                            <!-- OBSERVAÇÕES -->
+                            <div class="col-12">
+
+                                <label
+                                    for="observacoesPelada"
+                                    class="form-label fw-semibold"
+                                >
+                                    Observações
+                                </label>
+
+                                <textarea
+                                    id="observacoesPelada"
+                                    class="form-control"
+                                    rows="3"
+                                    maxlength="1000"
+                                    placeholder="Observações adicionais..."
+                                ></textarea>
+
+                            </div>
+
+                        </div>
+
+                    </form>
+
+                </div>
+
+
+                <div class="modal-footer">
+
+                    <button
+                        type="button"
+                        class="btn btn-secondary"
+                        data-bs-dismiss="modal"
+                    >
+                        Cancelar
+                    </button>
+
+
+                    <button
+                        type="button"
+                        id="btnSalvarPelada"
+                        class="btn btn-success"
+                    >
+
+                        <i
+                            class="bi bi-check-circle me-1"
+                        ></i>
+
+                        Salvar Pelada
+
+                    </button>
+
+                </div>
+
+            </div>
+
+        </div>
+
+    </div>
+
+
+
+    <!-- ===================================================== -->
+    <!-- MODAL DETALHES -->
+    <!-- ===================================================== -->
+
+    <div
+        class="modal fade"
+        id="modalDetalhesPelada"
+        tabindex="-1"
+        aria-hidden="true"
+    >
+
+        <div
+            class="modal-dialog
+                   modal-lg
+                   modal-dialog-centered"
+        >
+
+            <div class="modal-content">
+
+                <div class="modal-header">
+
+                    <h5
+                        class="modal-title fw-bold"
+                    >
+                        Detalhes da Pelada
+                    </h5>
+
+                    <button
+                        type="button"
+                        class="btn-close"
+                        data-bs-dismiss="modal"
+                        aria-label="Fechar"
+                    ></button>
+
+                </div>
+
+
+                <div
+                    id="detalhesPelada"
+                    class="modal-body"
+                ></div>
+
+
+                <div class="modal-footer">
+
+                    <button
+                        type="button"
+                        class="btn btn-secondary"
+                        data-bs-dismiss="modal"
+                    >
+                        Fechar
+                    </button>
+
+                </div>
+
+            </div>
+
+        </div>
+
+    </div>
+
+</div>

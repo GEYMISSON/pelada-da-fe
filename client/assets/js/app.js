@@ -9,225 +9,470 @@
 
     let navegacaoId = 0;
 
+
+    // ============================================================
+    // TÍTULOS DAS PÁGINAS
+    // ============================================================
+
     const titulos = {
+
         dashboard: "Dashboard",
+
         jogadores: "Jogadores",
+
         peladas: "Peladas",
+
         sorteio: "Sorteio",
+
         partidas: "Partidas",
+
         artilharia: "Artilharia",
+
         estatisticas: "Estatísticas",
+
         historico: "Histórico",
+
         configuracoes: "Configurações"
+
     };
+
 
     // ============================================================
     // MENU LATERAL
     // ============================================================
 
-    const sidebar = document.querySelector(".sidebar");
-    const menuBtn = document.getElementById("menu-btn");
+    const sidebar =
+        document.querySelector(".sidebar");
 
-    if (menuBtn && sidebar) {
-        menuBtn.addEventListener("click", () => {
-            sidebar.classList.toggle("active");
-        });
+
+    const menuBtn =
+        document.getElementById("menu-btn");
+
+
+    if (
+        menuBtn &&
+        sidebar
+    ) {
+
+        menuBtn.addEventListener(
+            "click",
+            () => {
+
+                sidebar.classList.toggle(
+                    "active"
+                );
+
+            }
+        );
+
     }
+
 
     // ============================================================
     // RELÓGIO
     // ============================================================
 
     function atualizarRelogio() {
-        const agora = new Date();
+
+        const agora =
+            new Date();
+
 
         const relogio =
-            document.getElementById("relogio");
+            document.getElementById(
+                "relogio"
+            );
+
 
         if (relogio) {
+
             relogio.textContent =
-                agora.toLocaleDateString("pt-BR") +
+                agora.toLocaleDateString(
+                    "pt-BR"
+                ) +
                 " • " +
-                agora.toLocaleTimeString("pt-BR");
+                agora.toLocaleTimeString(
+                    "pt-BR"
+                );
+
         }
+
     }
 
-    setInterval(atualizarRelogio, 1000);
+
+    setInterval(
+        atualizarRelogio,
+        1000
+    );
+
 
     atualizarRelogio();
 
+
     // ============================================================
-    // DESTRUIR MÓDULO DA PÁGINA ANTERIOR
+    // LIMPAR MÓDULO DA PÁGINA ANTERIOR
     // ============================================================
 
     function removerScriptPagina() {
 
-        /*
-         * Antes de remover o módulo atual,
-         * damos oportunidade para ele limpar
-         * timers e eventos.
-         */
+        // --------------------------------------------------------
+        // PARTIDAS
+        // --------------------------------------------------------
 
         if (
             window.Partidas &&
-            typeof window.Partidas.destroy === "function"
+            typeof window.Partidas.destroy ===
+                "function"
         ) {
-            window.Partidas.destroy();
-        }
 
-        const script =
-            document.getElementById("pagina-script");
+            try {
 
-        if (script) {
-            script.remove();
-        }
+                window.Partidas.destroy();
 
-        /*
-         * Evita reutilizar uma instância antiga.
-         */
+            } catch (erro) {
 
-        if (window.Partidas) {
-            window.Partidas = null;
-        }
+                console.warn(
+                    "Erro ao destruir módulo Partidas:",
+                    erro
+                );
 
-    }
-
-    // ============================================================
-    // CARREGAR SERVICE
-    // ============================================================
-
-    function carregarServicePagina(nome) {
-
-        return new Promise((resolve, reject) => {
-
-            const serviceId =
-                `service-${nome}`;
-
-            const existente =
-                document.getElementById(serviceId);
-
-            if (existente) {
-                resolve();
-                return;
             }
 
-            const script =
-                document.createElement("script");
+        }
 
-            script.id =
-                serviceId;
 
-            script.src =
-                `assets/js/services/${nome}Service.js`;
+        // --------------------------------------------------------
+        // PELADAS
+        // --------------------------------------------------------
 
-            script.onload = () => {
-                resolve();
-            };
+        if (
+            window.Peladas &&
+            typeof window.Peladas.destroy ===
+                "function"
+        ) {
 
-            script.onerror = () => {
-                reject(
-                    new Error(
-                        `Serviço "${nome}" não encontrado.`
-                    )
+            try {
+
+                window.Peladas.destroy();
+
+            } catch (erro) {
+
+                console.warn(
+                    "Erro ao destruir módulo Peladas:",
+                    erro
                 );
-            };
 
-            document.body.appendChild(script);
+            }
 
-        });
+        }
+
+
+        // --------------------------------------------------------
+        // DASHBOARD
+        // --------------------------------------------------------
+
+        if (
+            window.Dashboard &&
+            typeof window.Dashboard.destroy ===
+                "function"
+        ) {
+
+            try {
+
+                window.Dashboard.destroy();
+
+            } catch (erro) {
+
+                console.warn(
+                    "Erro ao destruir módulo Dashboard:",
+                    erro
+                );
+
+            }
+
+        }
+
+
+        // --------------------------------------------------------
+        // HISTÓRICO
+        // --------------------------------------------------------
+
+        if (
+            window.Historico &&
+            typeof window.Historico.destroy ===
+                "function"
+        ) {
+
+            try {
+
+                window.Historico.destroy();
+
+            } catch (erro) {
+
+                console.warn(
+                    "Erro ao destruir módulo Histórico:",
+                    erro
+                );
+
+            }
+
+        }
+
+
+        // --------------------------------------------------------
+        // REMOVER SCRIPT
+        // --------------------------------------------------------
+
+        const script =
+            document.getElementById(
+                "pagina-script"
+            );
+
+
+        if (script) {
+
+            script.remove();
+
+        }
+
+
+        // --------------------------------------------------------
+        // LIMPAR REFERÊNCIAS
+        // --------------------------------------------------------
+
+        if (window.Partidas) {
+
+            window.Partidas = null;
+
+        }
+
+
+        if (window.Peladas) {
+
+            window.Peladas = null;
+
+        }
+
+
+        if (window.Dashboard) {
+
+            window.Dashboard = null;
+
+        }
+
+
+        if (window.Historico) {
+
+            window.Historico = null;
+
+        }
 
     }
+
+
+    // ============================================================
+    // CARREGAR SERVIÇO
+    // ============================================================
+
+    function carregarServicePagina(
+        nome
+    ) {
+
+        return new Promise(
+            (
+                resolve,
+                reject
+            ) => {
+
+                const serviceId =
+                    `service-${nome}`;
+
+
+                const existente =
+                    document.getElementById(
+                        serviceId
+                    );
+
+
+                if (existente) {
+
+                    resolve();
+
+                    return;
+
+                }
+
+
+                const script =
+                    document.createElement(
+                        "script"
+                    );
+
+
+                script.id =
+                    serviceId;
+
+
+                script.src =
+                    `assets/js/services/${nome}Service.js`;
+
+
+                script.onload =
+                    resolve;
+
+
+                script.onerror =
+                    () => {
+
+                        reject(
+                            new Error(
+                                `Serviço "${nome}" não encontrado.`
+                            )
+                        );
+
+                    };
+
+
+                document.body.appendChild(
+                    script
+                );
+
+            }
+        );
+
+    }
+
 
     // ============================================================
     // CARREGAR MÓDULO DA PÁGINA
     // ============================================================
 
-    function carregarScriptPagina(nome, id) {
+    function carregarScriptPagina(
+        nome,
+        id
+    ) {
 
-        return new Promise((resolve, reject) => {
+        return new Promise(
+            (
+                resolve,
+                reject
+            ) => {
 
-            const script =
-                document.createElement("script");
-
-            script.id =
-                "pagina-script";
-
-            /*
-             * O timestamp evita que o navegador
-             * utilize uma versão antiga em cache.
-             */
-
-            script.src =
-                `assets/js/modules/${nome}.js?v=${Date.now()}`;
-
-            script.onload = () => {
-
-                if (id === navegacaoId) {
-                    resolve();
-                }
-
-            };
-
-            script.onerror = () => {
-
-                if (id === navegacaoId) {
-
-                    reject(
-                        new Error(
-                            `Módulo "${nome}" não encontrado.`
-                        )
+                const script =
+                    document.createElement(
+                        "script"
                     );
 
-                }
 
-            };
+                script.id =
+                    "pagina-script";
 
-            document.body.appendChild(script);
 
-        });
+                // Evita problemas de cache
+                // durante o desenvolvimento.
+
+                script.src =
+                    `assets/js/modules/${nome}.js?v=${Date.now()}`;
+
+
+                script.onload =
+                    () => {
+
+                        if (
+                            id ===
+                            navegacaoId
+                        ) {
+
+                            resolve();
+
+                        }
+
+                    };
+
+
+                script.onerror =
+                    () => {
+
+                        if (
+                            id ===
+                            navegacaoId
+                        ) {
+
+                            reject(
+                                new Error(
+                                    `Módulo "${nome}" não encontrado.`
+                                )
+                            );
+
+                        }
+
+                    };
+
+
+                document.body.appendChild(
+                    script
+                );
+
+            }
+        );
 
     }
+
 
     // ============================================================
     // ATUALIZAR TÍTULO
     // ============================================================
 
-    function atualizarTitulo(nome) {
+    function atualizarTitulo(
+        nome
+    ) {
 
         const titulo =
             document.getElementById(
                 "tituloPagina"
             );
 
+
         if (titulo) {
 
             titulo.textContent =
                 titulos[nome] ||
-                nome.charAt(0).toUpperCase() +
+                nome
+                    .charAt(0)
+                    .toUpperCase() +
                 nome.slice(1);
 
         }
 
     }
 
+
     // ============================================================
-    // MENU ATIVO
+    // MARCAR ITEM ATIVO
     // ============================================================
 
-    function atualizarMenuAtivo(nome) {
+    function atualizarMenuAtivo(
+        nome
+    ) {
 
         document
-            .querySelectorAll(".menu a[data-page]")
-            .forEach(link => {
+            .querySelectorAll(
+                ".menu a[data-page]"
+            )
+            .forEach(
+                link => {
 
-                link.classList.toggle(
-                    "active",
-                    link.dataset.page === nome
-                );
+                    link.classList.toggle(
+                        "active",
+                        link.dataset.page ===
+                            nome
+                    );
 
-            });
+                }
+            );
 
     }
+
 
     // ============================================================
     // CARREGAR PÁGINA
@@ -243,47 +488,95 @@
         const id =
             ++navegacaoId;
 
+
         const conteudo =
             document.getElementById(
                 "conteudo"
             );
 
-        if (!conteudo || !nome) {
+
+        if (
+            !conteudo ||
+            !nome
+        ) {
+
             return;
+
         }
 
-        /*
-         * Cancela o módulo anterior.
-         */
+
+        // --------------------------------------------------------
+        // LIMPAR PÁGINA ANTERIOR
+        // --------------------------------------------------------
 
         removerScriptPagina();
 
-        /*
-         * Tela de carregamento.
-         */
+
+        // --------------------------------------------------------
+        // LOADING
+        // --------------------------------------------------------
 
         conteudo.innerHTML = `
-            <div class="d-flex justify-content-center align-items-center py-5">
-                <div class="spinner-border text-success" role="status">
-                    <span class="visually-hidden">
+
+            <div
+                class="
+                    d-flex
+                    justify-content-center
+                    align-items-center
+                    py-5
+                "
+            >
+
+                <div
+                    class="
+                        spinner-border
+                        text-success
+                    "
+                    role="status"
+                >
+
+                    <span
+                        class="visually-hidden"
+                    >
                         Carregando...
                     </span>
+
                 </div>
+
             </div>
+
         `;
 
-        atualizarTitulo(nome);
 
-        atualizarMenuAtivo(nome);
+        // --------------------------------------------------------
+        // TÍTULO
+        // --------------------------------------------------------
 
-        /*
-         * Atualiza URL.
-         */
+        atualizarTitulo(
+            nome
+        );
 
-        if (atualizarHistorico) {
+
+        // --------------------------------------------------------
+        // MENU ATIVO
+        // --------------------------------------------------------
+
+        atualizarMenuAtivo(
+            nome
+        );
+
+
+        // --------------------------------------------------------
+        // HISTÓRICO DO NAVEGADOR
+        // --------------------------------------------------------
+
+        if (
+            atualizarHistorico
+        ) {
 
             const novoHash =
                 `#${nome}`;
+
 
             if (
                 window.location.hash !==
@@ -302,26 +595,36 @@
 
         }
 
+
         try {
+
+            // ----------------------------------------------------
+            // CARREGAR HTML DA VIEW
+            // ----------------------------------------------------
 
             const resposta =
                 await fetch(
                     `views/${nome}.html`,
                     {
-                        cache: "no-store"
+                        cache:
+                            "no-store"
                     }
                 );
 
-            /*
-             * Outra navegação aconteceu enquanto
-             * esta página estava carregando.
-             */
 
-            if (id !== navegacaoId) {
+            if (
+                id !==
+                navegacaoId
+            ) {
+
                 return;
+
             }
 
-            if (!resposta.ok) {
+
+            if (
+                !resposta.ok
+            ) {
 
                 throw new Error(
                     `Não foi possível carregar a página "${nome}".`
@@ -329,21 +632,43 @@
 
             }
 
+
             const html =
                 await resposta.text();
 
-            if (id !== navegacaoId) {
+
+            if (
+                id !==
+                navegacaoId
+            ) {
+
                 return;
+
             }
+
 
             conteudo.innerHTML =
                 html;
 
-            /*
-             * Jogadores precisa do service.
-             */
 
-            if (nome === "jogadores") {
+            if (
+                id !==
+                navegacaoId
+            ) {
+
+                return;
+
+            }
+
+
+            // ----------------------------------------------------
+            // SERVIÇO DE JOGADORES
+            // ----------------------------------------------------
+
+            if (
+                nome ===
+                "jogadores"
+            ) {
 
                 await carregarServicePagina(
                     "jogador"
@@ -351,27 +676,51 @@
 
             }
 
-            if (id !== navegacaoId) {
+
+            if (
+                id !==
+                navegacaoId
+            ) {
+
                 return;
+
             }
 
-            /*
-             * Páginas que possuem módulo JS próprio.
-             */
+
+            // ====================================================
+            // PÁGINAS COM MÓDULOS JAVASCRIPT
+            // ====================================================
 
             const paginasComModulo =
                 new Set([
+
                     "dashboard",
+
                     "jogadores",
+
+                    "peladas",
+
                     "sorteio",
+
                     "partidas",
+
                     "artilharia",
+
                     "estatisticas",
+
                     "historico"
+
                 ]);
 
+
+            // ----------------------------------------------------
+            // CARREGAR MÓDULO
+            // ----------------------------------------------------
+
             if (
-                paginasComModulo.has(nome)
+                paginasComModulo.has(
+                    nome
+                )
             ) {
 
                 await carregarScriptPagina(
@@ -383,17 +732,32 @@
 
         } catch (erro) {
 
-            if (id !== navegacaoId) {
+            if (
+                id !==
+                navegacaoId
+            ) {
+
                 return;
+
             }
+
 
             console.error(
                 "Erro ao carregar página:",
                 erro
             );
 
+
             conteudo.innerHTML = `
-                <div class="alert alert-danger mt-3">
+
+                <div
+                    class="
+                        alert
+                        alert-danger
+                        mt-3
+                    "
+                >
+
                     <strong>
                         Erro ao carregar a página.
                     </strong>
@@ -401,23 +765,25 @@
                     <br>
 
                     ${erro.message}
+
                 </div>
+
             `;
 
         }
 
     }
 
+
     // ============================================================
     // MENU
     // ============================================================
 
-    const menu =
-        document.querySelector(".menu");
-
-    if (menu) {
-
-        menu.addEventListener(
+    document
+        .querySelector(
+            ".menu"
+        )
+        ?.addEventListener(
             "click",
             evento => {
 
@@ -426,22 +792,31 @@
                         "a[data-page]"
                     );
 
+
                 if (!link) {
+
                     return;
+
                 }
 
+
                 evento.preventDefault();
+
 
                 const pagina =
                     link.dataset.page;
 
+
                 if (!pagina) {
+
                     return;
+
                 }
 
-                /*
-                 * Fecha o menu no celular.
-                 */
+
+                // ------------------------------------------------
+                // FECHAR MENU NO CELULAR
+                // ------------------------------------------------
 
                 if (sidebar) {
 
@@ -451,6 +826,7 @@
 
                 }
 
+
                 carregarPagina(
                     pagina
                 );
@@ -458,7 +834,6 @@
             }
         );
 
-    }
 
     // ============================================================
     // VOLTAR / AVANÇAR DO NAVEGADOR
@@ -469,33 +844,42 @@
         () => {
 
             const pagina =
-                window.location.hash
-                    .replace("#", "") ||
+                window.location.hash.replace(
+                    "#",
+                    ""
+                ) ||
                 paginaInicial;
+
 
             carregarPagina(
                 pagina,
                 {
-                    atualizarHistorico: false
+                    atualizarHistorico:
+                        false
                 }
             );
 
         }
     );
 
+
     // ============================================================
-    // PRIMEIRA PÁGINA
+    // PRIMEIRA TELA
     // ============================================================
 
     const paginaAtual =
-        window.location.hash
-            .replace("#", "") ||
+        window.location.hash.replace(
+            "#",
+            ""
+        ) ||
         paginaInicial;
+
 
     carregarPagina(
         paginaAtual,
         {
-            atualizarHistorico: false
+            atualizarHistorico:
+                false
         }
     );
 
