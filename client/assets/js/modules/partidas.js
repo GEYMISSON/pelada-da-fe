@@ -24,6 +24,31 @@
             this.partidasRealizadas = 0;
             this.historico = [];
 
+            /*
+             * ID da Pelada atualmente selecionada no sistema.
+             *
+             * Esse valor vem da tela Peladas.
+             */
+            this.peladaAtualId =
+                localStorage.getItem(
+                    "peladaDaFePeladaAtualId"
+                ) || "";
+
+            /*
+             * Guarda a Pelada vinculada à sessão atual
+             * da pelada.
+             *
+             * Isso é importante porque o usuário pode,
+             * teoricamente, mudar a Pelada selecionada
+             * enquanto o módulo Partidas está aberto.
+             *
+             * As partidas dessa sessão continuarão vinculadas
+             * à Pelada que estava selecionada quando a sessão
+             * foi iniciada.
+             */
+            this.peladaDaSessaoId = null;
+            this.peladaDaSessaoNome = null;
+
             this.times = {
                 amarelo: {
                     nome: "Amarelo",
@@ -73,6 +98,9 @@
              */
             this.partidaBancoIdAtual = null;
 
+            /*
+             * Horário em que a partida atual começou.
+             */
             this.iniciadaEm = null;
 
             this.inicializar();
@@ -105,6 +133,12 @@
             );
 
             this.atualizarBotoes();
+
+            /*
+             * Atualiza o ID da Pelada atual diretamente do localStorage.
+             */
+            this.obterPeladaAtualId();
+
         }
 
 
@@ -314,6 +348,163 @@
         }
 
 
+        /*
+         * Retorna o ID da Pelada atualmente selecionada.
+         *
+         * A origem oficial é:
+         * localStorage["peladaDaFePeladaAtualId"]
+         */
+        obterPeladaAtualId() {
+
+            const id =
+                localStorage.getItem(
+                    "peladaDaFePeladaAtualId"
+                ) || "";
+
+            this.peladaAtualId =
+                String(id).trim();
+
+            return this.peladaAtualId;
+
+        }
+
+
+        /*
+         * Retorna os dados completos da Pelada atual,
+         * quando disponíveis no localStorage.
+         */
+        obterPeladaAtual() {
+
+            const dados =
+                localStorage.getItem(
+                    "peladaDaFePeladaAtual"
+                );
+
+            if (!dados) {
+                return null;
+            }
+
+            try {
+
+                const pelada =
+                    JSON.parse(dados);
+
+                return pelada || null;
+
+            } catch (erro) {
+
+                console.warn(
+                    "⚠️ Não foi possível ler os dados da Pelada atual:",
+                    erro
+                );
+
+                return null;
+
+            }
+
+        }
+
+
+        /*
+         * Valida se existe uma Pelada selecionada e
+         * se ela pode receber partidas.
+         */
+        validarPeladaAtual() {
+
+            const peladaId =
+                this.obterPeladaAtualId();
+
+            if (!peladaId) {
+
+                this.mostrarErro(
+                    "Selecione uma Pelada na tela Peladas antes de iniciar."
+                );
+
+                return false;
+
+            }
+
+
+            if (
+                !this.ehObjectIdMongo(
+                    peladaId
+                )
+            ) {
+
+                this.mostrarErro(
+                    "A Pelada selecionada possui um ID inválido."
+                );
+
+                return false;
+
+            }
+
+
+            const pelada =
+                this.obterPeladaAtual();
+
+
+            if (pelada) {
+
+                const status =
+                    String(
+                        pelada.status || ""
+                    ).trim();
+
+
+                if (
+                    status === "Finalizada" ||
+                    status === "Cancelada"
+                ) {
+
+                    this.mostrarErro(
+                        `A Pelada selecionada está com status "${status}" e não pode receber novas partidas.`
+                    );
+
+                    return false;
+
+                }
+
+            }
+
+
+            return true;
+
+        }
+
+
+        /*
+         * Captura a Pelada selecionada para a sessão atual.
+         */
+        iniciarVinculoPeladaSessao() {
+
+            const peladaId =
+                this.obterPeladaAtualId();
+
+            const pelada =
+                this.obterPeladaAtual();
+
+
+            this.peladaDaSessaoId =
+                peladaId || null;
+
+
+            this.peladaDaSessaoNome =
+                pelada?.nome ||
+                "Pelada selecionada";
+
+
+            console.log(
+                "🏆 Pelada vinculada à sessão:",
+                {
+                    id: this.peladaDaSessaoId,
+                    nome: this.peladaDaSessaoNome
+                }
+            );
+
+        }
+
+
         carregarTimesDoSorteio() {
 
             try {
@@ -424,6 +615,15 @@
                 return;
             }
 
+
+            /*
+             * Primeiro validamos a Pelada atual.
+             */
+            if (!this.validarPeladaAtual()) {
+                return;
+            }
+
+
             const duracaoPelada =
                 this.obterDuracaoPelada();
 
@@ -450,6 +650,16 @@
 
                 return;
             }
+
+
+            /*
+             * Vincula a Pelada à sessão atual.
+             *
+             * Todas as partidas dessa sessão utilizarão
+             * esse mesmo ID.
+             */
+            this.iniciarVinculoPeladaSessao();
+
 
             this.duracaoPelada =
                 duracaoPelada;
@@ -488,7 +698,8 @@
 
             this.limparGolsPartida();
 
-            this.iniciadaEm = null;
+            this.iniciadaEm =
+                null;
 
             this.filaTimes = [
                 "amarelo",
@@ -506,7 +717,7 @@
                 this.filaTimes.shift();
 
             this.atualizarStatus(
-                "Pelada iniciada"
+                `Pelada iniciada: ${this.peladaDaSessaoNome}`
             );
 
             this.atualizarBadgePartida(
@@ -521,7 +732,11 @@
             this.atualizarBotoes();
 
             console.log(
-                "🏆 Pelada iniciada."
+                "🏆 Pelada iniciada:",
+                {
+                    id: this.peladaDaSessaoId,
+                    nome: this.peladaDaSessaoNome
+                }
             );
 
         }
@@ -629,6 +844,16 @@
                 return;
             }
 
+            if (!this.peladaDaSessaoId) {
+
+                this.mostrarErro(
+                    "Não existe uma Pelada vinculada à sessão atual."
+                );
+
+                return;
+
+            }
+
             if (
                 this.tempoRestantePelada <= 0
             ) {
@@ -682,7 +907,11 @@
                 "⚽ Partida iniciada:",
                 this.obterNomeTime(this.time1),
                 "x",
-                this.obterNomeTime(this.time2)
+                this.obterNomeTime(this.time2),
+                "| Pelada:",
+                this.peladaDaSessaoNome,
+                "| ID:",
+                this.peladaDaSessaoId
             );
 
         }
@@ -1424,6 +1653,22 @@
             }
 
 
+            /*
+             * Segurança adicional:
+             * uma partida somente pode ser salva se estiver
+             * vinculada a uma Pelada.
+             */
+            if (!this.peladaDaSessaoId) {
+
+                this.mostrarErro(
+                    "Não existe uma Pelada vinculada à sessão atual."
+                );
+
+                return;
+
+            }
+
+
             const golsTime1 =
                 this.calcularTotalGols(
                     "time1"
@@ -1500,6 +1745,12 @@
                 numero:
                     this.partidasRealizadas + 1,
 
+                peladaId:
+                    this.peladaDaSessaoId,
+
+                peladaNome:
+                    this.peladaDaSessaoNome,
+
                 time1:
                     time1Jogado,
 
@@ -1533,6 +1784,9 @@
 
                 duracao:
                     duracaoDecorrida,
+
+                iniciadaEm:
+                    this.iniciadaEm,
 
                 data:
                     new Date().toISOString()
@@ -1752,7 +2006,11 @@
                 golsTime2,
                 nomeTime2Jogado,
                 "| Vencedor:",
-                nomeVencedor
+                nomeVencedor,
+                "| Pelada:",
+                this.peladaDaSessaoNome,
+                "| Pelada ID:",
+                this.peladaDaSessaoId
             );
 
         }
@@ -1761,6 +2019,27 @@
         async salvarPartidaNoBanco(
             registro
         ) {
+
+            /*
+             * A partida agora obrigatoriamente precisa estar
+             * vinculada à Pelada da sessão.
+             */
+            const peladaId =
+                this.peladaDaSessaoId;
+
+
+            if (
+                !this.ehObjectIdMongo(
+                    peladaId
+                )
+            ) {
+
+                throw new Error(
+                    "A partida não pode ser salva porque a Pelada vinculada possui um ID inválido."
+                );
+
+            }
+
 
             const jogadoresTimeA =
                 this.obterJogadoresDoTime(
@@ -1810,6 +2089,13 @@
 
 
             const payload = {
+
+                /*
+                 * NOVO:
+                 * associação da partida com a Pelada.
+                 */
+                pelada:
+                    peladaId,
 
                 nomeTimeA:
                     this.obterNomeTime(
@@ -2954,6 +3240,18 @@
             this.iniciadaEm =
                 null;
 
+            /*
+             * Libera o vínculo da sessão.
+             *
+             * Ao iniciar novamente, o sistema irá ler
+             * novamente a Pelada atualmente selecionada.
+             */
+            this.peladaDaSessaoId =
+                null;
+
+            this.peladaDaSessaoNome =
+                null;
+
             this.ocultarAreaResultado();
 
             this.atualizarStatus(
@@ -3017,7 +3315,11 @@
             this.atualizarBotoes();
 
             console.log(
-                "🏁 Pelada finalizada."
+                "🏁 Pelada finalizada.",
+                {
+                    id: this.peladaDaSessaoId,
+                    nome: this.peladaDaSessaoNome
+                }
             );
 
         }

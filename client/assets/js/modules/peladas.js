@@ -17,6 +17,12 @@
 
             this.modalDetalhes = null;
 
+            // ID da pelada atualmente selecionada
+            this.peladaAtualId =
+                localStorage.getItem(
+                    "peladaDaFePeladaAtualId"
+                ) || "";
+
             this.inicializar();
 
         }
@@ -294,6 +300,18 @@
 
                         }
 
+
+                        if (
+                            acao ===
+                            "selecionar"
+                        ) {
+
+                            this.selecionarPeladaAtual(
+                                id
+                            );
+
+                        }
+
                     }
                 );
 
@@ -402,6 +420,9 @@
                         : [];
 
 
+                this.validarPeladaAtual();
+
+
                 this.peladasFiltradas =
                     [
                         ...this.peladas
@@ -419,6 +440,20 @@
                     "✅ Peladas carregadas:",
                     this.peladas.length
                 );
+
+
+                const peladaAtual =
+                    this.obterPeladaAtual();
+
+
+                if (peladaAtual) {
+
+                    console.log(
+                        "🏆 Pelada atual:",
+                        peladaAtual
+                    );
+
+                }
 
             } catch (erro) {
 
@@ -958,6 +993,22 @@
 
                 await this.carregarPeladas();
 
+                // Caso a pelada editada seja a atual,
+                // atualizamos também o snapshot salvo.
+                if (
+                    id &&
+                    id === this.peladaAtualId
+                ) {
+
+                    this.salvarPeladaAtual(
+                        this.peladas.find(
+                            item =>
+                                this.obterId(item) === id
+                        )
+                    );
+
+                }
+
             } catch (erro) {
 
                 console.error(
@@ -976,6 +1027,276 @@
                 this.alterarEstadoBotaoSalvar(
                     botao,
                     false
+                );
+
+            }
+
+        }
+
+
+        // ========================================================
+        // SELECIONAR PELADA ATUAL
+        // ========================================================
+
+        selecionarPeladaAtual(id) {
+
+            const pelada =
+                this.peladas.find(
+                    item =>
+                        this.obterId(item) === id
+                );
+
+
+            if (!pelada) {
+
+                this.mostrarAlerta(
+                    "Pelada não encontrada.",
+                    "warning"
+                );
+
+                return;
+
+            }
+
+
+            const statusBloqueado =
+                pelada.status ===
+                    "Finalizada" ||
+                pelada.status ===
+                    "Cancelada";
+
+
+            if (statusBloqueado) {
+
+                this.mostrarAlerta(
+                    "Esta pelada está finalizada ou cancelada e não será selecionada como pelada atual.",
+                    "warning"
+                );
+
+                return;
+
+            }
+
+
+            this.peladaAtualId =
+                id;
+
+
+            this.salvarPeladaAtual(
+                pelada
+            );
+
+
+            this.renderizar();
+
+
+            this.mostrarAlerta(
+                `A pelada "${pelada.nome || "Pelada da Fé"}" foi definida como atual.`,
+                "success"
+            );
+
+
+            console.log(
+                "🏆 Pelada atual selecionada:",
+                pelada
+            );
+
+        }
+
+
+        // ========================================================
+        // SALVAR PELADA ATUAL NO LOCALSTORAGE
+        // ========================================================
+
+        salvarPeladaAtual(
+            pelada
+        ) {
+
+            if (!pelada) {
+
+                return;
+
+            }
+
+
+            const id =
+                this.obterId(
+                    pelada
+                );
+
+
+            if (!id) {
+
+                return;
+
+            }
+
+
+            const dados = {
+
+                id:
+
+                    id,
+
+                nome:
+
+                    pelada.nome ||
+                    "Pelada da Fé",
+
+                data:
+
+                    pelada.data ||
+                    null,
+
+                horario:
+
+                    pelada.horario ||
+                    "",
+
+                local:
+
+                    pelada.local ||
+                    "",
+
+                status:
+
+                    pelada.status ||
+                    "Agendada"
+
+            };
+
+
+            localStorage.setItem(
+                "peladaDaFePeladaAtualId",
+                id
+            );
+
+
+            localStorage.setItem(
+                "peladaDaFePeladaAtual",
+                JSON.stringify(
+                    dados
+                )
+            );
+
+        }
+
+
+        // ========================================================
+        // OBTER PELADA ATUAL
+        // ========================================================
+
+        obterPeladaAtual() {
+
+            if (!this.peladaAtualId) {
+
+                return null;
+
+            }
+
+
+            return (
+                this.peladas.find(
+                    item =>
+                        this.obterId(item) ===
+                        this.peladaAtualId
+                ) ||
+                null
+            );
+
+        }
+
+
+        // ========================================================
+        // VALIDAR PELADA ATUAL
+        // ========================================================
+
+        validarPeladaAtual() {
+
+            if (
+                !this.peladaAtualId
+            ) {
+
+                return;
+
+            }
+
+
+            const pelada =
+                this.peladas.find(
+                    item =>
+                        this.obterId(item) ===
+                        this.peladaAtualId
+                );
+
+
+            if (!pelada) {
+
+                this.limparPeladaAtual();
+
+                return;
+
+            }
+
+
+            if (
+                pelada.status ===
+                    "Finalizada" ||
+                pelada.status ===
+                    "Cancelada"
+            ) {
+
+                this.limparPeladaAtual();
+
+                return;
+
+            }
+
+
+            this.salvarPeladaAtual(
+                pelada
+            );
+
+        }
+
+
+        // ========================================================
+        // LIMPAR PELADA ATUAL
+        // ========================================================
+
+        limparPeladaAtual(
+            mostrarMensagem = true
+        ) {
+
+            const pelada =
+                this.obterPeladaAtual();
+
+
+            this.peladaAtualId =
+                "";
+
+
+            localStorage.removeItem(
+                "peladaDaFePeladaAtualId"
+            );
+
+
+            localStorage.removeItem(
+                "peladaDaFePeladaAtual"
+            );
+
+
+            this.renderizar();
+
+
+            if (
+                mostrarMensagem &&
+                pelada
+            ) {
+
+                this.mostrarAlerta(
+                    "A pelada atual foi desmarcada.",
+                    "success"
                 );
 
             }
@@ -1053,6 +1374,20 @@
                 }
 
 
+                // Caso a pelada excluída fosse a atual,
+                // limpamos a seleção.
+                if (
+                    id ===
+                    this.peladaAtualId
+                ) {
+
+                    this.limparPeladaAtual(
+                        false
+                    );
+
+                }
+
+
                 this.mostrarAlerta(
                     "Pelada excluída com sucesso.",
                     "success"
@@ -1121,6 +1456,13 @@
                 );
 
 
+            const isAtual =
+                this.obterId(
+                    pelada
+                ) ===
+                this.peladaAtualId;
+
+
             area.innerHTML = `
 
                 <div class="row g-3">
@@ -1136,24 +1478,50 @@
 
                             <div class="card-body">
 
-                                <small
-                                    class="text-muted"
+                                <div
+                                    class="d-flex
+                                           justify-content-between
+                                           align-items-start
+                                           gap-2"
                                 >
-                                    Pelada
-                                </small>
 
-                                <h4
-                                    class="fw-bold mb-3"
-                                >
-                                    ${this.escaparHtml(
-                                        pelada.nome ||
-                                        "Pelada da Fé"
-                                    )}
-                                </h4>
+                                    <div>
+
+                                        <small
+                                            class="text-muted"
+                                        >
+                                            Pelada
+                                        </small>
+
+                                        <h4
+                                            class="fw-bold mb-1"
+                                        >
+                                            ${this.escaparHtml(
+                                                pelada.nome ||
+                                                "Pelada da Fé"
+                                            )}
+                                        </h4>
+
+                                    </div>
+
+                                    ${
+                                        isAtual
+                                            ? `
+                                                <span
+                                                    class="badge bg-success"
+                                                >
+                                                    <i class="bi bi-check-circle me-1"></i>
+                                                    Pelada atual
+                                                </span>
+                                              `
+                                            : ""
+                                    }
+
+                                </div>
 
 
                                 <div
-                                    class="row g-3"
+                                    class="row g-3 mt-2"
                                 >
 
                                     <div class="col-sm-6">
@@ -1536,6 +1904,9 @@
 
             }
 
+
+            this.atualizarIndicadorPeladaAtual();
+
         }
 
 
@@ -1566,9 +1937,29 @@
                 "Agendada";
 
 
+            const isAtual =
+                this.obterId(
+                    pelada
+                ) ===
+                this.peladaAtualId;
+
+
+            const podeSelecionar =
+                pelada.status !==
+                    "Finalizada" &&
+                pelada.status !==
+                    "Cancelada";
+
+
             return `
 
-                <tr>
+                <tr
+                    class="${
+                        isAtual
+                            ? "table-success"
+                            : ""
+                    }"
+                >
 
 
                     <td
@@ -1586,12 +1977,30 @@
 
                     <td>
 
-                        <div class="fw-bold">
+                        <div
+                            class="fw-bold
+                                   d-flex
+                                   align-items-center
+                                   gap-2"
+                        >
 
-                            ${this.escaparHtml(
-                                pelada.nome ||
-                                "Pelada da Fé"
-                            )}
+                            ${
+                                isAtual
+                                    ? `
+                                        <i
+                                            class="bi bi-check-circle-fill text-success"
+                                            title="Pelada atual"
+                                        ></i>
+                                      `
+                                    : ""
+                            }
+
+                            <span>
+                                ${this.escaparHtml(
+                                    pelada.nome ||
+                                    "Pelada da Fé"
+                                )}
+                            </span>
 
                         </div>
 
@@ -1674,8 +2083,54 @@
                         <div
                             class="d-flex
                                    justify-content-end
-                                   gap-1"
+                                   gap-1
+                                   flex-wrap"
                         >
+
+                            ${
+                                isAtual
+                                    ? `
+                                        <button
+                                            type="button"
+                                            class="btn btn-sm btn-success"
+                                            data-acao="selecionar"
+                                            data-id="${id}"
+                                            title="Pelada atual"
+                                        >
+                                            <i
+                                                class="bi bi-check-circle-fill"
+                                            ></i>
+                                            <span
+                                                class="d-none d-md-inline"
+                                            >
+                                                Atual
+                                            </span>
+                                        </button>
+                                      `
+                                    : (
+                                        podeSelecionar
+                                            ? `
+                                                <button
+                                                    type="button"
+                                                    class="btn btn-sm btn-outline-success"
+                                                    data-acao="selecionar"
+                                                    data-id="${id}"
+                                                    title="Usar esta pelada como atual"
+                                                >
+                                                    <i
+                                                        class="bi bi-play-circle"
+                                                    ></i>
+                                                    <span
+                                                        class="d-none d-md-inline"
+                                                    >
+                                                        Usar
+                                                    </span>
+                                                </button>
+                                              `
+                                            : ""
+                                    )
+                            }
+
 
                             <button
                                 type="button"
@@ -1722,6 +2177,127 @@
                 </tr>
 
             `;
+
+        }
+
+
+        // ========================================================
+        // INDICADOR DA PELADA ATUAL
+        // ========================================================
+
+        atualizarIndicadorPeladaAtual() {
+
+            const pelada =
+                this.obterPeladaAtual();
+
+
+            const indicador =
+                document.getElementById(
+                    "peladaAtualIndicador"
+                );
+
+
+            if (!indicador) {
+
+                return;
+
+            }
+
+
+            if (!pelada) {
+
+                indicador.className =
+                    "alert alert-secondary";
+
+                indicador.innerHTML = `
+
+                    <i class="bi bi-calendar-x me-1"></i>
+
+                    Nenhuma pelada selecionada como atual.
+
+                `;
+
+                return;
+
+            }
+
+
+            indicador.className =
+                "alert alert-success";
+
+
+            indicador.innerHTML = `
+
+                <div
+                    class="d-flex
+                           justify-content-between
+                           align-items-center
+                           gap-2
+                           flex-wrap"
+                >
+
+                    <div>
+
+                        <strong>
+                            <i class="bi bi-check-circle-fill me-1"></i>
+                            Pelada atual:
+                        </strong>
+
+                        ${this.escaparHtml(
+                            pelada.nome ||
+                            "Pelada da Fé"
+                        )}
+
+                        <span class="ms-2">
+                            ${this.formatarData(
+                                pelada.data
+                            )}
+                            ${
+                                pelada.horario
+                                    ? ` • ${this.escaparHtml(
+                                        pelada.horario
+                                    )}`
+                                    : ""
+                            }
+                        </span>
+
+                    </div>
+
+
+                    <button
+                        type="button"
+                        class="btn btn-sm btn-outline-success"
+                        id="btnDesmarcarPeladaAtual"
+                    >
+                        <i
+                            class="bi bi-x-circle me-1"
+                        ></i>
+                        Desmarcar
+                    </button>
+
+                </div>
+
+            `;
+
+
+            const btnDesmarcar =
+                document.getElementById(
+                    "btnDesmarcarPeladaAtual"
+                );
+
+
+            if (btnDesmarcar) {
+
+                btnDesmarcar.addEventListener(
+                    "click",
+                    () => {
+
+                        this.limparPeladaAtual();
+
+                    }
+                );
+
+            }
 
         }
 
@@ -1791,6 +2367,9 @@
                     "0";
 
             }
+
+
+            this.atualizarIndicadorPeladaAtual();
 
         }
 

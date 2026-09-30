@@ -1,24 +1,46 @@
-const Partida = require("../models/Partida");
+const mongoose = require("mongoose");
+
+const Partida =
+    require("../models/Partida");
+
+const Pelada =
+    require("../models/Pelada");
 
 
 // ============================================================
-// LISTAR PARTIDAS
+// LISTAR
 // ============================================================
 
-exports.listar = async (req, res) => {
+async function listar(
+    req,
+    res
+) {
 
     try {
 
-        const partidas = await Partida
-            .find()
-            .populate("jogadoresTimeA", "nome numeroCamisa")
-            .populate("jogadoresTimeB", "nome numeroCamisa")
-            .sort({
-                createdAt: -1
-            });
+        const partidas =
+            await Partida
+                .find()
+                .populate(
+                    "pelada",
+                    "nome data horario local status"
+                )
+                .populate(
+                    "jogadoresTimeA",
+                    "nome numeroCamisa"
+                )
+                .populate(
+                    "jogadoresTimeB",
+                    "nome numeroCamisa"
+                )
+                .sort({
+                    createdAt: -1
+                });
 
 
-        res.json(partidas);
+        return res.json(
+            partidas
+        );
 
     } catch (erro) {
 
@@ -27,10 +49,11 @@ exports.listar = async (req, res) => {
             erro
         );
 
-        res.status(500).json({
+
+        return res.status(500).json({
 
             erro:
-                "Erro ao listar partidas.",
+                "Não foi possível listar as partidas.",
 
             detalhes:
                 erro.message
@@ -39,20 +62,48 @@ exports.listar = async (req, res) => {
 
     }
 
-};
+}
 
 
 // ============================================================
-// BUSCAR PARTIDA POR ID
+// BUSCAR
 // ============================================================
 
-exports.buscar = async (req, res) => {
+async function buscar(
+    req,
+    res
+) {
 
     try {
 
+        const {
+            id
+        } = req.params;
+
+
+        if (
+            !mongoose.Types.ObjectId.isValid(
+                id
+            )
+        ) {
+
+            return res.status(400).json({
+
+                erro:
+                    "ID da partida inválido."
+
+            });
+
+        }
+
+
         const partida =
             await Partida
-                .findById(req.params.id)
+                .findById(id)
+                .populate(
+                    "pelada",
+                    "nome data horario local status"
+                )
                 .populate(
                     "jogadoresTimeA",
                     "nome numeroCamisa"
@@ -75,7 +126,9 @@ exports.buscar = async (req, res) => {
         }
 
 
-        res.json(partida);
+        return res.json(
+            partida
+        );
 
     } catch (erro) {
 
@@ -84,10 +137,11 @@ exports.buscar = async (req, res) => {
             erro
         );
 
-        res.status(500).json({
+
+        return res.status(500).json({
 
             erro:
-                "Erro ao buscar partida.",
+                "Não foi possível buscar a partida.",
 
             detalhes:
                 erro.message
@@ -96,29 +150,34 @@ exports.buscar = async (req, res) => {
 
     }
 
-};
+}
 
 
 // ============================================================
-// CRIAR PARTIDA
+// CRIAR
 // ============================================================
 
-exports.criar = async (req, res) => {
+async function criar(
+    req,
+    res
+) {
 
     try {
 
         const {
 
-            nomeTimeA,
+            pelada,
 
+            timeA,
+            timeB,
+
+            nomeTimeA,
             nomeTimeB,
 
             jogadoresTimeA,
-
             jogadoresTimeB,
 
             golsTimeA,
-
             golsTimeB,
 
             vencedor,
@@ -128,7 +187,6 @@ exports.criar = async (req, res) => {
             duracaoSegundos,
 
             iniciadaEm,
-
             finalizadaEm,
 
             finalizada
@@ -137,10 +195,13 @@ exports.criar = async (req, res) => {
 
 
         // --------------------------------------------------------
-        // VALIDAÇÕES
+        // VALIDAR NOMES DOS TIMES
         // --------------------------------------------------------
 
-        if (!nomeTimeA || !nomeTimeB) {
+        if (
+            !nomeTimeA ||
+            !nomeTimeB
+        ) {
 
             return res.status(400).json({
 
@@ -152,16 +213,39 @@ exports.criar = async (req, res) => {
         }
 
 
+        // --------------------------------------------------------
+        // VALIDAR GOLS
+        // --------------------------------------------------------
+
         const placarA =
-            Number.isFinite(Number(golsTimeA))
-                ? Number(golsTimeA)
-                : 0;
+            Number(
+                golsTimeA || 0
+            );
 
 
         const placarB =
-            Number.isFinite(Number(golsTimeB))
-                ? Number(golsTimeB)
-                : 0;
+            Number(
+                golsTimeB || 0
+            );
+
+
+        if (
+            !Number.isFinite(
+                placarA
+            ) ||
+            !Number.isFinite(
+                placarB
+            )
+        ) {
+
+            return res.status(400).json({
+
+                erro:
+                    "Os gols informados são inválidos."
+
+            });
+
+        }
 
 
         if (
@@ -172,7 +256,7 @@ exports.criar = async (req, res) => {
             return res.status(400).json({
 
                 erro:
-                    "O placar não pode ser negativo."
+                    "A quantidade de gols não pode ser negativa."
 
             });
 
@@ -180,20 +264,88 @@ exports.criar = async (req, res) => {
 
 
         // --------------------------------------------------------
-        // VERIFICAR VENCEDOR
+        // NÃO ACEITAR EMPATE
         // --------------------------------------------------------
 
-        if (placarA === placarB) {
+        if (
+            placarA === placarB
+        ) {
 
             return res.status(400).json({
 
                 erro:
-                    "Uma partida não pode ser finalizada empatada."
+                    "A partida não pode ser salva empatada."
 
             });
 
         }
 
+
+        // --------------------------------------------------------
+        // VALIDAR PELADA
+        // --------------------------------------------------------
+
+        let peladaValida =
+            null;
+
+
+        if (pelada) {
+
+            if (
+                !mongoose.Types.ObjectId.isValid(
+                    pelada
+                )
+            ) {
+
+                return res.status(400).json({
+
+                    erro:
+                        "O ID da pelada é inválido."
+
+                });
+
+            }
+
+
+            peladaValida =
+                await Pelada.findById(
+                    pelada
+                );
+
+
+            if (!peladaValida) {
+
+                return res.status(404).json({
+
+                    erro:
+                        "A pelada informada não foi encontrada."
+
+                });
+
+            }
+
+
+            // Pelada cancelada não pode receber novas partidas.
+            if (
+                peladaValida.status ===
+                "Cancelada"
+            ) {
+
+                return res.status(400).json({
+
+                    erro:
+                        "Não é possível registrar uma partida em uma pelada cancelada."
+
+                });
+
+            }
+
+        }
+
+
+        // --------------------------------------------------------
+        // CALCULAR VENCEDOR
+        // --------------------------------------------------------
 
         const vencedorCalculado =
             placarA > placarB
@@ -202,70 +354,202 @@ exports.criar = async (req, res) => {
 
 
         // --------------------------------------------------------
-        // CRIAR PARTIDA
+        // PAYLOAD
+        // --------------------------------------------------------
+
+        const dadosPartida = {
+
+            nomeTimeA:
+                String(
+                    nomeTimeA
+                ).trim(),
+
+            nomeTimeB:
+                String(
+                    nomeTimeB
+                ).trim(),
+
+            jogadoresTimeA:
+                Array.isArray(
+                    jogadoresTimeA
+                )
+                    ? jogadoresTimeA
+                    : [],
+
+            jogadoresTimeB:
+                Array.isArray(
+                    jogadoresTimeB
+                )
+                    ? jogadoresTimeB
+                    : [],
+
+            golsTimeA:
+                placarA,
+
+            golsTimeB:
+                placarB,
+
+            vencedor:
+                vencedorCalculado,
+
+            finalizada:
+                typeof finalizada ===
+                "boolean"
+                    ? finalizada
+                    : true
+
+        };
+
+
+        // --------------------------------------------------------
+        // CAMPOS OPCIONAIS
+        // --------------------------------------------------------
+
+        if (
+            peladaValida
+        ) {
+
+            dadosPartida.pelada =
+                peladaValida._id;
+
+        }
+
+
+        if (
+            timeA &&
+            mongoose.Types.ObjectId.isValid(
+                timeA
+            )
+        ) {
+
+            dadosPartida.timeA =
+                timeA;
+
+        }
+
+
+        if (
+            timeB &&
+            mongoose.Types.ObjectId.isValid(
+                timeB
+            )
+        ) {
+
+            dadosPartida.timeB =
+                timeB;
+
+        }
+
+
+        if (
+            Number.isFinite(
+                Number(
+                    numero
+                )
+            ) &&
+            Number(
+                numero
+            ) > 0
+        ) {
+
+            dadosPartida.numero =
+                Number(
+                    numero
+                );
+
+        }
+
+
+        if (
+            Number.isFinite(
+                Number(
+                    duracaoSegundos
+                )
+            ) &&
+            Number(
+                duracaoSegundos
+            ) >= 0
+        ) {
+
+            dadosPartida.duracaoSegundos =
+                Number(
+                    duracaoSegundos
+                );
+
+        }
+
+
+        if (
+            iniciadaEm
+        ) {
+
+            const dataInicio =
+                new Date(
+                    iniciadaEm
+                );
+
+
+            if (
+                !Number.isNaN(
+                    dataInicio.getTime()
+                )
+            ) {
+
+                dadosPartida.iniciadaEm =
+                    dataInicio;
+
+            }
+
+        }
+
+
+        if (
+            finalizadaEm
+        ) {
+
+            const dataFinal =
+                new Date(
+                    finalizadaEm
+                );
+
+
+            if (
+                !Number.isNaN(
+                    dataFinal.getTime()
+                )
+            ) {
+
+                dadosPartida.finalizadaEm =
+                    dataFinal;
+
+            }
+
+        }
+
+
+        // --------------------------------------------------------
+        // CRIAR
         // --------------------------------------------------------
 
         const partida =
-            await Partida.create({
-
-                nomeTimeA:
-                    nomeTimeA.trim(),
-
-                nomeTimeB:
-                    nomeTimeB.trim(),
-
-                jogadoresTimeA:
-                    Array.isArray(jogadoresTimeA)
-                        ? jogadoresTimeA
-                        : [],
-
-                jogadoresTimeB:
-                    Array.isArray(jogadoresTimeB)
-                        ? jogadoresTimeB
-                        : [],
-
-                golsTimeA:
-                    placarA,
-
-                golsTimeB:
-                    placarB,
-
-                vencedor:
-                    vencedorCalculado,
-
-                numero:
-                    numero
-                        ? Number(numero)
-                        : undefined,
-
-                duracaoSegundos:
-                    duracaoSegundos
-                        ? Number(duracaoSegundos)
-                        : 0,
-
-                iniciadaEm:
-                    iniciadaEm
-                        ? new Date(iniciadaEm)
-                        : undefined,
-
-                finalizadaEm:
-                    finalizadaEm
-                        ? new Date(finalizadaEm)
-                        : new Date(),
-
-                finalizada:
-                    finalizada !== false
-
-            });
+            await Partida.create(
+                dadosPartida
+            );
 
 
         // --------------------------------------------------------
-        // RETORNAR PARTIDA
+        // BUSCAR NOVAMENTE COM POPULATE
         // --------------------------------------------------------
 
         const partidaCompleta =
             await Partida
-                .findById(partida._id)
+                .findById(
+                    partida._id
+                )
+                .populate(
+                    "pelada",
+                    "nome data horario local status"
+                )
                 .populate(
                     "jogadoresTimeA",
                     "nome numeroCamisa"
@@ -276,12 +560,29 @@ exports.criar = async (req, res) => {
                 );
 
 
-        res.status(201).json({
+        console.log(
+            "✅ Partida criada:",
+            partidaCompleta._id
+        );
 
-            sucesso: true,
+
+        if (
+            partidaCompleta.pelada
+        ) {
+
+            console.log(
+                "🏆 Pelada vinculada:",
+                partidaCompleta.pelada.nome,
+                partidaCompleta.pelada._id
+            );
+
+        }
+
+
+        return res.status(201).json({
 
             mensagem:
-                "Partida salva com sucesso.",
+                "Partida criada com sucesso.",
 
             partida:
                 partidaCompleta
@@ -296,10 +597,10 @@ exports.criar = async (req, res) => {
         );
 
 
-        res.status(400).json({
+        return res.status(500).json({
 
             erro:
-                "Erro ao salvar partida.",
+                "Não foi possível criar a partida.",
 
             detalhes:
                 erro.message
@@ -308,20 +609,44 @@ exports.criar = async (req, res) => {
 
     }
 
-};
+}
 
 
 // ============================================================
-// EXCLUIR PARTIDA
+// EXCLUIR
 // ============================================================
 
-exports.excluir = async (req, res) => {
+async function excluir(
+    req,
+    res
+) {
 
     try {
 
+        const {
+            id
+        } = req.params;
+
+
+        if (
+            !mongoose.Types.ObjectId.isValid(
+                id
+            )
+        ) {
+
+            return res.status(400).json({
+
+                erro:
+                    "ID da partida inválido."
+
+            });
+
+        }
+
+
         const partida =
             await Partida.findByIdAndDelete(
-                req.params.id
+                id
             );
 
 
@@ -337,9 +662,13 @@ exports.excluir = async (req, res) => {
         }
 
 
-        res.json({
+        console.log(
+            "🗑️ Partida excluída:",
+            id
+        );
 
-            sucesso: true,
+
+        return res.json({
 
             mensagem:
                 "Partida excluída com sucesso."
@@ -353,10 +682,11 @@ exports.excluir = async (req, res) => {
             erro
         );
 
-        res.status(500).json({
+
+        return res.status(500).json({
 
             erro:
-                "Erro ao excluir partida.",
+                "Não foi possível excluir a partida.",
 
             detalhes:
                 erro.message
@@ -364,5 +694,22 @@ exports.excluir = async (req, res) => {
         });
 
     }
+
+}
+
+
+// ============================================================
+// EXPORTAR
+// ============================================================
+
+module.exports = {
+
+    listar,
+
+    buscar,
+
+    criar,
+
+    excluir
 
 };
