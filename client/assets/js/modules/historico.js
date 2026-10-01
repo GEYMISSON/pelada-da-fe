@@ -16,7 +16,14 @@
 
             this.gols = [];
 
+            this.peladas = [];
+
             this.filtradas = [];
+
+            this.peladaAtualId =
+                localStorage.getItem(
+                    "peladaDaFePeladaAtualId"
+                ) || "";
 
             this.modal = null;
 
@@ -83,25 +90,36 @@
                     "dataInicialHistorico"
                 );
 
+
             const dataFinal =
                 document.getElementById(
                     "dataFinalHistorico"
                 );
+
+
+            const filtroPelada =
+                document.getElementById(
+                    "filtroPeladaHistorico"
+                );
+
 
             const filtroTime =
                 document.getElementById(
                     "filtroTimeHistorico"
                 );
 
+
             const filtroVencedor =
                 document.getElementById(
                     "filtroVencedorHistorico"
                 );
 
+
             const pesquisa =
                 document.getElementById(
                     "pesquisaHistorico"
                 );
+
 
             const btnLimpar =
                 document.getElementById(
@@ -112,6 +130,7 @@
             [
                 dataInicial,
                 dataFinal,
+                filtroPelada,
                 filtroTime,
                 filtroVencedor,
                 pesquisa
@@ -128,6 +147,7 @@
 
                             }
                         );
+
 
                         elemento.addEventListener(
                             "change",
@@ -233,7 +253,8 @@
 
                 const [
                     respostaPartidas,
-                    respostaGols
+                    respostaGols,
+                    respostaPeladas
                 ] = await Promise.all([
 
                     fetch(
@@ -248,6 +269,13 @@
                         {
                             cache: "no-store"
                         }
+                    ),
+
+                    fetch(
+                        "/api/peladas",
+                        {
+                            cache: "no-store"
+                        }
                     )
 
                 ]);
@@ -256,6 +284,8 @@
                 let partidas = [];
 
                 let gols = [];
+
+                let peladas = [];
 
 
                 try {
@@ -278,6 +308,18 @@
                 } catch (erro) {
 
                     gols = [];
+
+                }
+
+
+                try {
+
+                    peladas =
+                        await respostaPeladas.json();
+
+                } catch (erro) {
+
+                    peladas = [];
 
                 }
 
@@ -308,6 +350,19 @@
                 }
 
 
+                if (!respostaPeladas.ok) {
+
+                    throw new Error(
+
+                        peladas?.erro ||
+                        peladas?.message ||
+                        "Não foi possível carregar as peladas."
+
+                    );
+
+                }
+
+
                 if (
                     !Array.isArray(partidas)
                 ) {
@@ -330,6 +385,17 @@
                 }
 
 
+                if (
+                    !Array.isArray(peladas)
+                ) {
+
+                    throw new Error(
+                        "A API de peladas retornou um formato inválido."
+                    );
+
+                }
+
+
                 this.partidas =
                     partidas.filter(
                         partida =>
@@ -339,6 +405,13 @@
 
                 this.gols =
                     gols;
+
+
+                this.peladas =
+                    peladas;
+
+
+                this.preencherFiltroPelada();
 
 
                 this.partidas.sort(
@@ -391,6 +464,8 @@
 
                 this.gols = [];
 
+                this.peladas = [];
+
                 this.filtradas = [];
 
 
@@ -421,7 +496,7 @@
                         <tr>
 
                             <td
-                                colspan="8"
+                                colspan="9"
                                 class="text-center py-5"
                             >
 
@@ -452,6 +527,292 @@
 
 
         // ========================================================
+        // PELADAS
+        // ========================================================
+
+        preencherFiltroPelada() {
+
+            const elemento =
+                document.getElementById(
+                    "filtroPeladaHistorico"
+                );
+
+
+            if (!elemento) {
+                return;
+            }
+
+
+            const valorAtual =
+                elemento.value ||
+                "";
+
+
+            const peladasUnicas =
+                new Map();
+
+
+            this.peladas
+                .filter(
+                    pelada =>
+                        pelada &&
+                        pelada._id
+                )
+                .forEach(
+                    pelada => {
+
+                        peladasUnicas.set(
+                            String(
+                                pelada._id
+                            ),
+                            pelada
+                        );
+
+                    }
+                );
+
+
+            this.partidas.forEach(
+                partida => {
+
+                    const dados =
+                        this.obterDadosPelada(
+                            partida
+                        );
+
+
+                    if (
+                        dados.id &&
+                        !peladasUnicas.has(
+                            dados.id
+                        )
+                    ) {
+
+                        peladasUnicas.set(
+                            dados.id,
+                            {
+                                _id:
+                                    dados.id,
+
+                                nome:
+                                    dados.nome
+                            }
+                        );
+
+                    }
+
+                }
+            );
+
+
+            const peladasOrdenadas =
+                Array.from(
+                    peladasUnicas.values()
+                )
+                    .sort(
+                        (
+                            peladaA,
+                            peladaB
+                        ) => {
+
+                            return String(
+                                peladaA.nome ||
+                                "Pelada"
+                            ).localeCompare(
+                                String(
+                                    peladaB.nome ||
+                                    "Pelada"
+                                ),
+                                "pt-BR"
+                            );
+
+                        }
+                    );
+
+
+            elemento.innerHTML = `
+
+                <option value="">
+                    Todas
+                </option>
+
+            `;
+
+
+            peladasOrdenadas.forEach(
+                pelada => {
+
+                    const option =
+                        document.createElement(
+                            "option"
+                        );
+
+
+                    option.value =
+                        String(
+                            pelada._id
+                        );
+
+
+                    option.textContent =
+                        pelada.nome ||
+                        "Pelada sem nome";
+
+
+                    elemento.appendChild(
+                        option
+                    );
+
+                }
+            );
+
+
+            if (
+                valorAtual &&
+                peladasUnicas.has(
+                    valorAtual
+                )
+            ) {
+
+                elemento.value =
+                    valorAtual;
+
+            } else {
+
+                const peladaAtual =
+                    String(
+                        this.peladaAtualId ||
+                        ""
+                    );
+
+
+                if (
+                    peladaAtual &&
+                    peladasUnicas.has(
+                        peladaAtual
+                    )
+                ) {
+
+                    /*
+                     * Não filtramos automaticamente pela
+                     * Pelada atual.
+                     *
+                     * O Histórico continua iniciando em
+                     * "Todas" até o usuário escolher uma
+                     * Pelada explicitamente.
+                     */
+                    elemento.value = "";
+
+                }
+
+            }
+
+        }
+
+
+        obterDadosPelada(
+            partida
+        ) {
+
+            if (!partida) {
+
+                return {
+                    id: "",
+                    nome: "Sem pelada vinculada"
+                };
+
+            }
+
+
+            const pelada =
+                partida.pelada;
+
+
+            /*
+             * O backend atual devolve a Pelada populada
+             * como objeto.
+             */
+            if (
+                pelada &&
+                typeof pelada === "object"
+            ) {
+
+                return {
+
+                    id:
+                        String(
+                            pelada._id ||
+                            pelada.id ||
+                            ""
+                        ),
+
+                    nome:
+                        pelada.nome ||
+                        "Pelada sem nome"
+
+                };
+
+            }
+
+
+            /*
+             * Compatibilidade com registros em que
+             * o campo pelada venha apenas como ObjectId.
+             */
+            if (pelada) {
+
+                const id =
+                    String(
+                        pelada
+                    );
+
+
+                const encontrada =
+                    this.peladas.find(
+                        item =>
+                            String(
+                                item?._id
+                            ) === id
+                    );
+
+
+                return {
+
+                    id,
+
+                    nome:
+                        encontrada?.nome ||
+                        "Pelada sem nome"
+
+                };
+
+            }
+
+
+            return {
+
+                id: "",
+
+                nome:
+                    "Sem pelada vinculada"
+
+            };
+
+        }
+
+
+        obterNomePelada(
+            partida
+        ) {
+
+            return this.obterDadosPelada(
+                partida
+            ).nome;
+
+        }
+
+
+        // ========================================================
         // FILTROS
         // ========================================================
 
@@ -466,6 +827,12 @@
             const dataFinal =
                 document.getElementById(
                     "dataFinalHistorico"
+                )?.value || "";
+
+
+            const filtroPelada =
+                document.getElementById(
+                    "filtroPeladaHistorico"
                 )?.value || "";
 
 
@@ -523,6 +890,26 @@
                         if (
                             dataFinal &&
                             dataPartida > dataFinal
+                        ) {
+
+                            return false;
+
+                        }
+
+
+                        const dadosPelada =
+                            this.obterDadosPelada(
+                                partida
+                            );
+
+
+                        // ----------------------------------------
+                        // FILTRO DE PELADA
+                        // ----------------------------------------
+
+                        if (
+                            filtroPelada &&
+                            dadosPelada.id !== filtroPelada
                         ) {
 
                             return false;
@@ -589,6 +976,7 @@
 
                             const texto =
                                 [
+                                    dadosPelada.nome,
                                     nomeTimeA,
                                     nomeTimeB,
                                     nomeVencedor,
@@ -656,6 +1044,7 @@
 
                 "dataInicialHistorico",
                 "dataFinalHistorico",
+                "filtroPeladaHistorico",
                 "filtroTimeHistorico",
                 "filtroVencedorHistorico",
                 "pesquisaHistorico"
@@ -791,7 +1180,7 @@
                     <tr>
 
                         <td
-                            colspan="8"
+                            colspan="9"
                             class="text-center text-muted py-5"
                         >
 
@@ -826,6 +1215,12 @@
                             const nomeTimeB =
                                 partida.nomeTimeB ||
                                 "Time B";
+
+
+                            const nomePelada =
+                                this.obterNomePelada(
+                                    partida
+                                );
 
 
                             const golsA =
@@ -877,6 +1272,20 @@
                                         <strong>
                                             ${partida.numero || "—"}
                                         </strong>
+
+                                    </td>
+
+
+                                    <td>
+
+                                        <span
+                                            class="badge bg-success-subtle text-success border border-success-subtle"
+                                        >
+                                            <i class="bi bi-calendar-event me-1"></i>
+                                            ${this.escaparHtml(
+                                                nomePelada
+                                            )}
+                                        </span>
 
                                     </td>
 
@@ -1059,6 +1468,12 @@
                 );
 
 
+            const nomePelada =
+                this.obterNomePelada(
+                    partida
+                );
+
+
             const gols =
                 this.obterGolsPartida(
                     partida._id
@@ -1090,7 +1505,7 @@
             if (subtitulo) {
 
                 subtitulo.textContent =
-                    `${nomeTimeA} ${golsA} x ${golsB} ${nomeTimeB}`;
+                    `${nomeTimeA} ${golsA} x ${golsB} ${nomeTimeB} • ${nomePelada}`;
 
             }
 
@@ -1160,12 +1575,13 @@
 
                                                     </div>
 
+
                                                     <span
                                                         class="badge bg-success"
                                                     >
 
                                                         ${minuto}'
-                                                        
+
                                                     </span>
 
                                                 </div>
@@ -1185,6 +1601,23 @@
 
 
             conteudo.innerHTML = `
+
+                <div class="border rounded p-3 mb-4">
+
+                    <small class="text-muted d-block mb-1">
+                        Pelada
+                    </small>
+
+                    <div class="fw-bold">
+
+                        <i class="bi bi-calendar-event text-success me-1"></i>
+
+                        ${this.escaparHtml(nomePelada)}
+
+                    </div>
+
+                </div>
+
 
                 <div class="row g-3 mb-4">
 
@@ -1646,7 +2079,11 @@
 
             this.gols = [];
 
+            this.peladas = [];
+
             this.filtradas = [];
+
+            this.peladaAtualId = null;
 
             this.modal = null;
 
