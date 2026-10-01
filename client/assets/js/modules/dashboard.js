@@ -8,21 +8,14 @@
     class Dashboard {
 
         constructor() {
-
             this.jogadores = [];
-
             this.partidas = [];
-
             this.gols = [];
-
+            this.peladas = [];
+            this.filtroPeladaId = "";
             this.inicializar();
-
         }
 
-
-        // ========================================================
-        // INICIALIZAÇÃO
-        // ========================================================
 
         async inicializar() {
 
@@ -37,15 +30,23 @@
         }
 
 
-        // ========================================================
-        // EVENTOS
-        // ========================================================
-
         configurarEventos() {
 
             const botao =
                 document.getElementById(
                     "btnAtualizarDashboard"
+                );
+
+
+            const filtroPelada =
+                document.getElementById(
+                    "filtroPeladaDashboard"
+                );
+
+
+            const btnLimpar =
+                document.getElementById(
+                    "btnLimparFiltroDashboard"
                 );
 
 
@@ -62,12 +63,46 @@
 
             }
 
+
+            if (filtroPelada) {
+
+                filtroPelada.addEventListener(
+                    "change",
+                    () => {
+
+                        this.filtroPeladaId =
+                            filtroPelada.value ||
+                            "";
+
+                        this.processarDados();
+
+                    }
+                );
+
+            }
+
+
+            if (btnLimpar) {
+
+                btnLimpar.addEventListener(
+                    "click",
+                    () => {
+
+                        if (filtroPelada) {
+                            filtroPelada.value = "";
+                        }
+
+                        this.filtroPeladaId = "";
+
+                        this.processarDados();
+
+                    }
+                );
+
+            }
+
         }
 
-
-        // ========================================================
-        // CARREGAR DADOS
-        // ========================================================
 
         async carregarDados() {
 
@@ -82,14 +117,37 @@
                 const [
                     respostaJogadores,
                     respostaPartidas,
-                    respostaGols
+                    respostaGols,
+                    respostaPeladas
                 ] = await Promise.all([
 
-                    fetch("/api/jogadores"),
+                    fetch(
+                        "/api/jogadores",
+                        {
+                            cache: "no-store"
+                        }
+                    ),
 
-                    fetch("/api/partidas"),
+                    fetch(
+                        "/api/partidas",
+                        {
+                            cache: "no-store"
+                        }
+                    ),
 
-                    fetch("/api/gols")
+                    fetch(
+                        "/api/gols",
+                        {
+                            cache: "no-store"
+                        }
+                    ),
+
+                    fetch(
+                        "/api/peladas",
+                        {
+                            cache: "no-store"
+                        }
+                    )
 
                 ]);
 
@@ -121,6 +179,15 @@
                 }
 
 
+                if (!respostaPeladas.ok) {
+
+                    throw new Error(
+                        "Erro ao carregar peladas."
+                    );
+
+                }
+
+
                 this.jogadores =
                     await respostaJogadores.json();
 
@@ -133,8 +200,65 @@
                     await respostaGols.json();
 
 
-                this.processarDados();
+                this.peladas =
+                    await respostaPeladas.json();
 
+
+                if (
+                    !Array.isArray(
+                        this.jogadores
+                    )
+                ) {
+
+                    throw new Error(
+                        "A API de jogadores retornou um formato inválido."
+                    );
+
+                }
+
+
+                if (
+                    !Array.isArray(
+                        this.partidas
+                    )
+                ) {
+
+                    throw new Error(
+                        "A API de partidas retornou um formato inválido."
+                    );
+
+                }
+
+
+                if (
+                    !Array.isArray(
+                        this.gols
+                    )
+                ) {
+
+                    throw new Error(
+                        "A API de gols retornou um formato inválido."
+                    );
+
+                }
+
+
+                if (
+                    !Array.isArray(
+                        this.peladas
+                    )
+                ) {
+
+                    throw new Error(
+                        "A API de peladas retornou um formato inválido."
+                    );
+
+                }
+
+
+                this.preencherFiltroPelada();
+
+                this.processarDados();
 
                 this.atualizarStatus(
                     "Atualizado",
@@ -165,10 +289,6 @@
         }
 
 
-        // ========================================================
-        // PROCESSAR DADOS
-        // ========================================================
-
         processarDados() {
 
             const jogadoresAtivos =
@@ -185,30 +305,418 @@
                 );
 
 
+            const partidasFiltradas =
+                this.filtrarPartidasPorPelada(
+                    partidasFinalizadas
+                );
+
+
+            const golsFiltrados =
+                this.obterGolsDasPartidas(
+                    partidasFiltradas
+                );
+
+
+            this.atualizarIndicadorPelada();
+
+
             this.atualizarCards(
                 jogadoresAtivos,
-                partidasFinalizadas
+                partidasFiltradas,
+                golsFiltrados
             );
 
 
             this.renderizarGolsPorTime(
-                partidasFinalizadas
+                partidasFiltradas
             );
 
 
             this.renderizarDesempenhoTimes(
-                partidasFinalizadas
+                partidasFiltradas
             );
 
 
             this.renderizarArtilheiros(
-                jogadoresAtivos
+                jogadoresAtivos,
+                partidasFiltradas,
+                golsFiltrados
             );
 
 
             this.renderizarUltimasPartidas(
-                partidasFinalizadas
+                partidasFiltradas
             );
+
+        }
+
+
+        // ========================================================
+        // FILTRO DE PELADA
+        // ========================================================
+
+        preencherFiltroPelada() {
+
+            const elemento =
+                document.getElementById(
+                    "filtroPeladaDashboard"
+                );
+
+
+            if (!elemento) {
+                return;
+            }
+
+
+            const valorAtual =
+                this.filtroPeladaId ||
+                elemento.value ||
+                "";
+
+
+            const mapa =
+                new Map();
+
+
+            this.peladas
+                .filter(
+                    pelada =>
+                        pelada &&
+                        pelada._id
+                )
+                .forEach(
+                    pelada => {
+
+                        mapa.set(
+                            String(
+                                pelada._id
+                            ),
+                            pelada
+                        );
+
+                    }
+                );
+
+
+            this.partidas.forEach(
+                partida => {
+
+                    const dados =
+                        this.obterDadosPelada(
+                            partida
+                        );
+
+
+                    if (
+                        dados.id &&
+                        !mapa.has(
+                            dados.id
+                        )
+                    ) {
+
+                        mapa.set(
+                            dados.id,
+                            {
+                                _id:
+                                    dados.id,
+
+                                nome:
+                                    dados.nome
+
+                            }
+                        );
+
+                    }
+
+                }
+            );
+
+
+            const lista =
+                Array.from(
+                    mapa.values()
+                )
+                    .sort(
+                        (
+                            a,
+                            b
+                        ) =>
+                            String(
+                                a.nome ||
+                                "Pelada"
+                            )
+                                .localeCompare(
+                                    String(
+                                        b.nome ||
+                                        "Pelada"
+                                    ),
+                                    "pt-BR"
+                                )
+                    );
+
+
+            elemento.innerHTML = `
+
+                <option value="">
+                    Todas
+                </option>
+
+            `;
+
+
+            lista.forEach(
+                pelada => {
+
+                    const option =
+                        document.createElement(
+                            "option"
+                        );
+
+
+                    option.value =
+                        String(
+                            pelada._id
+                        );
+
+
+                    option.textContent =
+                        pelada.nome ||
+                        "Pelada sem nome";
+
+
+                    elemento.appendChild(
+                        option
+                    );
+
+                }
+            );
+
+
+            if (
+                valorAtual &&
+                mapa.has(
+                    valorAtual
+                )
+            ) {
+
+                elemento.value =
+                    valorAtual;
+
+                this.filtroPeladaId =
+                    valorAtual;
+
+            } else {
+
+                elemento.value =
+                    "";
+
+                this.filtroPeladaId =
+                    "";
+
+            }
+
+        }
+
+
+        obterDadosPelada(
+            partida
+        ) {
+
+            if (!partida) {
+
+                return {
+                    id: "",
+                    nome: "Sem pelada vinculada"
+                };
+
+            }
+
+
+            const pelada =
+                partida.pelada;
+
+
+            if (
+                pelada &&
+                typeof pelada === "object"
+            ) {
+
+                return {
+
+                    id:
+                        String(
+                            pelada._id ||
+                            pelada.id ||
+                            ""
+                        ),
+
+                    nome:
+                        pelada.nome ||
+                        "Pelada sem nome"
+
+                };
+
+            }
+
+
+            if (pelada) {
+
+                const id =
+                    String(
+                        pelada
+                    );
+
+
+                const encontrada =
+                    this.peladas.find(
+                        item =>
+                            String(
+                                item?._id ||
+                                ""
+                            ) === id
+                    );
+
+
+                return {
+
+                    id,
+
+                    nome:
+                        encontrada?.nome ||
+                        "Pelada sem nome"
+
+                };
+
+            }
+
+
+            return {
+
+                id: "",
+
+                nome:
+                    "Sem pelada vinculada"
+
+            };
+
+        }
+
+
+        obterNomePelada(
+            partida
+        ) {
+
+            return this.obterDadosPelada(
+                partida
+            ).nome;
+
+        }
+
+
+        filtrarPartidasPorPelada(
+            partidas
+        ) {
+
+            if (
+                !this.filtroPeladaId
+            ) {
+
+                return partidas;
+
+            }
+
+
+            return partidas.filter(
+                partida =>
+                    this.obterDadosPelada(
+                        partida
+                    ).id ===
+                    this.filtroPeladaId
+            );
+
+        }
+
+
+        obterGolsDasPartidas(
+            partidas
+        ) {
+
+            const ids =
+                new Set(
+                    partidas
+                        .map(
+                            partida =>
+                                String(
+                                    partida?._id ||
+                                    ""
+                                )
+                        )
+                        .filter(
+                            Boolean
+                        )
+                );
+
+
+            return this.gols.filter(
+                gol => {
+
+                    const partidaId =
+                        String(
+                            gol?.partida?._id ||
+                            gol?.partida ||
+                            ""
+                        );
+
+
+                    return ids.has(
+                        partidaId
+                    );
+
+                }
+            );
+
+        }
+
+
+        atualizarIndicadorPelada() {
+
+            const indicador =
+                document.getElementById(
+                    "dashboardPeladaSelecionada"
+                );
+
+
+            if (!indicador) {
+                return;
+            }
+
+
+            if (
+                !this.filtroPeladaId
+            ) {
+
+                indicador.textContent =
+                    "Todas as peladas";
+
+                return;
+
+            }
+
+
+            const pelada =
+                this.peladas.find(
+                    item =>
+                        String(
+                            item?._id ||
+                            ""
+                        ) ===
+                        this.filtroPeladaId
+                );
+
+
+            indicador.textContent =
+                pelada?.nome ||
+                "Pelada selecionada";
 
         }
 
@@ -219,7 +727,8 @@
 
         atualizarCards(
             jogadoresAtivos,
-            partidasFinalizadas
+            partidasFinalizadas,
+            golsFiltrados
         ) {
 
             const totalJogadores =
@@ -257,63 +766,26 @@
                     (
                         total,
                         partida
-                    ) => {
-
-                        return total +
-                            Number(
-                                partida.golsTimeA || 0
-                            ) +
-                            Number(
-                                partida.golsTimeB || 0
-                            );
-
-                    },
+                    ) =>
+                        total +
+                        Number(
+                            partida.golsTimeA ||
+                            0
+                        ) +
+                        Number(
+                            partida.golsTimeB ||
+                            0
+                        ),
                     0
                 );
 
 
             const ranking =
-                [...jogadoresAtivos]
-                    .sort(
-                        (
-                            a,
-                            b
-                        ) => {
-
-                            const golsA =
-                                Number(
-                                    a.gols || 0
-                                );
-
-
-                            const golsB =
-                                Number(
-                                    b.gols || 0
-                                );
-
-
-                            if (
-                                golsB !== golsA
-                            ) {
-
-                                return (
-                                    golsB -
-                                    golsA
-                                );
-
-                            }
-
-
-                            return (
-                                a.nome || ""
-                            )
-                                .localeCompare(
-                                    b.nome || "",
-                                    "pt-BR"
-                                );
-
-                        }
-                    );
+                this.obterRankingArtilheiros(
+                    jogadoresAtivos,
+                    partidasFinalizadas,
+                    golsFiltrados
+                );
 
 
             const primeiro =
@@ -359,7 +831,8 @@
                 golsArtilheiro.textContent =
                     primeiro
                         ? `${Number(
-                            primeiro.gols || 0
+                            primeiro.gols ||
+                            0
                         )} gols`
                         : "0 gols";
 
@@ -383,9 +856,7 @@
 
 
             if (!area) {
-
                 return;
-
             }
 
 
@@ -407,58 +878,59 @@
 
                     const golsA =
                         Number(
-                            partida.golsTimeA || 0
+                            partida.golsTimeA ||
+                            0
                         );
 
 
                     const golsB =
                         Number(
-                            partida.golsTimeB || 0
+                            partida.golsTimeB ||
+                            0
                         );
 
 
-                    if (
-                        !times[nomeA]
-                    ) {
-
+                    if (!times[nomeA]) {
                         times[nomeA] = 0;
-
                     }
 
 
-                    if (
-                        !times[nomeB]
-                    ) {
-
+                    if (!times[nomeB]) {
                         times[nomeB] = 0;
-
                     }
 
 
-                    times[nomeA] += golsA;
+                    times[nomeA] +=
+                        golsA;
 
-                    times[nomeB] += golsB;
+
+                    times[nomeB] +=
+                        golsB;
 
                 }
             );
 
 
             const ranking =
-                Object.entries(times)
+                Object.entries(
+                    times
+                )
                     .sort(
                         (
                             a,
                             b
                         ) =>
-                            b[1] - a[1]
+                            b[1] -
+                            a[1]
                     );
 
 
             if (!ranking.length) {
 
-                area.innerHTML = this.mensagemVazia(
-                    "Nenhum gol registrado."
-                );
+                area.innerHTML =
+                    this.mensagemVazia(
+                        "Nenhum gol registrado."
+                    );
 
                 return;
 
@@ -476,57 +948,66 @@
 
 
             area.innerHTML =
-                ranking.map(
-                    (
-                        [nome, gols]
-                    ) => {
+                ranking
+                    .map(
+                        (
+                            [nome, gols]
+                        ) => {
 
-                        const percentual =
-                            (
-                                gols /
-                                maiorValor
-                            ) *
-                            100;
+                            const percentual =
+                                (
+                                    gols /
+                                    maiorValor
+                                ) *
+                                100;
 
 
-                        return `
+                            return `
 
-                            <div class="mb-3">
-
-                                <div
-                                    class="d-flex justify-content-between
-                                           align-items-center mb-1"
-                                >
-
-                                    <strong>
-                                        ${this.escaparHtml(nome)}
-                                    </strong>
-
-                                    <span class="fw-bold">
-                                        ${gols}
-                                    </span>
-
-                                </div>
-
-                                <div
-                                    class="progress"
-                                    style="height:14px;"
-                                >
+                                <div class="mb-3">
 
                                     <div
-                                        class="progress-bar bg-primary"
-                                        role="progressbar"
-                                        style="width:${percentual}%"
-                                    ></div>
+                                        class="
+                                            d-flex
+                                            justify-content-between
+                                            align-items-center
+                                            mb-1
+                                        "
+                                    >
+
+                                        <strong>
+                                            ${this.escaparHtml(
+                                                nome
+                                            )}
+                                        </strong>
+
+                                        <span class="fw-bold">
+                                            ${gols}
+                                        </span>
+
+                                    </div>
+
+
+                                    <div
+                                        class="progress"
+                                        style="height:14px;"
+                                    >
+
+                                        <div
+                                            class="progress-bar bg-primary"
+                                            role="progressbar"
+                                            style="width:${percentual}%"
+                                        ></div>
+
+                                    </div>
 
                                 </div>
 
-                            </div>
+                            `;
 
-                        `;
-
-                    }
-                ).join("");
+                        }
+                    )
+                    .join("");
 
         }
 
@@ -546,9 +1027,7 @@
 
 
             if (!area) {
-
                 return;
-
             }
 
 
@@ -571,11 +1050,8 @@
                     if (!times[nomeA]) {
 
                         times[nomeA] = {
-
                             vitorias: 0,
-
                             derrotas: 0
-
                         };
 
                     }
@@ -584,11 +1060,8 @@
                     if (!times[nomeB]) {
 
                         times[nomeB] = {
-
                             vitorias: 0,
-
                             derrotas: 0
-
                         };
 
                     }
@@ -622,14 +1095,17 @@
 
 
             const ranking =
-                Object.entries(times);
+                Object.entries(
+                    times
+                );
 
 
             if (!ranking.length) {
 
-                area.innerHTML = this.mensagemVazia(
-                    "Nenhuma partida finalizada."
-                );
+                area.innerHTML =
+                    this.mensagemVazia(
+                        "Nenhuma partida finalizada."
+                    );
 
                 return;
 
@@ -638,7 +1114,6 @@
 
             const maiorValor =
                 Math.max(
-
                     ...ranking.map(
                         ([, dados]) =>
                             Math.max(
@@ -646,143 +1121,164 @@
                                 dados.derrotas
                             )
                     ),
-
                     1
-
                 );
 
 
             area.innerHTML =
-                ranking.map(
-                    (
-                        [nome, dados]
-                    ) => {
+                ranking
+                    .map(
+                        (
+                            [nome, dados]
+                        ) => {
 
-                        const larguraVitorias =
-                            (
-                                dados.vitorias /
-                                maiorValor
-                            ) *
-                            100;
-
-
-                        const larguraDerrotas =
-                            (
-                                dados.derrotas /
-                                maiorValor
-                            ) *
-                            100;
+                            const larguraVitorias =
+                                (
+                                    dados.vitorias /
+                                    maiorValor
+                                ) *
+                                100;
 
 
-                        return `
-
-                            <div class="mb-4">
-
-                                <div class="fw-bold mb-2">
-
-                                    ${this.escaparHtml(nome)}
-
-                                </div>
+                            const larguraDerrotas =
+                                (
+                                    dados.derrotas /
+                                    maiorValor
+                                ) *
+                                100;
 
 
-                                <div
-                                    class="d-flex align-items-center gap-2 mb-2"
-                                >
+                            return `
 
-                                    <span
-                                        class="text-success fw-bold"
-                                        style="width:75px;"
-                                    >
-                                        Vitórias
-                                    </span>
+                                <div class="mb-4">
 
                                     <div
-                                        class="progress flex-grow-1"
-                                        style="height:12px;"
+                                        class="fw-bold mb-2"
                                     >
 
-                                        <div
-                                            class="progress-bar bg-success"
-                                            style="width:${larguraVitorias}%"
-                                        ></div>
+                                        ${this.escaparHtml(
+                                            nome
+                                        )}
 
                                     </div>
 
-                                    <span
-                                        class="fw-bold"
-                                        style="width:30px;"
-                                    >
-                                        ${dados.vitorias}
-                                    </span>
-
-                                </div>
-
-
-                                <div
-                                    class="d-flex align-items-center gap-2"
-                                >
-
-                                    <span
-                                        class="text-danger fw-bold"
-                                        style="width:75px;"
-                                    >
-                                        Derrotas
-                                    </span>
 
                                     <div
-                                        class="progress flex-grow-1"
-                                        style="height:12px;"
+                                        class="
+                                            d-flex
+                                            align-items-center
+                                            gap-2
+                                            mb-2
+                                        "
                                     >
 
+                                        <span
+                                            class="
+                                                text-success
+                                                fw-bold
+                                            "
+                                            style="width:75px;"
+                                        >
+                                            Vitórias
+                                        </span>
+
+
                                         <div
-                                            class="progress-bar bg-danger"
-                                            style="width:${larguraDerrotas}%"
-                                        ></div>
+                                            class="progress flex-grow-1"
+                                            style="height:12px;"
+                                        >
+
+                                            <div
+                                                class="
+                                                    progress-bar
+                                                    bg-success
+                                                "
+                                                style="width:${larguraVitorias}%"
+                                            ></div>
+
+                                        </div>
+
+
+                                        <span
+                                            class="fw-bold"
+                                            style="width:30px;"
+                                        >
+                                            ${dados.vitorias}
+                                        </span>
 
                                     </div>
 
-                                    <span
-                                        class="fw-bold"
-                                        style="width:30px;"
+
+                                    <div
+                                        class="
+                                            d-flex
+                                            align-items-center
+                                            gap-2
+                                        "
                                     >
-                                        ${dados.derrotas}
-                                    </span>
+
+                                        <span
+                                            class="
+                                                text-danger
+                                                fw-bold
+                                            "
+                                            style="width:75px;"
+                                        >
+                                            Derrotas
+                                        </span>
+
+
+                                        <div
+                                            class="progress flex-grow-1"
+                                            style="height:12px;"
+                                        >
+
+                                            <div
+                                                class="
+                                                    progress-bar
+                                                    bg-danger
+                                                "
+                                                style="width:${larguraDerrotas}%"
+                                            ></div>
+
+                                        </div>
+
+
+                                        <span
+                                            class="fw-bold"
+                                            style="width:30px;"
+                                        >
+                                            ${dados.derrotas}
+                                        </span>
+
+                                    </div>
 
                                 </div>
 
-                            </div>
+                            `;
 
-                        `;
-
-                    }
-                ).join("");
+                        }
+                    )
+                    .join("");
 
         }
 
 
         // ========================================================
-        // TOP ARTILHEIROS
+        // RANKING DE ARTILHEIROS
         // ========================================================
 
-        renderizarArtilheiros(
-            jogadores
+        obterRankingArtilheiros(
+            jogadores,
+            partidas,
+            golsFiltrados
         ) {
 
-            const area =
-                document.getElementById(
-                    "rankingArtilheiros"
-                );
+            if (
+                !this.filtroPeladaId
+            ) {
 
-
-            if (!area) {
-
-                return;
-
-            }
-
-
-            const ranking =
-                [...jogadores]
+                return [...jogadores]
                     .sort(
                         (
                             a,
@@ -791,13 +1287,15 @@
 
                             const golsA =
                                 Number(
-                                    a.gols || 0
+                                    a.gols ||
+                                    0
                                 );
 
 
                             const golsB =
                                 Number(
-                                    b.gols || 0
+                                    b.gols ||
+                                    0
                                 );
 
 
@@ -815,13 +1313,15 @@
 
                             const assistA =
                                 Number(
-                                    a.assistencias || 0
+                                    a.assistencias ||
+                                    0
                                 );
 
 
                             const assistB =
                                 Number(
-                                    b.assistencias || 0
+                                    b.assistencias ||
+                                    0
                                 );
 
 
@@ -838,15 +1338,194 @@
 
 
                             return (
-                                a.nome || ""
+                                a.nome ||
+                                ""
                             )
                                 .localeCompare(
-                                    b.nome || "",
+                                    b.nome ||
+                                    "",
                                     "pt-BR"
                                 );
 
                         }
-                    )
+                    );
+
+            }
+
+
+            const jogadoresPorId =
+                new Map();
+
+
+            jogadores.forEach(
+                jogador => {
+
+                    const id =
+                        String(
+                            jogador?._id ||
+                            jogador?.id ||
+                            ""
+                        );
+
+
+                    if (id) {
+
+                        jogadoresPorId.set(
+                            id,
+                            jogador
+                        );
+
+                    }
+
+                }
+            );
+
+
+            const mapa =
+                new Map();
+
+
+            golsFiltrados.forEach(
+                gol => {
+
+                    const nome =
+                        gol.nomeJogador ||
+                        gol.jogador?.nome ||
+                        "Jogador";
+
+
+                    const jogadorId =
+                        String(
+                            gol.jogador?._id ||
+                            gol.jogador?.id ||
+                            gol.jogador ||
+                            ""
+                        );
+
+
+                    const chave =
+                        jogadorId ||
+                        nome.toLowerCase();
+
+
+                    const jogadorOriginal =
+                        jogadoresPorId.get(
+                            jogadorId
+                        );
+
+
+                    const atual =
+                        mapa.get(
+                            chave
+                        ) ||
+                        {
+                            nome,
+
+                            gols: 0,
+
+                            assistencias:
+                                Number(
+                                    jogadorOriginal?.assistencias ||
+                                    0
+                                )
+
+                        };
+
+
+                    atual.gols +=
+                        Number(
+                            gol.gols ||
+                            1
+                        );
+
+
+                    mapa.set(
+                        chave,
+                        atual
+                    );
+
+                }
+            );
+
+
+            return Array.from(
+                mapa.values()
+            )
+                .sort(
+                    (
+                        a,
+                        b
+                    ) => {
+
+                        if (
+                            b.gols !==
+                            a.gols
+                        ) {
+
+                            return (
+                                b.gols -
+                                a.gols
+                            );
+
+                        }
+
+
+                        if (
+                            b.assistencias !==
+                            a.assistencias
+                        ) {
+
+                            return (
+                                b.assistencias -
+                                a.assistencias
+                            );
+
+                        }
+
+
+                        return (
+                            a.nome ||
+                            ""
+                        )
+                            .localeCompare(
+                                b.nome ||
+                                "",
+                                "pt-BR"
+                            );
+
+                    }
+                );
+
+        }
+
+
+        // ========================================================
+        // TOP ARTILHEIROS
+        // ========================================================
+
+        renderizarArtilheiros(
+            jogadores,
+            partidas,
+            golsFiltrados
+        ) {
+
+            const area =
+                document.getElementById(
+                    "rankingArtilheiros"
+                );
+
+
+            if (!area) {
+                return;
+            }
+
+
+            const ranking =
+                this.obterRankingArtilheiros(
+                    jogadores,
+                    partidas,
+                    golsFiltrados
+                )
                     .slice(
                         0,
                         5
@@ -866,99 +1545,121 @@
 
 
             area.innerHTML =
-                ranking.map(
-                    (
-                        jogador,
-                        indice
-                    ) => {
+                ranking
+                    .map(
+                        (
+                            jogador,
+                            indice
+                        ) => {
 
-                        const gols =
-                            Number(
-                                jogador.gols || 0
-                            );
-
-
-                        const assistencias =
-                            Number(
-                                jogador.assistencias || 0
-                            );
+                            const gols =
+                                Number(
+                                    jogador.gols ||
+                                    0
+                                );
 
 
-                        return `
+                            const assistencias =
+                                Number(
+                                    jogador.assistencias ||
+                                    0
+                                );
 
-                            <div
-                                class="d-flex align-items-center
-                                       justify-content-between
-                                       border-bottom py-3"
-                            >
+
+                            return `
 
                                 <div
-                                    class="d-flex align-items-center"
+                                    class="
+                                        d-flex
+                                        align-items-center
+                                        justify-content-between
+                                        border-bottom
+                                        py-3
+                                    "
                                 >
 
                                     <div
-                                        class="rounded-circle
-                                               bg-primary
-                                               text-white
-                                               d-flex
-                                               align-items-center
-                                               justify-content-center
-                                               fw-bold
-                                               me-3"
-                                        style="
-                                            width:38px;
-                                            height:38px;
+                                        class="
+                                            d-flex
+                                            align-items-center
                                         "
                                     >
-                                        ${indice + 1}
+
+                                        <div
+                                            class="
+                                                rounded-circle
+                                                bg-primary
+                                                text-white
+                                                d-flex
+                                                align-items-center
+                                                justify-content-center
+                                                fw-bold
+                                                me-3
+                                            "
+                                            style="
+                                                width:38px;
+                                                height:38px;
+                                            "
+                                        >
+                                            ${indice + 1}
+                                        </div>
+
+
+                                        <div>
+
+                                            <div
+                                                class="fw-bold"
+                                            >
+                                                ${this.escaparHtml(
+                                                    jogador.nome
+                                                )}
+                                            </div>
+
+
+                                            <small
+                                                class="text-muted"
+                                            >
+                                                ${this.escaparHtml(
+                                                    jogador.posicao ||
+                                                    "Sem posição"
+                                                )}
+                                            </small>
+
+                                        </div>
+
                                     </div>
 
 
-                                    <div>
+                                    <div
+                                        class="text-end"
+                                    >
 
-                                        <div class="fw-bold">
-                                            ${this.escaparHtml(
-                                                jogador.nome
-                                            )}
+                                        <div
+                                            class="
+                                                fw-bold
+                                                text-primary
+                                            "
+                                        >
+                                            ${gols} gols
                                         </div>
+
 
                                         <small
                                             class="text-muted"
                                         >
-                                            ${this.escaparHtml(
-                                                jogador.posicao ||
-                                                "Sem posição"
-                                            )}
+                                            ${assistencias}
+                                            assistência${assistencias === 1 ? "" : "s"}
                                         </small>
 
                                     </div>
 
                                 </div>
 
+                            `;
 
-                                <div class="text-end">
-
-                                    <div
-                                        class="fw-bold text-primary"
-                                    >
-                                        ${gols} gols
-                                    </div>
-
-                                    <small
-                                        class="text-muted"
-                                    >
-                                        ${assistencias}
-                                        assistência${assistencias === 1 ? "" : "s"}
-                                    </small>
-
-                                </div>
-
-                            </div>
-
-                        `;
-
-                    }
-                ).join("");
+                        }
+                    )
+                    .join("");
 
         }
 
@@ -978,9 +1679,7 @@
 
 
             if (!area) {
-
                 return;
-
             }
 
 
@@ -1009,7 +1708,8 @@
 
 
                             return (
-                                dataB - dataA
+                                dataB -
+                                dataA
                             );
 
                         }
@@ -1033,130 +1733,174 @@
 
 
             area.innerHTML =
-                ultimas.map(
-                    partida => {
+                ultimas
+                    .map(
+                        partida => {
 
-                        const golsA =
-                            Number(
-                                partida.golsTimeA || 0
-                            );
-
-
-                        const golsB =
-                            Number(
-                                partida.golsTimeB || 0
-                            );
+                            const golsA =
+                                Number(
+                                    partida.golsTimeA ||
+                                    0
+                                );
 
 
-                        const venceuA =
-                            partida.vencedor ===
-                            "timeA";
+                            const golsB =
+                                Number(
+                                    partida.golsTimeB ||
+                                    0
+                                );
 
 
-                        const venceuB =
-                            partida.vencedor ===
-                            "timeB";
+                            const venceuA =
+                                partida.vencedor ===
+                                "timeA";
 
 
-                        const data =
-                            this.formatarData(
-                                partida.finalizadaEm ||
-                                partida.createdAt
-                            );
+                            const venceuB =
+                                partida.vencedor ===
+                                "timeB";
 
 
-                        return `
-
-                            <div
-                                class="border-bottom py-3"
-                            >
-
-                                <div
-                                    class="d-flex
-                                           justify-content-between
-                                           align-items-center
-                                           gap-2"
-                                >
-
-                                    <div
-                                        class="
-                                            text-truncate
-                                            ${venceuA
-                                                ? "fw-bold"
-                                                : ""}
-                                        "
-                                    >
-                                        ${this.escaparHtml(
-                                            partida.nomeTimeA ||
-                                            "Time A"
-                                        )}
-                                    </div>
+                            const data =
+                                this.formatarData(
+                                    partida.finalizadaEm ||
+                                    partida.createdAt
+                                );
 
 
-                                    <div
-                                        class="
-                                            fw-bold
-                                            fs-5
-                                            text-nowrap
-                                        "
-                                    >
-                                        ${golsA}
-                                        x
-                                        ${golsB}
-                                    </div>
-
-
-                                    <div
-                                        class="
-                                            text-end
-                                            text-truncate
-                                            ${venceuB
-                                                ? "fw-bold"
-                                                : ""}
-                                        "
-                                    >
-                                        ${this.escaparHtml(
-                                            partida.nomeTimeB ||
-                                            "Time B"
-                                        )}
-                                    </div>
-
-                                </div>
-
+                            return `
 
                                 <div
                                     class="
-                                        d-flex
-                                        justify-content-between
-                                        mt-1
+                                        border-bottom
+                                        py-3
                                     "
                                 >
 
-                                    <small
-                                        class="text-muted"
+                                    <div
+                                        class="
+                                            d-flex
+                                            justify-content-between
+                                            align-items-center
+                                            gap-2
+                                        "
                                     >
-                                        ${data}
-                                    </small>
+
+                                        <div
+                                            class="
+                                                text-truncate
+                                                ${venceuA
+                                                    ? "fw-bold"
+                                                    : ""}
+                                            "
+                                        >
+                                            ${this.escaparHtml(
+                                                partida.nomeTimeA ||
+                                                "Time A"
+                                            )}
+                                        </div>
 
 
-                                    <small
-                                        class="text-success"
+                                        <div
+                                            class="
+                                                fw-bold
+                                                fs-5
+                                                text-nowrap
+                                            "
+                                        >
+                                            ${golsA}
+                                            x
+                                            ${golsB}
+                                        </div>
+
+
+                                        <div
+                                            class="
+                                                text-end
+                                                text-truncate
+                                                ${venceuB
+                                                    ? "fw-bold"
+                                                    : ""}
+                                            "
+                                        >
+                                            ${this.escaparHtml(
+                                                partida.nomeTimeB ||
+                                                "Time B"
+                                            )}
+                                        </div>
+
+                                    </div>
+
+
+                                    <div
+                                        class="
+                                            d-flex
+                                            justify-content-between
+                                            align-items-center
+                                            gap-2
+                                            mt-1
+                                        "
                                     >
-                                        ${this.escaparHtml(
-                                            this.obterNomeVencedor(
-                                                partida
-                                            )
-                                        )}
-                                    </small>
+
+                                        <small
+                                            class="
+                                                text-muted
+                                                text-truncate
+                                            "
+                                        >
+                                            ${data}
+                                        </small>
+
+
+                                        <small
+                                            class="
+                                                text-success
+                                                text-truncate
+                                            "
+                                        >
+                                            ${this.escaparHtml(
+                                                this.obterNomeVencedor(
+                                                    partida
+                                                )
+                                            )}
+                                        </small>
+
+                                    </div>
+
+
+                                    <div
+                                        class="mt-1"
+                                    >
+
+                                        <small
+                                            class="text-muted"
+                                        >
+
+                                            <i
+                                                class="
+                                                    bi
+                                                    bi-calendar-event
+                                                    me-1
+                                                "
+                                            ></i>
+
+                                            ${this.escaparHtml(
+                                                this.obterNomePelada(
+                                                    partida
+                                                )
+                                            )}
+
+                                        </small>
+
+                                    </div>
 
                                 </div>
 
-                            </div>
+                            `;
 
-                        `;
-
-                    }
-                ).join("");
+                        }
+                    )
+                    .join("");
 
         }
 
@@ -1209,14 +1953,14 @@
         ) {
 
             if (!valor) {
-
                 return "--";
-
             }
 
 
             const data =
-                new Date(valor);
+                new Date(
+                    valor
+                );
 
 
             if (
@@ -1253,9 +1997,7 @@
 
 
             if (!status) {
-
                 return;
-
             }
 
 
@@ -1297,7 +2039,9 @@
                         "
                     ></i>
 
-                    ${this.escaparHtml(texto)}
+                    ${this.escaparHtml(
+                        texto
+                    )}
 
                 </div>
 
@@ -1315,7 +2059,8 @@
         ) {
 
             return String(
-                valor ?? ""
+                valor ??
+                ""
             )
                 .replace(
                     /&/g,
@@ -1390,6 +2135,10 @@
             this.partidas = [];
 
             this.gols = [];
+
+            this.peladas = [];
+
+            this.filtroPeladaId = "";
 
         }
 
