@@ -1,6 +1,9 @@
 <div class="container-fluid py-3">
 
+    <!-- ========================================================= -->
     <!-- CABEÇALHO -->
+    <!-- ========================================================= -->
+
     <div
         class="d-flex flex-column flex-md-row justify-content-between align-items-md-center mb-4"
     >
@@ -37,10 +40,103 @@
     </div>
 
 
+    <!-- ========================================================= -->
+    <!-- FILTRO POR PELADA -->
+    <!-- ========================================================= -->
+
+    <div class="card border-0 shadow-sm mb-4">
+
+        <div class="card-body">
+
+            <div
+                class="d-flex flex-column flex-lg-row align-items-lg-end gap-3"
+            >
+
+                <!-- SELECT DA PELADA -->
+
+                <div class="flex-grow-1">
+
+                    <label
+                        for="filtroPeladaArtilharia"
+                        class="form-label fw-semibold mb-1"
+                    >
+
+                        <i class="bi bi-calendar-event text-success me-1"></i>
+
+                        Pelada
+
+                    </label>
+
+                    <select
+                        id="filtroPeladaArtilharia"
+                        class="form-select"
+                    >
+
+                        <option value="">
+                            Todas
+                        </option>
+
+                    </select>
+
+                </div>
+
+
+                <!-- INDICADOR -->
+
+                <div
+                    class="border rounded px-3 py-2 bg-light"
+                    style="min-width: 220px;"
+                >
+
+                    <small
+                        class="text-muted d-block"
+                    >
+                        Exibindo dados de
+                    </small>
+
+                    <strong
+                        id="artilhariaPeladaSelecionada"
+                        class="text-success"
+                    >
+                        Todas as peladas
+                    </strong>
+
+                </div>
+
+
+                <!-- BOTÃO LIMPAR -->
+
+                <div>
+
+                    <button
+                        type="button"
+                        class="btn btn-outline-secondary"
+                        id="btnLimparFiltroArtilharia"
+                    >
+
+                        <i class="bi bi-x-circle me-1"></i>
+
+                        Limpar filtro
+
+                    </button>
+
+                </div>
+
+            </div>
+
+        </div>
+
+    </div>
+
+
+    <!-- ========================================================= -->
     <!-- RESUMO -->
+    <!-- ========================================================= -->
+
     <div class="row g-3 mb-4">
 
         <!-- TOTAL DE GOLS -->
+
         <div class="col-12 col-md-4">
 
             <div class="card border-0 shadow-sm h-100">
@@ -86,6 +182,7 @@
 
 
         <!-- ARTILHEIRO -->
+
         <div class="col-12 col-md-4">
 
             <div class="card border-0 shadow-sm h-100">
@@ -138,6 +235,7 @@
 
 
         <!-- JOGADORES COM GOL -->
+
         <div class="col-12 col-md-4">
 
             <div class="card border-0 shadow-sm h-100">
@@ -184,7 +282,10 @@
     </div>
 
 
+    <!-- ========================================================= -->
     <!-- PESQUISA -->
+    <!-- ========================================================= -->
+
     <div class="card border-0 shadow-sm mb-4">
 
         <div class="card-body">
@@ -212,7 +313,10 @@
     </div>
 
 
+    <!-- ========================================================= -->
     <!-- RANKING -->
+    <!-- ========================================================= -->
+
     <div class="card border-0 shadow-sm">
 
         <div
@@ -220,7 +324,7 @@
         >
 
             <div
-                class="d-flex justify-content-between align-items-center"
+                class="d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-2"
             >
 
                 <div>

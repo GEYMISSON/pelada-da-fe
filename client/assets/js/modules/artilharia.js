@@ -16,7 +16,15 @@
 
             this.partidas = [];
 
+            this.gols = [];
+
+            this.peladas = [];
+
             this.partidasPorJogador = {};
+
+            this.golsPorJogador = {};
+
+            this.filtroPeladaId = "";
 
             this.inicializar();
 
@@ -51,6 +59,16 @@
                     "pesquisaArtilharia"
                 );
 
+            const filtroPelada =
+                document.getElementById(
+                    "filtroPeladaArtilharia"
+                );
+
+            const btnLimpar =
+                document.getElementById(
+                    "btnLimparFiltroArtilharia"
+                );
+
 
             if (pesquisa) {
 
@@ -59,6 +77,45 @@
                     () => {
 
                         this.renderizar();
+
+                    }
+                );
+
+            }
+
+
+            if (filtroPelada) {
+
+                filtroPelada.addEventListener(
+                    "change",
+                    () => {
+
+                        this.filtroPeladaId =
+                            filtroPelada.value || "";
+
+                        this.processarDados();
+
+                    }
+                );
+
+            }
+
+
+            if (btnLimpar) {
+
+                btnLimpar.addEventListener(
+                    "click",
+                    () => {
+
+                        if (filtroPelada) {
+
+                            filtroPelada.value = "";
+
+                        }
+
+                        this.filtroPeladaId = "";
+
+                        this.processarDados();
 
                     }
                 );
@@ -93,13 +150,11 @@
                 }
 
 
-                // ------------------------------------------------
-                // CARREGAR JOGADORES E PARTIDAS
-                // ------------------------------------------------
-
                 const [
                     respostaJogadores,
-                    respostaPartidas
+                    respostaPartidas,
+                    respostaGols,
+                    respostaPeladas
                 ] = await Promise.all([
 
                     fetch(
@@ -114,50 +169,59 @@
                         {
                             cache: "no-store"
                         }
+                    ),
+
+                    fetch(
+                        "/api/gols",
+                        {
+                            cache: "no-store"
+                        }
+                    ),
+
+                    fetch(
+                        "/api/peladas",
+                        {
+                            cache: "no-store"
+                        }
                     )
 
                 ]);
 
 
-                let jogadores = [];
-
-                let partidas = [];
-
-
-                try {
-
-                    jogadores =
-                        await respostaJogadores.json();
-
-                } catch (erro) {
-
-                    jogadores = [];
-
-                }
+                const dadosJogadores =
+                    await this.lerJsonComSeguranca(
+                        respostaJogadores
+                    );
 
 
-                try {
+                const dadosPartidas =
+                    await this.lerJsonComSeguranca(
+                        respostaPartidas
+                    );
 
-                    partidas =
-                        await respostaPartidas.json();
 
-                } catch (erro) {
+                const dadosGols =
+                    await this.lerJsonComSeguranca(
+                        respostaGols
+                    );
 
-                    partidas = [];
 
-                }
+                const dadosPeladas =
+                    await this.lerJsonComSeguranca(
+                        respostaPeladas
+                    );
 
 
                 // ------------------------------------------------
-                // VERIFICAR RESPOSTAS
+                // VALIDAR RESPOSTAS
                 // ------------------------------------------------
 
                 if (!respostaJogadores.ok) {
 
                     throw new Error(
 
-                        jogadores?.erro ||
-                        jogadores?.message ||
+                        dadosJogadores?.erro ||
+                        dadosJogadores?.message ||
                         "Não foi possível carregar os jogadores."
 
                     );
@@ -169,8 +233,8 @@
 
                     throw new Error(
 
-                        partidas?.erro ||
-                        partidas?.message ||
+                        dadosPartidas?.erro ||
+                        dadosPartidas?.message ||
                         "Não foi possível carregar as partidas."
 
                     );
@@ -178,7 +242,33 @@
                 }
 
 
-                if (!Array.isArray(jogadores)) {
+                if (!respostaGols.ok) {
+
+                    throw new Error(
+
+                        dadosGols?.erro ||
+                        dadosGols?.message ||
+                        "Não foi possível carregar os gols."
+
+                    );
+
+                }
+
+
+                if (!respostaPeladas.ok) {
+
+                    throw new Error(
+
+                        dadosPeladas?.erro ||
+                        dadosPeladas?.message ||
+                        "Não foi possível carregar as peladas."
+
+                    );
+
+                }
+
+
+                if (!Array.isArray(dadosJogadores)) {
 
                     throw new Error(
                         "A API de jogadores retornou um formato inválido."
@@ -187,7 +277,7 @@
                 }
 
 
-                if (!Array.isArray(partidas)) {
+                if (!Array.isArray(dadosPartidas)) {
 
                     throw new Error(
                         "A API de partidas retornou um formato inválido."
@@ -196,8 +286,30 @@
                 }
 
 
+                if (!Array.isArray(dadosGols)) {
+
+                    throw new Error(
+                        "A API de gols retornou um formato inválido."
+                    );
+
+                }
+
+
+                if (!Array.isArray(dadosPeladas)) {
+
+                    throw new Error(
+                        "A API de peladas retornou um formato inválido."
+                    );
+
+                }
+
+
+                // ------------------------------------------------
+                // JOGADORES
+                // ------------------------------------------------
+
                 this.jogadores =
-                    jogadores.map(
+                    dadosJogadores.map(
                         jogador => ({
 
                             ...jogador,
@@ -216,124 +328,50 @@
                     );
 
 
-                /*
-                 * Consideramos somente partidas finalizadas
-                 * para calcular partidas oficialmente disputadas.
-                 */
+                // ------------------------------------------------
+                // SOMENTE PARTIDAS FINALIZADAS
+                // ------------------------------------------------
+
                 this.partidas =
-                    partidas.filter(
+                    dadosPartidas.filter(
                         partida =>
                             partida.finalizada === true
                     );
 
 
                 // ------------------------------------------------
-                // CALCULAR PARTIDAS POR JOGADOR
+                // GOLS
                 // ------------------------------------------------
 
-                this.calcularPartidasPorJogador();
+                this.gols =
+                    dadosGols;
 
 
                 // ------------------------------------------------
-                // ORDENAR ARTILHARIA
+                // PELADAS
                 // ------------------------------------------------
 
-                this.jogadores.sort(
-                    (
-                        jogadorA,
-                        jogadorB
-                    ) => {
-
-                        const golsA =
-                            Number(
-                                jogadorA.gols || 0
-                            );
-
-                        const golsB =
-                            Number(
-                                jogadorB.gols || 0
-                            );
+                this.peladas =
+                    dadosPeladas;
 
 
-                        // 1º critério: gols
-                        if (
-                            golsA !== golsB
-                        ) {
+                // ------------------------------------------------
+                // MONTAR FILTRO
+                // ------------------------------------------------
 
-                            return (
-                                golsB -
-                                golsA
-                            );
-
-                        }
+                this.preencherFiltroPelada();
 
 
-                        const assistenciasA =
-                            Number(
-                                jogadorA.assistencias || 0
-                            );
+                // ------------------------------------------------
+                // PROCESSAR
+                // ------------------------------------------------
 
-                        const assistenciasB =
-                            Number(
-                                jogadorB.assistencias || 0
-                            );
+                this.processarDados();
 
 
-                        // 2º critério: assistências
-                        if (
-                            assistenciasA !==
-                            assistenciasB
-                        ) {
-
-                            return (
-                                assistenciasB -
-                                assistenciasA
-                            );
-
-                        }
-
-
-                        // 3º critério: partidas
-                        const partidasA =
-                            this.obterPartidasJogador(
-                                jogadorA._id
-                            );
-
-                        const partidasB =
-                            this.obterPartidasJogador(
-                                jogadorB._id
-                            );
-
-
-                        if (
-                            partidasA !==
-                            partidasB
-                        ) {
-
-                            return (
-                                partidasB -
-                                partidasA
-                            );
-
-                        }
-
-
-                        // 4º critério: nome
-                        return String(
-                            jogadorA.nome || ""
-                        ).localeCompare(
-                            String(
-                                jogadorB.nome || ""
-                            ),
-                            "pt-BR"
-                        );
-
-                    }
-                );
-
-
-                this.renderizar();
-
+                // ------------------------------------------------
+                // STATUS
+                // ------------------------------------------------
 
                 if (status) {
 
@@ -358,6 +396,18 @@
                 );
 
 
+                console.log(
+                    "⚽ Gols carregados:",
+                    this.gols.length
+                );
+
+
+                console.log(
+                    "🏆 Peladas carregadas:",
+                    this.peladas.length
+                );
+
+
             } catch (erro) {
 
                 console.error(
@@ -370,7 +420,13 @@
 
                 this.partidas = [];
 
+                this.gols = [];
+
+                this.peladas = [];
+
                 this.partidasPorJogador = {};
+
+                this.golsPorJogador = {};
 
 
                 this.renderizar();
@@ -404,7 +460,9 @@
                                 class="text-center py-5"
                             >
 
-                                <div class="alert alert-danger mb-0">
+                                <div
+                                    class="alert alert-danger mb-0"
+                                >
 
                                     <i
                                         class="bi bi-exclamation-triangle-fill me-2"
@@ -431,15 +489,515 @@
 
 
         // ========================================================
+        // LER JSON COM SEGURANÇA
+        // ========================================================
+
+        async lerJsonComSeguranca(
+            resposta
+        ) {
+
+            try {
+
+                return await resposta.json();
+
+            } catch (erro) {
+
+                return null;
+
+            }
+
+        }
+
+
+        // ========================================================
+        // PREENCHER FILTRO POR PELADA
+        // ========================================================
+
+        preencherFiltroPelada() {
+
+            const elemento =
+                document.getElementById(
+                    "filtroPeladaArtilharia"
+                );
+
+
+            if (!elemento) {
+
+                return;
+
+            }
+
+
+            const valorAtual =
+                this.filtroPeladaId ||
+                elemento.value ||
+                "";
+
+
+            const mapa =
+                new Map();
+
+
+            // ----------------------------------------------------
+            // PELADAS CADASTRADAS
+            // ----------------------------------------------------
+
+            this.peladas
+                .filter(
+                    pelada =>
+                        pelada &&
+                        pelada._id
+                )
+                .forEach(
+                    pelada => {
+
+                        mapa.set(
+                            String(
+                                pelada._id
+                            ),
+                            pelada
+                        );
+
+                    }
+                );
+
+
+            // ----------------------------------------------------
+            // GARANTIR PELADAS ENCONTRADAS NAS PARTIDAS
+            // ----------------------------------------------------
+
+            this.partidas.forEach(
+                partida => {
+
+                    const dados =
+                        this.obterDadosPelada(
+                            partida
+                        );
+
+
+                    if (
+                        dados.id &&
+                        !mapa.has(
+                            dados.id
+                        )
+                    ) {
+
+                        mapa.set(
+                            dados.id,
+                            {
+
+                                _id:
+                                    dados.id,
+
+                                nome:
+                                    dados.nome
+
+                            }
+                        );
+
+                    }
+
+                }
+            );
+
+
+            // ----------------------------------------------------
+            // ORDENAR POR NOME
+            // ----------------------------------------------------
+
+            const lista =
+                Array.from(
+                    mapa.values()
+                ).sort(
+                    (
+                        peladaA,
+                        peladaB
+                    ) => {
+
+                        return String(
+                            peladaA.nome ||
+                            "Pelada"
+                        ).localeCompare(
+                            String(
+                                peladaB.nome ||
+                                "Pelada"
+                            ),
+                            "pt-BR"
+                        );
+
+                    }
+                );
+
+
+            // ----------------------------------------------------
+            // RECRIAR SELECT
+            // ----------------------------------------------------
+
+            elemento.innerHTML =
+                `
+                    <option value="">
+                        Todas
+                    </option>
+                `;
+
+
+            lista.forEach(
+                pelada => {
+
+                    const option =
+                        document.createElement(
+                            "option"
+                        );
+
+
+                    option.value =
+                        String(
+                            pelada._id
+                        );
+
+
+                    option.textContent =
+                        pelada.nome ||
+                        "Pelada sem nome";
+
+
+                    elemento.appendChild(
+                        option
+                    );
+
+                }
+            );
+
+
+            // ----------------------------------------------------
+            // RESTAURAR SELEÇÃO
+            // ----------------------------------------------------
+
+            if (
+                valorAtual &&
+                mapa.has(
+                    valorAtual
+                )
+            ) {
+
+                elemento.value =
+                    valorAtual;
+
+                this.filtroPeladaId =
+                    valorAtual;
+
+            } else {
+
+                elemento.value =
+                    "";
+
+                this.filtroPeladaId =
+                    "";
+
+            }
+
+        }
+
+
+        // ========================================================
+        // OBTER DADOS DA PELADA
+        // ========================================================
+
+        obterDadosPelada(
+            partida
+        ) {
+
+            if (!partida) {
+
+                return {
+
+                    id: "",
+
+                    nome:
+                        "Sem pelada vinculada"
+
+                };
+
+            }
+
+
+            const pelada =
+                partida.pelada;
+
+
+            // ----------------------------------------------------
+            // PELADA POPULADA
+            // ----------------------------------------------------
+
+            if (
+                pelada &&
+                typeof pelada === "object"
+            ) {
+
+                return {
+
+                    id:
+                        String(
+                            pelada._id ||
+                            pelada.id ||
+                            ""
+                        ),
+
+                    nome:
+                        pelada.nome ||
+                        "Pelada sem nome"
+
+                };
+
+            }
+
+
+            // ----------------------------------------------------
+            // PELADA COMO ID
+            // ----------------------------------------------------
+
+            if (pelada) {
+
+                const id =
+                    String(
+                        pelada
+                    );
+
+
+                const encontrada =
+                    this.peladas.find(
+                        item =>
+                            String(
+                                item?._id ||
+                                ""
+                            ) ===
+                            id
+                    );
+
+
+                return {
+
+                    id,
+
+                    nome:
+                        encontrada?.nome ||
+                        "Pelada sem nome"
+
+                };
+
+            }
+
+
+            return {
+
+                id: "",
+
+                nome:
+                    "Sem pelada vinculada"
+
+            };
+
+        }
+
+
+        // ========================================================
+        // NOME DA PELADA
+        // ========================================================
+
+        obterNomePelada(
+            partida
+        ) {
+
+            return this.obterDadosPelada(
+                partida
+            ).nome;
+
+        }
+
+
+        // ========================================================
+        // PROCESSAR DADOS
+        // ========================================================
+
+        processarDados() {
+
+            const partidasFiltradas =
+                this.filtrarPartidasPorPelada(
+                    this.partidas
+                );
+
+
+            const golsFiltrados =
+                this.obterGolsDasPartidas(
+                    partidasFiltradas
+                );
+
+
+            this.calcularPartidasPorJogador(
+                partidasFiltradas
+            );
+
+
+            this.calcularGolsPorJogador(
+                golsFiltrados
+            );
+
+
+            this.atualizarIndicadorPelada();
+
+
+            this.renderizar();
+
+        }
+
+
+        // ========================================================
+        // FILTRAR PARTIDAS POR PELADA
+        // ========================================================
+
+        filtrarPartidasPorPelada(
+            partidas
+        ) {
+
+            if (!this.filtroPeladaId) {
+
+                return partidas;
+
+            }
+
+
+            return partidas.filter(
+                partida => {
+
+                    const dados =
+                        this.obterDadosPelada(
+                            partida
+                        );
+
+
+                    return (
+                        dados.id ===
+                        String(
+                            this.filtroPeladaId
+                        )
+                    );
+
+                }
+            );
+
+        }
+
+
+        // ========================================================
+        // OBTER GOLS DAS PARTIDAS FILTRADAS
+        // ========================================================
+
+        obterGolsDasPartidas(
+            partidas
+        ) {
+
+            const idsPartidas =
+                new Set(
+
+                    partidas
+                        .map(
+                            partida =>
+                                String(
+                                    partida?._id ||
+                                    partida?.id ||
+                                    ""
+                                )
+                        )
+                        .filter(
+                            Boolean
+                        )
+
+                );
+
+
+            return this.gols.filter(
+                gol => {
+
+                    const partidaId =
+                        String(
+                            gol?.partida?._id ||
+                            gol?.partida ||
+                            ""
+                        );
+
+
+                    return idsPartidas.has(
+                        partidaId
+                    );
+
+                }
+            );
+
+        }
+
+
+        // ========================================================
+        // ATUALIZAR INDICADOR DA PELADA
+        // ========================================================
+
+        atualizarIndicadorPelada() {
+
+            const indicador =
+                document.getElementById(
+                    "artilhariaPeladaSelecionada"
+                );
+
+
+            if (!indicador) {
+
+                return;
+
+            }
+
+
+            if (!this.filtroPeladaId) {
+
+                indicador.textContent =
+                    "Todas as peladas";
+
+                return;
+
+            }
+
+
+            const pelada =
+                this.peladas.find(
+                    item =>
+                        String(
+                            item?._id ||
+                            ""
+                        ) ===
+                        String(
+                            this.filtroPeladaId
+                        )
+                );
+
+
+            indicador.textContent =
+                pelada?.nome ||
+                "Pelada selecionada";
+
+        }
+
+
+        // ========================================================
         // CALCULAR PARTIDAS POR JOGADOR
         // ========================================================
 
-        calcularPartidasPorJogador() {
+        calcularPartidasPorJogador(
+            partidas = this.partidas
+        ) {
 
-            this.partidasPorJogador = {};
+            this.partidasPorJogador =
+                {};
 
 
-            this.partidas.forEach(
+            partidas.forEach(
                 partida => {
 
                     const jogadoresPartida =
@@ -512,10 +1070,9 @@
                     }
 
 
-                    /*
-                     * Set evita contar o mesmo jogador duas vezes
-                     * dentro da mesma partida.
-                     */
+                    // --------------------------------------------
+                    // CONTAR UMA VEZ POR PARTIDA
+                    // --------------------------------------------
 
                     jogadoresPartida.forEach(
                         jogadorId => {
@@ -553,6 +1110,124 @@
 
 
         // ========================================================
+        // CALCULAR GOLS POR JOGADOR
+        // ========================================================
+
+        calcularGolsPorJogador(
+            golsFiltrados
+        ) {
+
+            this.golsPorJogador =
+                {};
+
+
+            golsFiltrados.forEach(
+                gol => {
+
+                    const jogadorId =
+                        this.obterIdReferencia(
+                            gol?.jogador
+                        );
+
+
+                    if (!jogadorId) {
+
+                        return;
+
+                    }
+
+
+                    if (
+                        !this.golsPorJogador[
+                            jogadorId
+                        ]
+                    ) {
+
+                        this.golsPorJogador[
+                            jogadorId
+                        ] = 0;
+
+                    }
+
+
+                    this.golsPorJogador[
+                        jogadorId
+                    ]++;
+
+                }
+            );
+
+
+            console.log(
+                "⚽ Gols por jogador:",
+                this.golsPorJogador
+            );
+
+        }
+
+
+        // ========================================================
+        // OBTER GOLS DO JOGADOR
+        // ========================================================
+
+        obterGolsJogador(
+            jogadorId
+        ) {
+
+            if (!jogadorId) {
+
+                return 0;
+
+            }
+
+
+            // ----------------------------------------------------
+            // COM FILTRO POR PELADA
+            // ----------------------------------------------------
+
+            if (
+                this.filtroPeladaId
+            ) {
+
+                return Number(
+
+                    this.golsPorJogador[
+                        String(
+                            jogadorId
+                        )
+                    ] || 0
+
+                );
+
+            }
+
+
+            // ----------------------------------------------------
+            // TODAS AS PELADAS
+            // ----------------------------------------------------
+
+            const jogador =
+                this.jogadores.find(
+                    item =>
+                        String(
+                            item?._id ||
+                            item?.id ||
+                            ""
+                        ) ===
+                        String(
+                            jogadorId
+                        )
+                );
+
+
+            return Number(
+                jogador?.gols || 0
+            );
+
+        }
+
+
+        // ========================================================
         // OBTER ID DE REFERÊNCIA
         // ========================================================
 
@@ -561,7 +1236,9 @@
         ) {
 
             if (!jogador) {
+
                 return null;
+
             }
 
 
@@ -614,7 +1291,9 @@
             return Number(
 
                 this.partidasPorJogador[
-                    String(jogadorId)
+                    String(
+                        jogadorId
+                    )
                 ] || 0
 
             );
@@ -631,8 +1310,8 @@
         ) {
 
             const gols =
-                Number(
-                    jogador.gols || 0
+                this.obterGolsJogador(
+                    jogador._id
                 );
 
 
@@ -651,7 +1330,135 @@
             }
 
 
-            return gols / partidas;
+            return (
+                gols /
+                partidas
+            );
+
+        }
+
+
+        // ========================================================
+        // ORDENAR ARTILHARIA
+        // ========================================================
+
+        ordenarJogadores(
+            jogadores
+        ) {
+
+            return jogadores.sort(
+
+                (
+                    jogadorA,
+                    jogadorB
+                ) => {
+
+                    const golsA =
+                        this.obterGolsJogador(
+                            jogadorA._id
+                        );
+
+
+                    const golsB =
+                        this.obterGolsJogador(
+                            jogadorB._id
+                        );
+
+
+                    // --------------------------------------------
+                    // 1º CRITÉRIO: GOLS
+                    // --------------------------------------------
+
+                    if (
+                        golsA !==
+                        golsB
+                    ) {
+
+                        return (
+                            golsB -
+                            golsA
+                        );
+
+                    }
+
+
+                    // --------------------------------------------
+                    // 2º CRITÉRIO: ASSISTÊNCIAS
+                    // --------------------------------------------
+
+                    const assistenciasA =
+                        Number(
+                            jogadorA.assistencias || 0
+                        );
+
+
+                    const assistenciasB =
+                        Number(
+                            jogadorB.assistencias || 0
+                        );
+
+
+                    if (
+                        assistenciasA !==
+                        assistenciasB
+                    ) {
+
+                        return (
+                            assistenciasB -
+                            assistenciasA
+                        );
+
+                    }
+
+
+                    // --------------------------------------------
+                    // 3º CRITÉRIO: PARTIDAS
+                    // --------------------------------------------
+
+                    const partidasA =
+                        this.obterPartidasJogador(
+                            jogadorA._id
+                        );
+
+
+                    const partidasB =
+                        this.obterPartidasJogador(
+                            jogadorB._id
+                        );
+
+
+                    if (
+                        partidasA !==
+                        partidasB
+                    ) {
+
+                        return (
+                            partidasB -
+                            partidasA
+                        );
+
+                    }
+
+
+                    // --------------------------------------------
+                    // 4º CRITÉRIO: NOME
+                    // --------------------------------------------
+
+                    return String(
+                        jogadorA.nome || ""
+                    ).localeCompare(
+
+                        String(
+                            jogadorB.nome || ""
+                        ),
+
+                        "pt-BR"
+
+                    );
+
+                }
+
+            );
 
         }
 
@@ -669,7 +1476,9 @@
 
 
             if (!lista) {
+
                 return;
+
             }
 
 
@@ -687,8 +1496,27 @@
                     .toLowerCase();
 
 
+            // ----------------------------------------------------
+            // ORDENAR TODOS
+            // ----------------------------------------------------
+
+            const jogadoresOrdenados =
+                this.ordenarJogadores(
+
+                    [
+                        ...this.jogadores
+                    ]
+
+                );
+
+
+            // ----------------------------------------------------
+            // APLICAR PESQUISA
+            // ----------------------------------------------------
+
             const jogadoresFiltrados =
-                this.jogadores.filter(
+                jogadoresOrdenados.filter(
+
                     jogador => {
 
                         const nome =
@@ -720,6 +1548,7 @@
                         );
 
                     }
+
                 );
 
 
@@ -729,6 +1558,7 @@
 
             const totalGols =
                 this.jogadores.reduce(
+
                     (
                         total,
                         jogador
@@ -738,31 +1568,46 @@
 
                             total +
 
-                            Number(
-                                jogador.gols || 0
+                            this.obterGolsJogador(
+                                jogador._id
                             )
 
                         );
 
                     },
+
                     0
+
                 );
 
 
             const jogadoresComGol =
                 this.jogadores.filter(
+
                     jogador =>
-                        Number(
-                            jogador.gols || 0
+
+                        this.obterGolsJogador(
+                            jogador._id
                         ) > 0
+
                 ).length;
 
 
             const artilheiro =
-                this.jogadores.length > 0
-                    ? this.jogadores[0]
-                    : null;
+                jogadoresOrdenados.find(
 
+                    jogador =>
+
+                        this.obterGolsJogador(
+                            jogador._id
+                        ) > 0
+
+                ) || null;
+
+
+            // ----------------------------------------------------
+            // TOTAL DE GOLS
+            // ----------------------------------------------------
 
             const totalGolsElemento =
                 document.getElementById(
@@ -777,6 +1622,10 @@
 
             }
 
+
+            // ----------------------------------------------------
+            // NOME DO ARTILHEIRO
+            // ----------------------------------------------------
 
             const nomeArtilheiro =
                 document.getElementById(
@@ -793,6 +1642,10 @@
             }
 
 
+            // ----------------------------------------------------
+            // GOLS DO ARTILHEIRO
+            // ----------------------------------------------------
+
             const golsArtilheiro =
                 document.getElementById(
                     "golsArtilheiro"
@@ -802,8 +1655,8 @@
             if (golsArtilheiro) {
 
                 const gols =
-                    Number(
-                        artilheiro?.gols || 0
+                    this.obterGolsJogador(
+                        artilheiro?._id
                     );
 
 
@@ -816,6 +1669,10 @@
 
             }
 
+
+            // ----------------------------------------------------
+            // JOGADORES COM GOL
+            // ----------------------------------------------------
 
             const jogadoresComGolElemento =
                 document.getElementById(
@@ -830,6 +1687,10 @@
 
             }
 
+
+            // ----------------------------------------------------
+            // QUANTIDADE
+            // ----------------------------------------------------
 
             const quantidadeJogadores =
                 document.getElementById(
@@ -888,8 +1749,11 @@
             // ====================================================
 
             lista.innerHTML =
+
                 jogadoresFiltrados
+
                     .map(
+
                         (
                             jogador,
                             indice
@@ -900,8 +1764,8 @@
 
 
                             const gols =
-                                Number(
-                                    jogador.gols || 0
+                                this.obterGolsJogador(
+                                    jogador._id
                                 );
 
 
@@ -924,18 +1788,26 @@
 
 
                             let classificacao =
+
                                 `
-                                <span class="fw-bold">
+                                <span
+                                    class="fw-bold"
+                                >
                                     ${posicao}
                                 </span>
                                 `;
 
+
+                            // ------------------------------------------------
+                            // 1º LUGAR
+                            // ------------------------------------------------
 
                             if (
                                 posicao === 1
                             ) {
 
                                 classificacao =
+
                                     `
                                     <span
                                         class="badge bg-warning text-dark fs-6"
@@ -944,11 +1816,19 @@
                                     </span>
                                     `;
 
-                            } else if (
+                            }
+
+
+                            // ------------------------------------------------
+                            // 2º LUGAR
+                            // ------------------------------------------------
+
+                            else if (
                                 posicao === 2
                             ) {
 
                                 classificacao =
+
                                     `
                                     <span
                                         class="badge bg-secondary fs-6"
@@ -957,11 +1837,19 @@
                                     </span>
                                     `;
 
-                            } else if (
+                            }
+
+
+                            // ------------------------------------------------
+                            // 3º LUGAR
+                            // ------------------------------------------------
+
+                            else if (
                                 posicao === 3
                             ) {
 
                                 classificacao =
+
                                     `
                                     <span
                                         class="badge bg-danger fs-6"
@@ -999,14 +1887,19 @@
 
                                             <img
                                                 src="${this.escaparHtml(foto)}"
-                                                alt="${this.escaparHtml(jogador.nome || "Jogador")}"
+                                                alt="${this.escaparHtml(
+                                                    jogador.nome ||
+                                                    "Jogador"
+                                                )}"
                                                 class="rounded-circle border"
                                                 style="
                                                     width:42px;
                                                     height:42px;
                                                     object-fit:cover;
                                                 "
-                                                onerror="this.src='assets/img/avatar.png'"
+                                                onerror="
+                                                    this.src='assets/img/avatar.png'
+                                                "
                                             >
 
                                             <div>
@@ -1087,14 +1980,20 @@
                                     >
 
                                         <div
-                                            class="d-flex flex-column align-items-center gap-1"
+                                            class="
+                                                d-flex
+                                                flex-column
+                                                align-items-center
+                                                gap-1
+                                            "
                                         >
 
                                             <span
                                                 class="badge bg-primary"
                                             >
 
-                                                ${assistencias} assist.
+                                                ${assistencias}
+                                                assist.
 
                                             </span>
 
@@ -1117,7 +2016,9 @@
                             `;
 
                         }
+
                     )
+
                     .join("");
 
         }
@@ -1142,6 +2043,58 @@
 
 
             return div.innerHTML;
+
+        }
+
+
+        // ========================================================
+        // DESTROY
+        // ========================================================
+
+        destroy() {
+
+            this.jogadores = [];
+
+            this.partidas = [];
+
+            this.gols = [];
+
+            this.peladas = [];
+
+            this.partidasPorJogador = {};
+
+            this.golsPorJogador = {};
+
+            this.filtroPeladaId = "";
+
+        }
+
+    }
+
+
+    // ============================================================
+    // EVITAR DUPLICIDADE
+    // ============================================================
+
+    if (
+
+        window.Artilharia &&
+
+        typeof window.Artilharia.destroy ===
+        "function"
+
+    ) {
+
+        try {
+
+            window.Artilharia.destroy();
+
+        } catch (erro) {
+
+            console.warn(
+                "Erro ao destruir Artilharia anterior:",
+                erro
+            );
 
         }
 
