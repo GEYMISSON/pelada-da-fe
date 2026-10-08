@@ -3,11 +3,16 @@
 // ============================================================
 
 (() => {
+
     "use strict";
 
-    const paginaInicial = "dashboard";
 
-    let navegacaoId = 0;
+    const paginaInicial =
+        "dashboard";
+
+
+    let navegacaoId =
+        0;
 
 
     // ============================================================
@@ -16,23 +21,32 @@
 
     const titulos = {
 
-        dashboard: "Dashboard",
+        dashboard:
+            "Dashboard",
 
-        jogadores: "Jogadores",
+        jogadores:
+            "Jogadores",
 
-        peladas: "Peladas",
+        peladas:
+            "Peladas",
 
-        sorteio: "Sorteio",
+        sorteio:
+            "Sorteio",
 
-        partidas: "Partidas",
+        partidas:
+            "Partidas",
 
-        artilharia: "Artilharia",
+        artilharia:
+            "Artilharia",
 
-        estatisticas: "Estatísticas",
+        estatisticas:
+            "Estatísticas",
 
-        historico: "Histórico",
+        historico:
+            "Histórico",
 
-        configuracoes: "Configurações"
+        configuracoes:
+            "Configurações"
 
     };
 
@@ -42,11 +56,15 @@
     // ============================================================
 
     const sidebar =
-        document.querySelector(".sidebar");
+        document.querySelector(
+            ".sidebar"
+        );
 
 
     const menuBtn =
-        document.getElementById("menu-btn");
+        document.getElementById(
+            "menu-btn"
+        );
 
 
     if (
@@ -220,6 +238,84 @@
 
 
         // --------------------------------------------------------
+        // SORTEIO
+        // --------------------------------------------------------
+
+        if (
+            window.Sorteio &&
+            typeof window.Sorteio.destroy ===
+                "function"
+        ) {
+
+            try {
+
+                window.Sorteio.destroy();
+
+            } catch (erro) {
+
+                console.warn(
+                    "Erro ao destruir módulo Sorteio:",
+                    erro
+                );
+
+            }
+
+        }
+
+
+        // --------------------------------------------------------
+        // ARTILHARIA
+        // --------------------------------------------------------
+
+        if (
+            window.Artilharia &&
+            typeof window.Artilharia.destroy ===
+                "function"
+        ) {
+
+            try {
+
+                window.Artilharia.destroy();
+
+            } catch (erro) {
+
+                console.warn(
+                    "Erro ao destruir módulo Artilharia:",
+                    erro
+                );
+
+            }
+
+        }
+
+
+        // --------------------------------------------------------
+        // ESTATÍSTICAS
+        // --------------------------------------------------------
+
+        if (
+            window.Estatisticas &&
+            typeof window.Estatisticas.destroy ===
+                "function"
+        ) {
+
+            try {
+
+                window.Estatisticas.destroy();
+
+            } catch (erro) {
+
+                console.warn(
+                    "Erro ao destruir módulo Estatísticas:",
+                    erro
+                );
+
+            }
+
+        }
+
+
+        // --------------------------------------------------------
         // REMOVER SCRIPT
         // --------------------------------------------------------
 
@@ -240,30 +336,72 @@
         // LIMPAR REFERÊNCIAS
         // --------------------------------------------------------
 
-        if (window.Partidas) {
+        if (
+            window.Partidas
+        ) {
 
-            window.Partidas = null;
-
-        }
-
-
-        if (window.Peladas) {
-
-            window.Peladas = null;
+            window.Partidas =
+                null;
 
         }
 
 
-        if (window.Dashboard) {
+        if (
+            window.Peladas
+        ) {
 
-            window.Dashboard = null;
+            window.Peladas =
+                null;
 
         }
 
 
-        if (window.Historico) {
+        if (
+            window.Dashboard
+        ) {
 
-            window.Historico = null;
+            window.Dashboard =
+                null;
+
+        }
+
+
+        if (
+            window.Historico
+        ) {
+
+            window.Historico =
+                null;
+
+        }
+
+
+        if (
+            window.Sorteio
+        ) {
+
+            window.Sorteio =
+                null;
+
+        }
+
+
+        if (
+            window.Artilharia
+        ) {
+
+            window.Artilharia =
+                null;
+
+        }
+
+
+        if (
+            window.Estatisticas
+        ) {
+
+            window.Estatisticas =
+                null;
 
         }
 

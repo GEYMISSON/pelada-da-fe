@@ -51,6 +51,97 @@
 
 
     <!-- =====================================================
+         PELADA ATUAL
+    ====================================================== -->
+
+    <div
+        class="card border-0 shadow-sm mb-4"
+        id="cardPeladaSorteio"
+    >
+
+        <div class="card-body">
+
+            <div
+                class="d-flex flex-column flex-md-row
+                       justify-content-between
+                       align-items-md-center
+                       gap-3"
+            >
+
+                <div
+                    class="d-flex align-items-center"
+                >
+
+                    <div
+                        class="rounded-circle
+                               bg-success
+                               bg-opacity-10
+                               p-3
+                               me-3"
+                    >
+
+                        <i
+                            class="bi bi-calendar-event
+                                   text-success
+                                   fs-4"
+                        ></i>
+
+                    </div>
+
+
+                    <div>
+
+                        <small class="text-muted">
+
+                            Pelada atual do sorteio
+
+                        </small>
+
+                        <h5
+                            id="sorteioPeladaSelecionada"
+                            class="fw-bold mb-0"
+                        >
+
+                            Carregando...
+
+                        </h5>
+
+                        <small
+                            id="sorteioPeladaStatus"
+                            class="text-muted"
+                        >
+
+                            Verificando Pelada selecionada...
+
+                        </small>
+
+                    </div>
+
+                </div>
+
+
+                <div>
+
+                    <span
+                        id="badgePeladaSorteio"
+                        class="badge bg-secondary fs-6"
+                    >
+
+                        Aguardando
+
+                    </span>
+
+                </div>
+
+            </div>
+
+        </div>
+
+    </div>
+
+
+
+    <!-- =====================================================
          RESUMO DO SORTEIO
     ====================================================== -->
 
@@ -315,6 +406,7 @@
                             id="pesquisaSorteio"
                             class="form-control"
                             placeholder="Pesquisar jogador..."
+                            autocomplete="off"
                         >
 
                     </div>
