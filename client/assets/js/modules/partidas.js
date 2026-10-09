@@ -15,6 +15,15 @@
 
             this.salvandoResultado = false;
 
+            /*
+             * Chave usada para preservar a sessão entre telas
+             * e também após recarregar o navegador.
+             */
+            this.chaveSessaoPersistida =
+                "peladaDaFePartidasSessao";
+
+            this.eventoPageHide = null;
+
             this.intervaloPelada = null;
             this.intervaloPartida = null;
 
@@ -113,7 +122,32 @@
 
             this.configurarEventos();
 
+            this.obterPeladaAtualId();
+
             this.carregarTimesDoSorteio();
+
+            /*
+             * Salva a sessão se o navegador estiver sendo fechado
+             * ou recarregado fora da navegação interna da aplicação.
+             */
+            this.eventoPageHide = () => {
+                this.salvarSessaoPersistida();
+            };
+
+            window.addEventListener(
+                "pagehide",
+                this.eventoPageHide
+            );
+
+            const sessaoRestaurada =
+                this.restaurarSessaoPersistida();
+
+            if (sessaoRestaurada) {
+                console.log(
+                    "♻️ Sessão de Partidas restaurada com sucesso."
+                );
+                return;
+            }
 
             this.atualizarTela();
 
@@ -134,10 +168,429 @@
 
             this.atualizarBotoes();
 
+        }
+
+
+        criarSnapshotTimes() {
+
+            const snapshot = {};
+
+            Object.entries(this.times || {}).forEach(
+                ([codigoTime, time]) => {
+
+                    snapshot[codigoTime] = {
+                        nome: time?.nome || codigoTime,
+                        jogadores: Array.isArray(time?.jogadores)
+                            ? time.jogadores.map((jogador, indice) => ({
+                                _id: this.obterIdJogador(jogador, indice),
+                                nome: this.obterNomeJogador(jogador),
+                                numeroCamisa:
+                                    jogador?.numeroCamisa ??
+                                    jogador?.numero ??
+                                    ""
+                            }))
+                            : []
+                    };
+
+                }
+            );
+
+            return snapshot;
+
+        }
+
+
+        salvarSessaoPersistida() {
+
+            if (
+                !this.peladaIniciada &&
+                !this.resultadoPendente
+            ) {
+                return;
+            }
+
+            try {
+
+                const snapshot = {
+                    versao: 1,
+                    salvoEm: Date.now(),
+                    duracaoPelada: this.duracaoPelada,
+                    duracaoPartida: this.duracaoPartida,
+                    tempoRestantePelada: this.tempoRestantePelada,
+                    tempoRestantePartida: this.tempoRestantePartida,
+                    peladaIniciada: this.peladaIniciada,
+                    partidaIniciada: this.partidaIniciada,
+                    partidaPausada: this.partidaPausada,
+                    peladaFinalizada: this.peladaFinalizada,
+                    resultadoPendente: this.resultadoPendente,
+                    partidasRealizadas: this.partidasRealizadas,
+                    historico: this.historico,
+                    peladaDaSessaoId: this.peladaDaSessaoId,
+                    peladaDaSessaoNome: this.peladaDaSessaoNome,
+                    times: this.criarSnapshotTimes(),
+                    filaTimes: Array.isArray(this.filaTimes)
+                        ? [...this.filaTimes]
+                        : [],
+                    time1: this.time1,
+                    time2: this.time2,
+                    proximoTime: this.proximoTime,
+                    golsPartida: this.golsPartida,
+                    eventosGolsPartida: this.eventosGolsPartida,
+                    partidaBancoIdAtual: this.partidaBancoIdAtual,
+                    iniciadaEm: this.iniciadaEm
+                };
+
+                localStorage.setItem(
+                    this.chaveSessaoPersistida,
+                    JSON.stringify(snapshot)
+                );
+
+            } catch (erro) {
+
+                console.warn(
+                    "⚠️ Não foi possível salvar a sessão de Partidas:",
+                    erro
+                );
+
+            }
+
+        }
+
+
+        limparSessaoPersistida() {
+
+            try {
+
+                localStorage.removeItem(
+                    this.chaveSessaoPersistida
+                );
+
+            } catch (erro) {
+
+                console.warn(
+                    "⚠️ Não foi possível limpar a sessão de Partidas:",
+                    erro
+                );
+
+            }
+
+        }
+
+
+        restaurarSessaoPersistida() {
+
+            let snapshot = null;
+
+            try {
+
+                const salvo = localStorage.getItem(
+                    this.chaveSessaoPersistida
+                );
+
+                if (!salvo) {
+                    return false;
+                }
+
+                snapshot = JSON.parse(salvo);
+
+            } catch (erro) {
+
+                console.warn(
+                    "⚠️ A sessão salva estava inválida e será descartada:",
+                    erro
+                );
+
+                this.limparSessaoPersistida();
+                return false;
+
+            }
+
+            if (
+                !snapshot ||
+                Number(snapshot.versao || 0) !== 1 ||
+                !snapshot.peladaDaSessaoId ||
+                !this.ehObjectIdMongo(snapshot.peladaDaSessaoId)
+            ) {
+
+                this.limparSessaoPersistida();
+                return false;
+
+            }
+
+            if (
+                !snapshot.peladaIniciada &&
+                !snapshot.resultadoPendente
+            ) {
+
+                this.limparSessaoPersistida();
+                return false;
+
+            }
+
+            const agora = Date.now();
+
+            const salvoEm = Number(snapshot.salvoEm || agora);
+
+            const segundosForaDaTela = Math.max(
+                0,
+                Math.floor((agora - salvoEm) / 1000)
+            );
+
+            this.duracaoPelada = Math.max(
+                1,
+                Number(snapshot.duracaoPelada || 60 * 60)
+            );
+
+            this.duracaoPartida = Math.max(
+                1,
+                Number(snapshot.duracaoPartida || 7 * 60)
+            );
+
+            this.tempoRestantePelada = Math.max(
+                0,
+                Number(snapshot.tempoRestantePelada ?? this.duracaoPelada)
+            );
+
+            this.tempoRestantePartida = Math.max(
+                0,
+                Number(snapshot.tempoRestantePartida ?? this.duracaoPartida)
+            );
+
+            this.peladaIniciada = Boolean(snapshot.peladaIniciada);
+            this.partidaIniciada = Boolean(snapshot.partidaIniciada);
+            this.partidaPausada = Boolean(snapshot.partidaPausada);
+            this.peladaFinalizada = Boolean(snapshot.peladaFinalizada);
+            this.resultadoPendente = Boolean(snapshot.resultadoPendente);
+            this.salvandoResultado = false;
+
+            this.partidasRealizadas = Math.max(
+                0,
+                Number(snapshot.partidasRealizadas || 0)
+            );
+
+            this.historico = Array.isArray(snapshot.historico)
+                ? snapshot.historico
+                : [];
+
+            this.peladaDaSessaoId = String(snapshot.peladaDaSessaoId);
+            this.peladaDaSessaoNome =
+                snapshot.peladaDaSessaoNome || "Pelada da Fé";
+
+            if (snapshot.times && typeof snapshot.times === "object") {
+
+                Object.entries(snapshot.times).forEach(
+                    ([codigoTime, dadosTime]) => {
+
+                        if (!this.times[codigoTime]) {
+                            this.times[codigoTime] = {
+                                nome: dadosTime?.nome || codigoTime,
+                                jogadores: []
+                            };
+                        }
+
+                        this.times[codigoTime].nome =
+                            dadosTime?.nome || this.times[codigoTime].nome;
+
+                        this.times[codigoTime].jogadores =
+                            Array.isArray(dadosTime?.jogadores)
+                                ? dadosTime.jogadores.map(jogador => ({
+                                    _id:
+                                        jogador?._id ||
+                                        jogador?.id ||
+                                        jogador?.codigo ||
+                                        jogador?.nome ||
+                                        "",
+                                    nome:
+                                        jogador?.nome ||
+                                        jogador?.name ||
+                                        "Jogador",
+                                    numeroCamisa:
+                                        jogador?.numeroCamisa ??
+                                        jogador?.numero ??
+                                        ""
+                                }))
+                                : [];
+
+                    }
+                );
+
+            }
+
+            this.filaTimes = Array.isArray(snapshot.filaTimes)
+                ? [...snapshot.filaTimes]
+                : [];
+
+            this.time1 = snapshot.time1 || null;
+            this.time2 = snapshot.time2 || null;
+            this.proximoTime = snapshot.proximoTime || null;
+
+            this.golsPartida =
+                snapshot.golsPartida &&
+                typeof snapshot.golsPartida === "object"
+                    ? snapshot.golsPartida
+                    : { time1: {}, time2: {} };
+
+            this.eventosGolsPartida =
+                snapshot.eventosGolsPartida &&
+                typeof snapshot.eventosGolsPartida === "object"
+                    ? snapshot.eventosGolsPartida
+                    : { time1: [], time2: [] };
+
+            this.partidaBancoIdAtual = snapshot.partidaBancoIdAtual || null;
+            this.iniciadaEm = snapshot.iniciadaEm || null;
+
             /*
-             * Atualiza o ID da Pelada atual diretamente do localStorage.
+             * O tempo corre enquanto o usuário está em outra tela.
+             * Uma partida pausada não perde tempo durante esse período.
              */
-            this.obterPeladaAtualId();
+            if (this.peladaIniciada && !this.peladaFinalizada) {
+
+                this.tempoRestantePelada = Math.max(
+                    0,
+                    this.tempoRestantePelada - segundosForaDaTela
+                );
+
+            }
+
+            if (this.partidaIniciada && !this.partidaPausada) {
+
+                this.tempoRestantePartida = Math.max(
+                    0,
+                    this.tempoRestantePartida - segundosForaDaTela
+                );
+
+            }
+
+            if (
+                this.partidaIniciada &&
+                this.tempoRestantePartida <= 0
+            ) {
+
+                this.tempoRestantePartida = 0;
+                this.partidaIniciada = false;
+                this.partidaPausada = false;
+                this.resultadoPendente = true;
+
+            }
+
+            if (
+                this.peladaIniciada &&
+                this.tempoRestantePelada <= 0
+            ) {
+
+                this.tempoRestantePelada = 0;
+                this.peladaIniciada = false;
+                this.peladaFinalizada = true;
+
+                if (this.partidaIniciada) {
+                    this.partidaIniciada = false;
+                    this.partidaPausada = false;
+                    this.resultadoPendente = true;
+                }
+
+            }
+
+            this.atualizarDuracoesNaTela();
+            this.atualizarTela();
+            this.atualizarEstimativa();
+            this.atualizarCronometroPelada();
+            this.atualizarCronometroPartida();
+            this.renderizarHistorico();
+
+            if (this.resultadoPendente) {
+
+                this.renderizarAreaResultado();
+
+                this.atualizarStatus(
+                    this.peladaFinalizada
+                        ? "Pelada finalizada - informe o resultado pendente"
+                        : "Informe o resultado da partida"
+                );
+
+                this.atualizarBadgePartida(
+                    "Resultado pendente",
+                    "bg-warning text-dark"
+                );
+
+            } else if (this.partidaIniciada) {
+
+                this.renderizarAreaResultado();
+
+                this.atualizarStatus(
+                    this.partidaPausada
+                        ? "Partida pausada"
+                        : "Partida em andamento"
+                );
+
+                this.atualizarBadgePartida(
+                    this.partidaPausada ? "Pausada" : "Em andamento",
+                    this.partidaPausada
+                        ? "bg-warning text-dark"
+                        : "bg-success"
+                );
+
+            } else if (this.peladaFinalizada) {
+
+                this.atualizarStatus("Pelada finalizada");
+
+                this.atualizarBadgePartida(
+                    "Pelada finalizada",
+                    "bg-danger"
+                );
+
+            } else if (this.peladaIniciada) {
+
+                this.atualizarStatus(
+                    `Pelada iniciada: ${this.peladaDaSessaoNome}`
+                );
+
+                this.atualizarBadgePartida(
+                    "Aguardando início",
+                    "bg-secondary"
+                );
+
+            }
+
+            this.atualizarBotoes();
+
+            if (this.peladaFinalizada && !this.resultadoPendente) {
+                this.limparSessaoPersistida();
+                return true;
+            }
+
+            this.salvarSessaoPersistida();
+
+            if (this.peladaIniciada && !this.peladaFinalizada) {
+                this.iniciarCronometroPelada();
+            }
+
+            if (this.partidaIniciada && !this.partidaPausada) {
+                this.iniciarCronometroPartida();
+            }
+
+            return true;
+
+        }
+
+
+        atualizarDuracoesNaTela() {
+
+            const campoPelada = document.getElementById("duracaoPelada");
+            const campoPartida = document.getElementById("duracaoPartida");
+
+            if (campoPelada) {
+                campoPelada.value = Math.max(
+                    1,
+                    Math.round(this.duracaoPelada / 60)
+                );
+            }
+
+            if (campoPartida) {
+                campoPartida.value = Math.max(
+                    1,
+                    Math.round(this.duracaoPartida / 60)
+                );
+            }
 
         }
 
@@ -731,6 +1184,8 @@
 
             this.atualizarBotoes();
 
+            this.salvarSessaoPersistida();
+
             console.log(
                 "🏆 Pelada iniciada:",
                 {
@@ -768,6 +1223,8 @@
 
                             this.atualizarCronometroPelada();
 
+                            this.salvarSessaoPersistida();
+
                             this.finalizarPelada(
                                 "Tempo da pelada encerrado."
                             );
@@ -776,6 +1233,8 @@
                         }
 
                         this.atualizarCronometroPelada();
+
+                        this.salvarSessaoPersistida();
 
                     },
                     1000
@@ -851,7 +1310,6 @@
                 );
 
                 return;
-
             }
 
             if (
@@ -903,6 +1361,8 @@
 
             this.atualizarBotoes();
 
+            this.salvarSessaoPersistida();
+
             console.log(
                 "⚽ Partida iniciada:",
                 this.obterNomeTime(this.time1),
@@ -943,6 +1403,8 @@
 
                             this.atualizarCronometroPartida();
 
+                            this.salvarSessaoPersistida();
+
                             this.pararCronometroPartida();
 
                             this.finalizarPartidaPorTempo();
@@ -951,6 +1413,8 @@
                         }
 
                         this.atualizarCronometroPartida();
+
+                        this.salvarSessaoPersistida();
 
                     },
                     1000
@@ -1009,6 +1473,8 @@
 
             this.atualizarBotoes();
 
+            this.salvarSessaoPersistida();
+
         }
 
 
@@ -1042,6 +1508,8 @@
 
             this.atualizarBotoes();
 
+            this.salvarSessaoPersistida();
+
         }
 
 
@@ -1074,6 +1542,8 @@
             );
 
             this.atualizarBotoes();
+
+            this.salvarSessaoPersistida();
 
         }
 
@@ -1263,6 +1733,8 @@
 
 
             this.renderizarAreaResultado();
+
+            this.salvarSessaoPersistida();
 
         }
 
@@ -1615,6 +2087,7 @@
                 evento.salvo =
                     true;
 
+                this.salvarSessaoPersistida();
 
                 resultados.push(
                     dados?.gol ||
@@ -1827,6 +2300,7 @@
                         partidaSalva?.id ||
                         null;
 
+                    this.salvarSessaoPersistida();
 
                     if (
                         !this.ehObjectIdMongo(
@@ -1894,8 +2368,9 @@
                     "Não foi possível salvar a partida e os gols no banco de dados."
                 );
 
-
                 this.atualizarBotoes();
+
+                this.salvarSessaoPersistida();
 
                 return;
             }
@@ -1997,6 +2472,11 @@
                 "success"
             );
 
+            if (this.peladaFinalizada || !this.peladaIniciada) {
+                this.limparSessaoPersistida();
+            } else {
+                this.salvarSessaoPersistida();
+            }
 
             console.log(
                 "🏆 Resultado:",
@@ -2916,7 +3396,6 @@
                     "partidasRealizadas"
                 );
 
-
             if (partidasRealizadas) {
 
                 partidasRealizadas.textContent =
@@ -3267,6 +3746,8 @@
 
             this.atualizarBotoes();
 
+            this.limparSessaoPersistida();
+
             console.log(
                 "🔄 Pelada reiniciada."
             );
@@ -3278,39 +3759,55 @@
             mensagem
         ) {
 
+            const partidaEstavaEmAndamento =
+                this.partidaIniciada;
+
+            const jaHaviaResultadoPendente =
+                this.resultadoPendente;
+
             this.pararCronometroPelada();
 
             this.pararCronometroPartida();
 
-            this.peladaFinalizada =
-                true;
+            this.peladaFinalizada = true;
+            this.peladaIniciada = false;
+            this.partidaIniciada = false;
+            this.partidaPausada = false;
+            this.salvandoResultado = false;
 
-            this.peladaIniciada =
-                false;
-
-            this.partidaIniciada =
-                false;
-
-            this.partidaPausada =
-                false;
-
-            this.resultadoPendente =
-                false;
-
-            this.salvandoResultado =
-                false;
+            /*
+             * Se o tempo total acabar durante uma partida,
+             * preserva o resultado para que ele possa ser confirmado.
+             */
+            this.resultadoPendente = Boolean(
+                partidaEstavaEmAndamento ||
+                jaHaviaResultadoPendente
+            );
 
             this.atualizarStatus(
-                mensagem ||
-                "Pelada finalizada"
+                this.resultadoPendente
+                    ? "Pelada finalizada - informe o resultado pendente"
+                    : (mensagem || "Pelada finalizada")
             );
 
             this.atualizarBadgePartida(
-                "Pelada finalizada",
-                "bg-danger"
+                this.resultadoPendente
+                    ? "Resultado pendente"
+                    : "Pelada finalizada",
+                this.resultadoPendente
+                    ? "bg-warning text-dark"
+                    : "bg-danger"
             );
 
             this.atualizarCronometroPelada();
+
+            if (this.resultadoPendente) {
+                this.renderizarAreaResultado();
+                this.salvarSessaoPersistida();
+            } else {
+                this.limparSessaoPersistida();
+                this.ocultarAreaResultado();
+            }
 
             this.atualizarBotoes();
 
@@ -3318,7 +3815,8 @@
                 "🏁 Pelada finalizada.",
                 {
                     id: this.peladaDaSessaoId,
-                    nome: this.peladaDaSessaoNome
+                    nome: this.peladaDaSessaoNome,
+                    resultadoPendente: this.resultadoPendente
                 }
             );
 
@@ -3521,8 +4019,18 @@
 
             this.pararCronometroPartida();
 
+            this.salvarSessaoPersistida();
+
+            if (this.eventoPageHide) {
+                window.removeEventListener(
+                    "pagehide",
+                    this.eventoPageHide
+                );
+                this.eventoPageHide = null;
+            }
+
             console.log(
-                "🧹 Módulo Partidas destruído."
+                "🧹 Módulo Partidas destruído; sessão salva quando ativa."
             );
 
         }
