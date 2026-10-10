@@ -15,10 +15,6 @@
 
             this.salvandoResultado = false;
 
-            /*
-             * Chave usada para preservar a sessão entre telas
-             * e também após recarregar o navegador.
-             */
             this.chaveSessaoPersistida =
                 "peladaDaFePartidasSessao";
 
@@ -33,30 +29,19 @@
             this.partidasRealizadas = 0;
             this.historico = [];
 
-            /*
-             * ID da Pelada atualmente selecionada no sistema.
-             *
-             * Esse valor vem da tela Peladas.
-             */
             this.peladaAtualId =
                 localStorage.getItem(
                     "peladaDaFePeladaAtualId"
                 ) || "";
 
-            /*
-             * Guarda a Pelada vinculada à sessão atual
-             * da pelada.
-             *
-             * Isso é importante porque o usuário pode,
-             * teoricamente, mudar a Pelada selecionada
-             * enquanto o módulo Partidas está aberto.
-             *
-             * As partidas dessa sessão continuarão vinculadas
-             * à Pelada que estava selecionada quando a sessão
-             * foi iniciada.
-             */
             this.peladaDaSessaoId = null;
             this.peladaDaSessaoNome = null;
+
+            /*
+             * Identificação da Pelada vinculada ao sorteio.
+             */
+            this.sorteioPeladaId = null;
+            this.sorteioValidoParaPelada = false;
 
             this.times = {
                 amarelo: {
@@ -86,30 +71,13 @@
                 time2: {}
             };
 
-            /*
-             * Eventos individuais dos gols.
-             *
-             * Cada gol fica registrado aqui durante a partida.
-             * Quando o resultado for confirmado, esses eventos
-             * serão enviados para /api/gols.
-             */
             this.eventosGolsPartida = {
                 time1: [],
                 time2: []
             };
 
-            /*
-             * Guarda o ID da partida criada no MongoDB.
-             *
-             * Isso permite tentar salvar os gols novamente
-             * sem criar uma segunda partida caso aconteça
-             * algum erro durante o salvamento dos gols.
-             */
             this.partidaBancoIdAtual = null;
 
-            /*
-             * Horário em que a partida atual começou.
-             */
             this.iniciadaEm = null;
 
             this.inicializar();
@@ -126,10 +94,6 @@
 
             this.carregarTimesDoSorteio();
 
-            /*
-             * Salva a sessão se o navegador estiver sendo fechado
-             * ou recarregado fora da navegação interna da aplicação.
-             */
             this.eventoPageHide = () => {
                 this.salvarSessaoPersistida();
             };
@@ -143,9 +107,11 @@
                 this.restaurarSessaoPersistida();
 
             if (sessaoRestaurada) {
+
                 console.log(
                     "♻️ Sessão de Partidas restaurada com sucesso."
                 );
+
                 return;
             }
 
@@ -180,15 +146,29 @@
 
                     snapshot[codigoTime] = {
                         nome: time?.nome || codigoTime,
+
                         jogadores: Array.isArray(time?.jogadores)
-                            ? time.jogadores.map((jogador, indice) => ({
-                                _id: this.obterIdJogador(jogador, indice),
-                                nome: this.obterNomeJogador(jogador),
-                                numeroCamisa:
-                                    jogador?.numeroCamisa ??
-                                    jogador?.numero ??
-                                    ""
-                            }))
+                            ? time.jogadores.map(
+                                (jogador, indice) => ({
+
+                                    _id:
+                                        this.obterIdJogador(
+                                            jogador,
+                                            indice
+                                        ),
+
+                                    nome:
+                                        this.obterNomeJogador(
+                                            jogador
+                                        ),
+
+                                    numeroCamisa:
+                                        jogador?.numeroCamisa ??
+                                        jogador?.numero ??
+                                        ""
+
+                                })
+                            )
                             : []
                     };
 
@@ -214,30 +194,74 @@
                 const snapshot = {
                     versao: 1,
                     salvoEm: Date.now(),
-                    duracaoPelada: this.duracaoPelada,
-                    duracaoPartida: this.duracaoPartida,
-                    tempoRestantePelada: this.tempoRestantePelada,
-                    tempoRestantePartida: this.tempoRestantePartida,
-                    peladaIniciada: this.peladaIniciada,
-                    partidaIniciada: this.partidaIniciada,
-                    partidaPausada: this.partidaPausada,
-                    peladaFinalizada: this.peladaFinalizada,
-                    resultadoPendente: this.resultadoPendente,
-                    partidasRealizadas: this.partidasRealizadas,
-                    historico: this.historico,
-                    peladaDaSessaoId: this.peladaDaSessaoId,
-                    peladaDaSessaoNome: this.peladaDaSessaoNome,
-                    times: this.criarSnapshotTimes(),
-                    filaTimes: Array.isArray(this.filaTimes)
-                        ? [...this.filaTimes]
-                        : [],
-                    time1: this.time1,
-                    time2: this.time2,
-                    proximoTime: this.proximoTime,
-                    golsPartida: this.golsPartida,
-                    eventosGolsPartida: this.eventosGolsPartida,
-                    partidaBancoIdAtual: this.partidaBancoIdAtual,
-                    iniciadaEm: this.iniciadaEm
+
+                    duracaoPelada:
+                        this.duracaoPelada,
+
+                    duracaoPartida:
+                        this.duracaoPartida,
+
+                    tempoRestantePelada:
+                        this.tempoRestantePelada,
+
+                    tempoRestantePartida:
+                        this.tempoRestantePartida,
+
+                    peladaIniciada:
+                        this.peladaIniciada,
+
+                    partidaIniciada:
+                        this.partidaIniciada,
+
+                    partidaPausada:
+                        this.partidaPausada,
+
+                    peladaFinalizada:
+                        this.peladaFinalizada,
+
+                    resultadoPendente:
+                        this.resultadoPendente,
+
+                    partidasRealizadas:
+                        this.partidasRealizadas,
+
+                    historico:
+                        this.historico,
+
+                    peladaDaSessaoId:
+                        this.peladaDaSessaoId,
+
+                    peladaDaSessaoNome:
+                        this.peladaDaSessaoNome,
+
+                    times:
+                        this.criarSnapshotTimes(),
+
+                    filaTimes:
+                        Array.isArray(this.filaTimes)
+                            ? [...this.filaTimes]
+                            : [],
+
+                    time1:
+                        this.time1,
+
+                    time2:
+                        this.time2,
+
+                    proximoTime:
+                        this.proximoTime,
+
+                    golsPartida:
+                        this.golsPartida,
+
+                    eventosGolsPartida:
+                        this.eventosGolsPartida,
+
+                    partidaBancoIdAtual:
+                        this.partidaBancoIdAtual,
+
+                    iniciadaEm:
+                        this.iniciadaEm
                 };
 
                 localStorage.setItem(
@@ -283,9 +307,10 @@
 
             try {
 
-                const salvo = localStorage.getItem(
-                    this.chaveSessaoPersistida
-                );
+                const salvo =
+                    localStorage.getItem(
+                        this.chaveSessaoPersistida
+                    );
 
                 if (!salvo) {
                     return false;
@@ -301,6 +326,7 @@
                 );
 
                 this.limparSessaoPersistida();
+
                 return false;
 
             }
@@ -309,10 +335,13 @@
                 !snapshot ||
                 Number(snapshot.versao || 0) !== 1 ||
                 !snapshot.peladaDaSessaoId ||
-                !this.ehObjectIdMongo(snapshot.peladaDaSessaoId)
+                !this.ehObjectIdMongo(
+                    snapshot.peladaDaSessaoId
+                )
             ) {
 
                 this.limparSessaoPersistida();
+
                 return false;
 
             }
@@ -323,44 +352,68 @@
             ) {
 
                 this.limparSessaoPersistida();
+
                 return false;
 
             }
 
             const agora = Date.now();
 
-            const salvoEm = Number(snapshot.salvoEm || agora);
+            const salvoEm =
+                Number(snapshot.salvoEm || agora);
 
             const segundosForaDaTela = Math.max(
                 0,
-                Math.floor((agora - salvoEm) / 1000)
+                Math.floor(
+                    (agora - salvoEm) / 1000
+                )
             );
 
             this.duracaoPelada = Math.max(
                 1,
-                Number(snapshot.duracaoPelada || 60 * 60)
+                Number(
+                    snapshot.duracaoPelada || 60 * 60
+                )
             );
 
             this.duracaoPartida = Math.max(
                 1,
-                Number(snapshot.duracaoPartida || 7 * 60)
+                Number(
+                    snapshot.duracaoPartida || 7 * 60
+                )
             );
 
             this.tempoRestantePelada = Math.max(
                 0,
-                Number(snapshot.tempoRestantePelada ?? this.duracaoPelada)
+                Number(
+                    snapshot.tempoRestantePelada ??
+                    this.duracaoPelada
+                )
             );
 
             this.tempoRestantePartida = Math.max(
                 0,
-                Number(snapshot.tempoRestantePartida ?? this.duracaoPartida)
+                Number(
+                    snapshot.tempoRestantePartida ??
+                    this.duracaoPartida
+                )
             );
 
-            this.peladaIniciada = Boolean(snapshot.peladaIniciada);
-            this.partidaIniciada = Boolean(snapshot.partidaIniciada);
-            this.partidaPausada = Boolean(snapshot.partidaPausada);
-            this.peladaFinalizada = Boolean(snapshot.peladaFinalizada);
-            this.resultadoPendente = Boolean(snapshot.resultadoPendente);
+            this.peladaIniciada =
+                Boolean(snapshot.peladaIniciada);
+
+            this.partidaIniciada =
+                Boolean(snapshot.partidaIniciada);
+
+            this.partidaPausada =
+                Boolean(snapshot.partidaPausada);
+
+            this.peladaFinalizada =
+                Boolean(snapshot.peladaFinalizada);
+
+            this.resultadoPendente =
+                Boolean(snapshot.resultadoPendente);
+
             this.salvandoResultado = false;
 
             this.partidasRealizadas = Math.max(
@@ -368,47 +421,66 @@
                 Number(snapshot.partidasRealizadas || 0)
             );
 
-            this.historico = Array.isArray(snapshot.historico)
-                ? snapshot.historico
-                : [];
+            this.historico =
+                Array.isArray(snapshot.historico)
+                    ? snapshot.historico
+                    : [];
 
-            this.peladaDaSessaoId = String(snapshot.peladaDaSessaoId);
+            this.peladaDaSessaoId =
+                String(snapshot.peladaDaSessaoId);
+
             this.peladaDaSessaoNome =
-                snapshot.peladaDaSessaoNome || "Pelada da Fé";
+                snapshot.peladaDaSessaoNome ||
+                "Pelada da Fé";
 
-            if (snapshot.times && typeof snapshot.times === "object") {
+            if (
+                snapshot.times &&
+                typeof snapshot.times === "object"
+            ) {
 
                 Object.entries(snapshot.times).forEach(
                     ([codigoTime, dadosTime]) => {
 
                         if (!this.times[codigoTime]) {
+
                             this.times[codigoTime] = {
-                                nome: dadosTime?.nome || codigoTime,
+                                nome:
+                                    dadosTime?.nome ||
+                                    codigoTime,
+
                                 jogadores: []
                             };
+
                         }
 
                         this.times[codigoTime].nome =
-                            dadosTime?.nome || this.times[codigoTime].nome;
+                            dadosTime?.nome ||
+                            this.times[codigoTime].nome;
 
                         this.times[codigoTime].jogadores =
                             Array.isArray(dadosTime?.jogadores)
-                                ? dadosTime.jogadores.map(jogador => ({
-                                    _id:
-                                        jogador?._id ||
-                                        jogador?.id ||
-                                        jogador?.codigo ||
-                                        jogador?.nome ||
-                                        "",
-                                    nome:
-                                        jogador?.nome ||
-                                        jogador?.name ||
-                                        "Jogador",
-                                    numeroCamisa:
-                                        jogador?.numeroCamisa ??
-                                        jogador?.numero ??
-                                        ""
-                                }))
+                                ? dadosTime.jogadores.map(
+                                    jogador => ({
+
+                                        _id:
+                                            jogador?._id ||
+                                            jogador?.id ||
+                                            jogador?.codigo ||
+                                            jogador?.nome ||
+                                            "",
+
+                                        nome:
+                                            jogador?.nome ||
+                                            jogador?.name ||
+                                            "Jogador",
+
+                                        numeroCamisa:
+                                            jogador?.numeroCamisa ??
+                                            jogador?.numero ??
+                                            ""
+
+                                    })
+                                )
                                 : [];
 
                     }
@@ -416,47 +488,72 @@
 
             }
 
-            this.filaTimes = Array.isArray(snapshot.filaTimes)
-                ? [...snapshot.filaTimes]
-                : [];
+            this.filaTimes =
+                Array.isArray(snapshot.filaTimes)
+                    ? [...snapshot.filaTimes]
+                    : [];
 
-            this.time1 = snapshot.time1 || null;
-            this.time2 = snapshot.time2 || null;
-            this.proximoTime = snapshot.proximoTime || null;
+            this.time1 =
+                snapshot.time1 || null;
+
+            this.time2 =
+                snapshot.time2 || null;
+
+            this.proximoTime =
+                snapshot.proximoTime || null;
 
             this.golsPartida =
                 snapshot.golsPartida &&
                 typeof snapshot.golsPartida === "object"
                     ? snapshot.golsPartida
-                    : { time1: {}, time2: {} };
+                    : {
+                        time1: {},
+                        time2: {}
+                    };
 
             this.eventosGolsPartida =
                 snapshot.eventosGolsPartida &&
                 typeof snapshot.eventosGolsPartida === "object"
                     ? snapshot.eventosGolsPartida
-                    : { time1: [], time2: [] };
+                    : {
+                        time1: [],
+                        time2: []
+                    };
 
-            this.partidaBancoIdAtual = snapshot.partidaBancoIdAtual || null;
-            this.iniciadaEm = snapshot.iniciadaEm || null;
+            this.partidaBancoIdAtual =
+                snapshot.partidaBancoIdAtual || null;
+
+            this.iniciadaEm =
+                snapshot.iniciadaEm || null;
 
             /*
-             * O tempo corre enquanto o usuário está em outra tela.
-             * Uma partida pausada não perde tempo durante esse período.
+             * A Pelada continua contando durante a navegação.
              */
-            if (this.peladaIniciada && !this.peladaFinalizada) {
+            if (
+                this.peladaIniciada &&
+                !this.peladaFinalizada
+            ) {
 
                 this.tempoRestantePelada = Math.max(
                     0,
-                    this.tempoRestantePelada - segundosForaDaTela
+                    this.tempoRestantePelada -
+                    segundosForaDaTela
                 );
 
             }
 
-            if (this.partidaIniciada && !this.partidaPausada) {
+            /*
+             * Uma partida pausada não perde tempo.
+             */
+            if (
+                this.partidaIniciada &&
+                !this.partidaPausada
+            ) {
 
                 this.tempoRestantePartida = Math.max(
                     0,
-                    this.tempoRestantePartida - segundosForaDaTela
+                    this.tempoRestantePartida -
+                    segundosForaDaTela
                 );
 
             }
@@ -467,8 +564,11 @@
             ) {
 
                 this.tempoRestantePartida = 0;
+
                 this.partidaIniciada = false;
+
                 this.partidaPausada = false;
+
                 this.resultadoPendente = true;
 
             }
@@ -479,22 +579,33 @@
             ) {
 
                 this.tempoRestantePelada = 0;
+
                 this.peladaIniciada = false;
+
                 this.peladaFinalizada = true;
 
                 if (this.partidaIniciada) {
+
                     this.partidaIniciada = false;
+
                     this.partidaPausada = false;
+
                     this.resultadoPendente = true;
+
                 }
 
             }
 
             this.atualizarDuracoesNaTela();
+
             this.atualizarTela();
+
             this.atualizarEstimativa();
+
             this.atualizarCronometroPelada();
+
             this.atualizarCronometroPartida();
+
             this.renderizarHistorico();
 
             if (this.resultadoPendente) {
@@ -523,7 +634,10 @@
                 );
 
                 this.atualizarBadgePartida(
-                    this.partidaPausada ? "Pausada" : "Em andamento",
+                    this.partidaPausada
+                        ? "Pausada"
+                        : "Em andamento",
+
                     this.partidaPausada
                         ? "bg-warning text-dark"
                         : "bg-success"
@@ -531,7 +645,9 @@
 
             } else if (this.peladaFinalizada) {
 
-                this.atualizarStatus("Pelada finalizada");
+                this.atualizarStatus(
+                    "Pelada finalizada"
+                );
 
                 this.atualizarBadgePartida(
                     "Pelada finalizada",
@@ -553,19 +669,35 @@
 
             this.atualizarBotoes();
 
-            if (this.peladaFinalizada && !this.resultadoPendente) {
+            if (
+                this.peladaFinalizada &&
+                !this.resultadoPendente
+            ) {
+
                 this.limparSessaoPersistida();
+
                 return true;
+
             }
 
             this.salvarSessaoPersistida();
 
-            if (this.peladaIniciada && !this.peladaFinalizada) {
+            if (
+                this.peladaIniciada &&
+                !this.peladaFinalizada
+            ) {
+
                 this.iniciarCronometroPelada();
+
             }
 
-            if (this.partidaIniciada && !this.partidaPausada) {
+            if (
+                this.partidaIniciada &&
+                !this.partidaPausada
+            ) {
+
                 this.iniciarCronometroPartida();
+
             }
 
             return true;
@@ -575,21 +707,36 @@
 
         atualizarDuracoesNaTela() {
 
-            const campoPelada = document.getElementById("duracaoPelada");
-            const campoPartida = document.getElementById("duracaoPartida");
+            const campoPelada =
+                document.getElementById(
+                    "duracaoPelada"
+                );
+
+            const campoPartida =
+                document.getElementById(
+                    "duracaoPartida"
+                );
 
             if (campoPelada) {
+
                 campoPelada.value = Math.max(
                     1,
-                    Math.round(this.duracaoPelada / 60)
+                    Math.round(
+                        this.duracaoPelada / 60
+                    )
                 );
+
             }
 
             if (campoPartida) {
+
                 campoPartida.value = Math.max(
                     1,
-                    Math.round(this.duracaoPartida / 60)
+                    Math.round(
+                        this.duracaoPartida / 60
+                    )
                 );
+
             }
 
         }
@@ -650,9 +797,11 @@
                                 this.obterDuracaoPelada();
 
                             this.atualizarCronometroPelada();
+
                         }
 
                         this.atualizarEstimativa();
+
                     }
                 );
 
@@ -671,9 +820,11 @@
                                 this.obterDuracaoPartida();
 
                             this.atualizarCronometroPartida();
+
                         }
 
                         this.atualizarEstimativa();
+
                     }
                 );
 
@@ -801,12 +952,6 @@
         }
 
 
-        /*
-         * Retorna o ID da Pelada atualmente selecionada.
-         *
-         * A origem oficial é:
-         * localStorage["peladaDaFePeladaAtualId"]
-         */
         obterPeladaAtualId() {
 
             const id =
@@ -822,10 +967,6 @@
         }
 
 
-        /*
-         * Retorna os dados completos da Pelada atual,
-         * quando disponíveis no localStorage.
-         */
         obterPeladaAtual() {
 
             const dados =
@@ -858,10 +999,6 @@
         }
 
 
-        /*
-         * Valida se existe uma Pelada selecionada e
-         * se ela pode receber partidas.
-         */
         validarPeladaAtual() {
 
             const peladaId =
@@ -877,12 +1014,7 @@
 
             }
 
-
-            if (
-                !this.ehObjectIdMongo(
-                    peladaId
-                )
-            ) {
+            if (!this.ehObjectIdMongo(peladaId)) {
 
                 this.mostrarErro(
                     "A Pelada selecionada possui um ID inválido."
@@ -892,10 +1024,8 @@
 
             }
 
-
             const pelada =
                 this.obterPeladaAtual();
-
 
             if (pelada) {
 
@@ -903,7 +1033,6 @@
                     String(
                         pelada.status || ""
                     ).trim();
-
 
                 if (
                     status === "Finalizada" ||
@@ -920,15 +1049,11 @@
 
             }
 
-
             return true;
 
         }
 
 
-        /*
-         * Captura a Pelada selecionada para a sessão atual.
-         */
         iniciarVinculoPeladaSessao() {
 
             const peladaId =
@@ -937,15 +1062,12 @@
             const pelada =
                 this.obterPeladaAtual();
 
-
             this.peladaDaSessaoId =
                 peladaId || null;
-
 
             this.peladaDaSessaoNome =
                 pelada?.nome ||
                 "Pelada selecionada";
-
 
             console.log(
                 "🏆 Pelada vinculada à sessão:",
@@ -958,24 +1080,93 @@
         }
 
 
+        /*
+         * ALTERAÇÃO:
+         * carrega os times somente quando o sorteio está associado
+         * à Pelada atualmente selecionada.
+         */
         carregarTimesDoSorteio() {
 
+            this.times = {
+                amarelo: {
+                    nome: "Amarelo",
+                    jogadores: []
+                },
+
+                vermelho: {
+                    nome: "Vermelho",
+                    jogadores: []
+                },
+
+                azul: {
+                    nome: "Azul",
+                    jogadores: []
+                }
+            };
+
+            this.filaTimes = [];
+            this.sorteioPeladaId = null;
+            this.sorteioValidoParaPelada = false;
+
             try {
+
+                const peladaAtualId =
+                    this.obterPeladaAtualId();
+
+                const sorteioPeladaId =
+                    String(
+                        localStorage.getItem(
+                            "peladaDaFeTimesPeladaId"
+                        ) || ""
+                    ).trim();
 
                 const dados =
                     localStorage.getItem(
                         "peladaDaFeTimes"
                     );
 
+                if (!peladaAtualId) {
+
+                    console.warn(
+                        "⚠️ Não existe uma Pelada selecionada."
+                    );
+
+                    return false;
+
+                }
+
                 if (!dados) {
 
                     console.warn(
-                        "⚠️ Nenhum sorteio encontrado."
+                        "⚠️ Nenhum sorteio foi encontrado."
                     );
 
-                    this.filaTimes = [];
+                    return false;
 
-                    return;
+                }
+
+                if (!sorteioPeladaId) {
+
+                    console.warn(
+                        "⚠️ O sorteio salvo não está vinculado a uma Pelada."
+                    );
+
+                    return false;
+
+                }
+
+                if (sorteioPeladaId !== peladaAtualId) {
+
+                    console.warn(
+                        "⚠️ O sorteio pertence a outra Pelada.",
+                        {
+                            peladaSelecionada: peladaAtualId,
+                            peladaDoSorteio: sorteioPeladaId
+                        }
+                    );
+
+                    return false;
+
                 }
 
                 const times =
@@ -989,75 +1180,172 @@
                 ) {
 
                     console.warn(
-                        "⚠️ Dados do sorteio inválidos."
+                        "⚠️ Os dados do sorteio estão incompletos."
                     );
 
-                    this.filaTimes = [];
+                    return false;
 
-                    return;
+                }
+
+                const jogadoresAmarelo =
+                    Array.isArray(times.amarelo)
+                        ? times.amarelo
+                        : times.amarelo.jogadores;
+
+                const jogadoresVermelho =
+                    Array.isArray(times.vermelho)
+                        ? times.vermelho
+                        : times.vermelho.jogadores;
+
+                const jogadoresAzul =
+                    Array.isArray(times.azul)
+                        ? times.azul
+                        : times.azul.jogadores;
+
+                if (
+                    !Array.isArray(jogadoresAmarelo) ||
+                    !Array.isArray(jogadoresVermelho) ||
+                    !Array.isArray(jogadoresAzul)
+                ) {
+
+                    console.warn(
+                        "⚠️ A lista de jogadores dos times está inválida."
+                    );
+
+                    return false;
+
                 }
 
                 this.times.amarelo.jogadores =
-                    Array.isArray(
-                        times.amarelo
-                    )
-                        ? [...times.amarelo]
-                        : (
-                            Array.isArray(
-                                times.amarelo.jogadores
-                            )
-                                ? [...times.amarelo.jogadores]
-                                : []
-                        );
-
+                    [...jogadoresAmarelo];
 
                 this.times.vermelho.jogadores =
-                    Array.isArray(
-                        times.vermelho
-                    )
-                        ? [...times.vermelho]
-                        : (
-                            Array.isArray(
-                                times.vermelho.jogadores
-                            )
-                                ? [...times.vermelho.jogadores]
-                                : []
-                        );
-
+                    [...jogadoresVermelho];
 
                 this.times.azul.jogadores =
-                    Array.isArray(
-                        times.azul
-                    )
-                        ? [...times.azul]
-                        : (
-                            Array.isArray(
-                                times.azul.jogadores
-                            )
-                                ? [...times.azul.jogadores]
-                                : []
-                        );
+                    [...jogadoresAzul];
 
+                this.filaTimes = [
+                    "amarelo",
+                    "vermelho",
+                    "azul"
+                ];
+
+                this.sorteioPeladaId =
+                    sorteioPeladaId;
+
+                this.sorteioValidoParaPelada =
+                    true;
 
                 console.log(
-                    "✅ Times carregados:",
-                    this.times
+                    "✅ Sorteio validado para a Pelada selecionada:",
+                    {
+                        peladaId: peladaAtualId,
+                        times: this.times
+                    }
                 );
+
+                return true;
 
             } catch (erro) {
 
-                console.warn(
-                    "Não foi possível carregar os times do sorteio.",
+                console.error(
+                    "❌ Não foi possível carregar os times do sorteio:",
                     erro
                 );
 
+                this.times = {
+                    amarelo: {
+                        nome: "Amarelo",
+                        jogadores: []
+                    },
+
+                    vermelho: {
+                        nome: "Vermelho",
+                        jogadores: []
+                    },
+
+                    azul: {
+                        nome: "Azul",
+                        jogadores: []
+                    }
+                };
+
+                this.filaTimes = [];
+                this.sorteioPeladaId = null;
+                this.sorteioValidoParaPelada = false;
+
+                return false;
+
             }
 
-            this.filaTimes = [
-                "amarelo",
-                "vermelho",
-                "azul"
-            ];
+        }
+
+
+        /*
+         * ALTERAÇÃO:
+         * valida o vínculo antes de iniciar uma nova sessão.
+         */
+        validarSorteioParaPelada() {
+
+            const peladaAtualId =
+                this.obterPeladaAtualId();
+
+            if (!peladaAtualId) {
+
+                this.mostrarErro(
+                    "Selecione uma Pelada na tela Peladas antes de iniciar."
+                );
+
+                return false;
+
+            }
+
+            const sorteioPeladaId =
+                String(
+                    localStorage.getItem(
+                        "peladaDaFeTimesPeladaId"
+                    ) || ""
+                ).trim();
+
+            if (!sorteioPeladaId) {
+
+                this.mostrarErro(
+                    "O sorteio salvo não está vinculado a uma Pelada. Selecione a Pelada desejada e gere um novo sorteio na tela Sorteio."
+                );
+
+                return false;
+
+            }
+
+            if (sorteioPeladaId !== peladaAtualId) {
+
+                this.mostrarErro(
+                    "O sorteio salvo pertence a outra Pelada. Acesse a tela Sorteio e gere um novo sorteio para a Pelada que está selecionada."
+                );
+
+                return false;
+
+            }
+
+            const sorteioCarregado =
+                this.carregarTimesDoSorteio();
+
+            if (
+                !sorteioCarregado ||
+                !this.sorteioValidoParaPelada ||
+                this.filaTimes.length !== 3
+            ) {
+
+                this.mostrarErro(
+                    "Não foi possível validar os três times para esta Pelada. Acesse Sorteio e gere um novo sorteio."
+                );
+
+                return false;
+
+            }
+
+            return true;
 
         }
 
@@ -1068,14 +1356,17 @@
                 return;
             }
 
-
-            /*
-             * Primeiro validamos a Pelada atual.
-             */
             if (!this.validarPeladaAtual()) {
                 return;
             }
 
+            /*
+             * NOVO:
+             * exige um sorteio pertencente à mesma Pelada.
+             */
+            if (!this.validarSorteioParaPelada()) {
+                return;
+            }
 
             const duracaoPelada =
                 this.obterDuracaoPelada();
@@ -1104,15 +1395,7 @@
                 return;
             }
 
-
-            /*
-             * Vincula a Pelada à sessão atual.
-             *
-             * Todas as partidas dessa sessão utilizarão
-             * esse mesmo ID.
-             */
             this.iniciarVinculoPeladaSessao();
-
 
             this.duracaoPelada =
                 duracaoPelada;
@@ -1126,33 +1409,19 @@
             this.tempoRestantePartida =
                 duracaoPartida;
 
-            this.peladaIniciada =
-                true;
+            this.peladaIniciada = true;
+            this.peladaFinalizada = false;
+            this.partidaIniciada = false;
+            this.partidaPausada = false;
+            this.resultadoPendente = false;
+            this.salvandoResultado = false;
 
-            this.peladaFinalizada =
-                false;
-
-            this.partidaIniciada =
-                false;
-
-            this.partidaPausada =
-                false;
-
-            this.resultadoPendente =
-                false;
-
-            this.salvandoResultado =
-                false;
-
-            this.partidasRealizadas =
-                0;
-
+            this.partidasRealizadas = 0;
             this.historico = [];
 
             this.limparGolsPartida();
 
-            this.iniciadaEm =
-                null;
+            this.iniciadaEm = null;
 
             this.filaTimes = [
                 "amarelo",
@@ -1214,12 +1483,9 @@
 
                         this.tempoRestantePelada--;
 
-                        if (
-                            this.tempoRestantePelada <= 0
-                        ) {
+                        if (this.tempoRestantePelada <= 0) {
 
-                            this.tempoRestantePelada =
-                                0;
+                            this.tempoRestantePelada = 0;
 
                             this.atualizarCronometroPelada();
 
@@ -1251,8 +1517,8 @@
                     this.intervaloPelada
                 );
 
-                this.intervaloPelada =
-                    null;
+                this.intervaloPelada = null;
+
             }
 
         }
@@ -1291,10 +1557,7 @@
                 return;
             }
 
-            if (
-                !this.time1 ||
-                !this.time2
-            ) {
+            if (!this.time1 || !this.time2) {
 
                 this.mostrarErro(
                     "Não existem dois times disponíveis para iniciar a partida."
@@ -1312,9 +1575,7 @@
                 return;
             }
 
-            if (
-                this.tempoRestantePelada <= 0
-            ) {
+            if (this.tempoRestantePelada <= 0) {
 
                 this.finalizarPelada(
                     "Tempo da pelada encerrado."
@@ -1334,17 +1595,10 @@
             this.iniciadaEm =
                 new Date().toISOString();
 
-            this.partidaIniciada =
-                true;
-
-            this.partidaPausada =
-                false;
-
-            this.resultadoPendente =
-                false;
-
-            this.salvandoResultado =
-                false;
+            this.partidaIniciada = true;
+            this.partidaPausada = false;
+            this.resultadoPendente = false;
+            this.salvandoResultado = false;
 
             this.atualizarStatus(
                 "Partida em andamento"
@@ -1394,12 +1648,9 @@
 
                         this.tempoRestantePartida--;
 
-                        if (
-                            this.tempoRestantePartida <= 0
-                        ) {
+                        if (this.tempoRestantePartida <= 0) {
 
-                            this.tempoRestantePartida =
-                                0;
+                            this.tempoRestantePartida = 0;
 
                             this.atualizarCronometroPartida();
 
@@ -1431,8 +1682,8 @@
                     this.intervaloPartida
                 );
 
-                this.intervaloPartida =
-                    null;
+                this.intervaloPartida = null;
+
             }
 
         }
@@ -1486,14 +1737,9 @@
 
             this.pararCronometroPartida();
 
-            this.partidaIniciada =
-                false;
-
-            this.partidaPausada =
-                false;
-
-            this.resultadoPendente =
-                true;
+            this.partidaIniciada = false;
+            this.partidaPausada = false;
+            this.resultadoPendente = true;
 
             this.renderizarAreaResultado();
 
@@ -1521,14 +1767,9 @@
 
             this.pararCronometroPartida();
 
-            this.partidaIniciada =
-                false;
-
-            this.partidaPausada =
-                false;
-
-            this.resultadoPendente =
-                true;
+            this.partidaIniciada = false;
+            this.partidaPausada = false;
+            this.resultadoPendente = true;
 
             this.renderizarAreaResultado();
 
@@ -1560,8 +1801,7 @@
                 time2: []
             };
 
-            this.partidaBancoIdAtual =
-                null;
+            this.partidaBancoIdAtual = null;
 
         }
 
@@ -1581,7 +1821,6 @@
                     this.golsPartida[time][jogadorId] || 0
                 );
 
-
             if (quantidade > 0) {
 
                 if (!this.ehObjectIdMongo(jogadorId)) {
@@ -1593,7 +1832,6 @@
                     return;
                 }
 
-
                 const jogadores =
                     this.obterJogadoresDoTime(
                         time === "time1"
@@ -1601,19 +1839,14 @@
                             : this.time2
                     );
 
-
                 const jogadorEncontrado =
                     jogadores.find(
-                        (
-                            jogador,
-                            indice
-                        ) =>
+                        (jogador, indice) =>
                             this.obterIdJogador(
                                 jogador,
                                 indice
                             ) === String(jogadorId)
                     );
-
 
                 if (!jogadorEncontrado) {
 
@@ -1624,13 +1857,8 @@
                     return;
                 }
 
-
-                const novoValor =
-                    atual + quantidade;
-
                 this.golsPartida[time][jogadorId] =
-                    novoValor;
-
+                    atual + quantidade;
 
                 const duracaoAtual =
                     this.obterDuracaoPartida();
@@ -1642,12 +1870,10 @@
                         this.tempoRestantePartida
                     );
 
-
                 const minuto =
                     Math.floor(
                         segundosDecorridos / 60
                     );
-
 
                 this.eventosGolsPartida[time].push({
 
@@ -1668,8 +1894,7 @@
 
                     minuto,
 
-                    salvo:
-                        false
+                    salvo: false
 
                 });
 
@@ -1679,14 +1904,10 @@
                     return;
                 }
 
-
                 const eventos =
                     this.eventosGolsPartida[time] || [];
 
-
-                let indiceEvento =
-                    -1;
-
+                let indiceEvento = -1;
 
                 for (
                     let indice = eventos.length - 1;
@@ -1701,14 +1922,12 @@
                         !eventos[indice]?.salvo
                     ) {
 
-                        indiceEvento =
-                            indice;
-
+                        indiceEvento = indice;
                         break;
+
                     }
 
                 }
-
 
                 if (indiceEvento >= 0) {
 
@@ -1719,18 +1938,13 @@
 
                 }
 
-
-                const novoValor =
+                this.golsPartida[time][jogadorId] =
                     Math.max(
                         0,
                         atual + quantidade
                     );
 
-                this.golsPartida[time][jogadorId] =
-                    novoValor;
-
             }
-
 
             this.renderizarAreaResultado();
 
@@ -1770,7 +1984,6 @@
             }
 
             return String(
-
                 jogador._id ||
                 jogador.id ||
                 jogador.codigo ||
@@ -1778,7 +1991,6 @@
                 jogador.nome ||
                 jogador.name ||
                 indice
-
             );
 
         }
@@ -1840,17 +2052,9 @@
             return Object.values(
                 this.golsPartida[time]
             ).reduce(
-                (
-                    total,
-                    gols
-                ) => {
-
-                    return (
-                        total +
-                        Number(gols || 0)
-                    );
-
-                },
+                (total, gols) => (
+                    total + Number(gols || 0)
+                ),
                 0
             );
 
@@ -1874,12 +2078,8 @@
                 )
                 .map(
                     ([jogador, gols]) => ({
-
                         jogador,
-
-                        gols:
-                            Number(gols)
-
+                        gols: Number(gols)
                     })
                 );
 
@@ -1899,12 +2099,8 @@
                         : this.time2
                 );
 
-
             jogadores.forEach(
-                (
-                    jogador,
-                    indice
-                ) => {
+                (jogador, indice) => {
 
                     const id =
                         this.obterIdJogador(
@@ -1912,27 +2108,23 @@
                             indice
                         );
 
-
                     const gols =
                         Number(
                             this.golsPartida[time]?.[id] || 0
                         );
 
-
                     if (gols > 0) {
 
                         resultado.push({
 
-                            jogadorId:
-                                id,
+                            jogadorId: id,
 
                             jogadorNome:
                                 this.obterNomeJogador(
                                     jogador
                                 ),
 
-                            gols:
-                                gols
+                            gols
 
                         });
 
@@ -1940,7 +2132,6 @@
 
                 }
             );
-
 
             return resultado;
 
@@ -1959,34 +2150,23 @@
 
             }
 
-
             const eventos = [
-
                 ...(this.eventosGolsPartida.time1 || []),
-
                 ...(this.eventosGolsPartida.time2 || [])
-
             ];
-
 
             const eventosPendentes =
                 eventos.filter(
-                    evento =>
-                        !evento.salvo
+                    evento => !evento.salvo
                 );
-
 
             if (!eventosPendentes.length) {
                 return [];
             }
 
-
             const resultados = [];
 
-
-            for (
-                const evento of eventosPendentes
-            ) {
+            for (const evento of eventosPendentes) {
 
                 if (
                     !this.ehObjectIdMongo(
@@ -2000,34 +2180,26 @@
 
                 }
 
-
                 const payload = {
 
-                    partida:
-                        partidaId,
+                    partida: partidaId,
 
-                    jogador:
-                        evento.jogadorId,
+                    jogador: evento.jogadorId,
 
-                    nomeJogador:
-                        evento.nomeJogador,
+                    nomeJogador: evento.nomeJogador,
 
-                    time:
-                        evento.time,
+                    time: evento.time,
 
-                    minuto:
-                        Number(
-                            evento.minuto ?? 0
-                        )
+                    minuto: Number(
+                        evento.minuto ?? 0
+                    )
 
                 };
-
 
                 console.log(
                     "📤 Enviando gol para /api/gols:",
                     payload
                 );
-
 
                 const resposta =
                     await fetch(
@@ -2040,28 +2212,21 @@
                                     "application/json"
                             },
 
-                            body:
-                                JSON.stringify(
-                                    payload
-                                )
+                            body: JSON.stringify(payload)
                         }
                     );
 
-
                 let dados = null;
-
 
                 try {
 
-                    dados =
-                        await resposta.json();
+                    dados = await resposta.json();
 
                 } catch (erro) {
 
                     dados = null;
 
                 }
-
 
                 if (!resposta.ok) {
 
@@ -2070,12 +2235,10 @@
                         dados?.message ||
                         "O servidor recusou o salvamento do gol.";
 
-
                     const detalhes =
                         dados?.detalhes
                             ? ` ${dados.detalhes}`
                             : "";
-
 
                     throw new Error(
                         mensagem + detalhes
@@ -2083,17 +2246,13 @@
 
                 }
 
-
-                evento.salvo =
-                    true;
+                evento.salvo = true;
 
                 this.salvarSessaoPersistida();
 
                 resultados.push(
-                    dados?.gol ||
-                    dados
+                    dados?.gol || dados
                 );
-
 
                 console.log(
                     "✅ Gol salvo no MongoDB:",
@@ -2101,7 +2260,6 @@
                 );
 
             }
-
 
             return resultados;
 
@@ -2118,19 +2276,10 @@
                 return;
             }
 
-            if (
-                !this.time1 ||
-                !this.time2
-            ) {
+            if (!this.time1 || !this.time2) {
                 return;
             }
 
-
-            /*
-             * Segurança adicional:
-             * uma partida somente pode ser salva se estiver
-             * vinculada a uma Pelada.
-             */
             if (!this.peladaDaSessaoId) {
 
                 this.mostrarErro(
@@ -2141,21 +2290,13 @@
 
             }
 
-
             const golsTime1 =
-                this.calcularTotalGols(
-                    "time1"
-                );
+                this.calcularTotalGols("time1");
 
             const golsTime2 =
-                this.calcularTotalGols(
-                    "time2"
-                );
+                this.calcularTotalGols("time2");
 
-
-            if (
-                golsTime1 === golsTime2
-            ) {
+            if (golsTime1 === golsTime2) {
 
                 this.mostrarMensagemResultado(
                     "O resultado não pode ser empate. Informe gols até que exista um vencedor.",
@@ -2165,45 +2306,30 @@
                 return;
             }
 
-
-            const time1Jogado =
-                this.time1;
-
-            const time2Jogado =
-                this.time2;
-
+            const time1Jogado = this.time1;
+            const time2Jogado = this.time2;
 
             const vencedor =
                 golsTime1 > golsTime2
                     ? time1Jogado
                     : time2Jogado;
 
-
             const perdedor =
                 golsTime1 > golsTime2
                     ? time2Jogado
                     : time1Jogado;
 
-
             const proximoTimeAntesDaRotacao =
                 this.proximoTime;
 
-
             const golsTime1Detalhados =
-                this.obterGolsDetalhados(
-                    "time1"
-                );
-
+                this.obterGolsDetalhados("time1");
 
             const golsTime2Detalhados =
-                this.obterGolsDetalhados(
-                    "time2"
-                );
-
+                this.obterGolsDetalhados("time2");
 
             const duracaoConfigurada =
                 this.obterDuracaoPartida();
-
 
             const duracaoDecorrida =
                 Math.max(
@@ -2211,7 +2337,6 @@
                     duracaoConfigurada -
                     this.tempoRestantePartida
                 );
-
 
             const registro = {
 
@@ -2237,13 +2362,8 @@
                     golsTime2,
 
                 gols: {
-
-                    time1:
-                        golsTime1Detalhados,
-
-                    time2:
-                        golsTime2Detalhados
-
+                    time1: golsTime1Detalhados,
+                    time2: golsTime2Detalhados
                 },
 
                 vencedor:
@@ -2266,9 +2386,7 @@
 
             };
 
-
-            this.salvandoResultado =
-                true;
+            this.salvandoResultado = true;
 
             this.atualizarBotoes();
 
@@ -2281,11 +2399,14 @@
                 "bg-info text-dark"
             );
 
+            /*
+             * Persiste o estado antes de iniciar operações assíncronas.
+             */
+            this.salvarSessaoPersistida();
 
             try {
 
                 let partidaSalva = null;
-
 
                 if (!this.partidaBancoIdAtual) {
 
@@ -2293,7 +2414,6 @@
                         await this.salvarPartidaNoBanco(
                             registro
                         );
-
 
                     this.partidaBancoIdAtual =
                         partidaSalva?._id ||
@@ -2314,7 +2434,6 @@
 
                     }
 
-
                     console.log(
                         "✅ Partida salva no MongoDB:",
                         partidaSalva
@@ -2329,16 +2448,13 @@
 
                 }
 
-
                 await this.salvarGolsNoBanco(
                     this.partidaBancoIdAtual
                 );
 
-
                 console.log(
                     "✅ Gols da partida sincronizados com o MongoDB."
                 );
-
 
             } catch (erro) {
 
@@ -2347,21 +2463,16 @@
                     erro
                 );
 
-
-                this.salvandoResultado =
-                    false;
-
+                this.salvandoResultado = false;
 
                 this.atualizarStatus(
                     "Erro ao salvar resultado"
                 );
 
-
                 this.atualizarBadgePartida(
                     "Erro ao salvar",
                     "bg-danger"
                 );
-
 
                 this.mostrarErro(
                     erro.message ||
@@ -2373,76 +2484,48 @@
                 this.salvarSessaoPersistida();
 
                 return;
+
             }
 
-
             this.partidasRealizadas++;
-
 
             registro.numero =
                 this.partidasRealizadas;
 
+            this.historico.push(registro);
 
-            this.historico.push(
-                registro
-            );
-
-
-            const timeVencedor =
-                vencedor;
-
-            const timePerdedor =
-                perdedor;
+            const timeVencedor = vencedor;
+            const timePerdedor = perdedor;
 
             const proximo =
                 proximoTimeAntesDaRotacao;
 
-
-            this.time1 =
-                timeVencedor;
-
-            this.time2 =
-                proximo;
-
+            this.time1 = timeVencedor;
+            this.time2 = proximo;
 
             if (timePerdedor) {
-
-                this.filaTimes.push(
-                    timePerdedor
-                );
-
+                this.filaTimes.push(timePerdedor);
             }
-
 
             this.proximoTime =
                 this.filaTimes.shift();
 
-
-            this.resultadoPendente =
-                false;
-
-            this.salvandoResultado =
-                false;
-
-            this.iniciadaEm =
-                null;
-
+            this.resultadoPendente = false;
+            this.salvandoResultado = false;
+            this.iniciadaEm = null;
 
             this.limparGolsPartida();
 
             this.ocultarAreaResultado();
 
-
             this.atualizarStatus(
                 `Vitória do ${this.obterNomeTime(vencedor)}`
             );
-
 
             this.atualizarBadgePartida(
                 "Resultado confirmado",
                 "bg-success"
             );
-
 
             this.atualizarTela();
 
@@ -2450,32 +2533,31 @@
 
             this.atualizarBotoes();
 
-
             const nomeTime1Jogado =
-                this.obterNomeTime(
-                    time1Jogado
-                );
+                this.obterNomeTime(time1Jogado);
 
             const nomeTime2Jogado =
-                this.obterNomeTime(
-                    time2Jogado
-                );
+                this.obterNomeTime(time2Jogado);
 
             const nomeVencedor =
-                this.obterNomeTime(
-                    vencedor
-                );
-
+                this.obterNomeTime(vencedor);
 
             this.mostrarMensagemResultado(
                 `Vitória do ${nomeVencedor} por ${golsTime1} x ${golsTime2}.`,
                 "success"
             );
 
-            if (this.peladaFinalizada || !this.peladaIniciada) {
+            if (
+                this.peladaFinalizada ||
+                !this.peladaIniciada
+            ) {
+
                 this.limparSessaoPersistida();
+
             } else {
+
                 this.salvarSessaoPersistida();
+
             }
 
             console.log(
@@ -2500,26 +2582,16 @@
             registro
         ) {
 
-            /*
-             * A partida agora obrigatoriamente precisa estar
-             * vinculada à Pelada da sessão.
-             */
             const peladaId =
                 this.peladaDaSessaoId;
 
-
-            if (
-                !this.ehObjectIdMongo(
-                    peladaId
-                )
-            ) {
+            if (!this.ehObjectIdMongo(peladaId)) {
 
                 throw new Error(
                     "A partida não pode ser salva porque a Pelada vinculada possui um ID inválido."
                 );
 
             }
-
 
             const jogadoresTimeA =
                 this.obterJogadoresDoTime(
@@ -2531,49 +2603,34 @@
                     registro.time2
                 );
 
-
             const idsTimeA =
                 jogadoresTimeA
                     .map(
-                        (
-                            jogador,
-                            indice
-                        ) =>
+                        (jogador, indice) =>
                             this.obterIdJogador(
                                 jogador,
                                 indice
                             )
                     )
                     .filter(
-                        id =>
-                            this.ehObjectIdMongo(id)
+                        id => this.ehObjectIdMongo(id)
                     );
-
 
             const idsTimeB =
                 jogadoresTimeB
                     .map(
-                        (
-                            jogador,
-                            indice
-                        ) =>
+                        (jogador, indice) =>
                             this.obterIdJogador(
                                 jogador,
                                 indice
                             )
                     )
                     .filter(
-                        id =>
-                            this.ehObjectIdMongo(id)
+                        id => this.ehObjectIdMongo(id)
                     );
-
 
             const payload = {
 
-                /*
-                 * NOVO:
-                 * associação da partida com a Pelada.
-                 */
                 pelada:
                     peladaId,
 
@@ -2594,14 +2651,10 @@
                     idsTimeB,
 
                 golsTimeA:
-                    Number(
-                        registro.golsTime1 || 0
-                    ),
+                    Number(registro.golsTime1 || 0),
 
                 golsTimeB:
-                    Number(
-                        registro.golsTime2 || 0
-                    ),
+                    Number(registro.golsTime2 || 0),
 
                 vencedor:
                     registro.golsTime1 >
@@ -2610,14 +2663,10 @@
                         : "timeB",
 
                 numero:
-                    Number(
-                        registro.numero
-                    ),
+                    Number(registro.numero),
 
                 duracaoSegundos:
-                    Number(
-                        registro.duracao || 0
-                    ),
+                    Number(registro.duracao || 0),
 
                 iniciadaEm:
                     registro.iniciadaEm ||
@@ -2628,17 +2677,14 @@
                     registro.data ||
                     new Date().toISOString(),
 
-                finalizada:
-                    true
+                finalizada: true
 
             };
-
 
             console.log(
                 "📤 Enviando partida para /api/partidas:",
                 payload
             );
-
 
             const resposta =
                 await fetch(
@@ -2652,27 +2698,21 @@
                         },
 
                         body:
-                            JSON.stringify(
-                                payload
-                            )
+                            JSON.stringify(payload)
                     }
                 );
 
-
             let dados = null;
-
 
             try {
 
-                dados =
-                    await resposta.json();
+                dados = await resposta.json();
 
             } catch (erro) {
 
                 dados = null;
 
             }
-
 
             if (!resposta.ok) {
 
@@ -2681,19 +2721,16 @@
                     dados?.message ||
                     "O servidor recusou o salvamento da partida.";
 
-
                 const detalhes =
                     dados?.detalhes
                         ? ` ${dados.detalhes}`
                         : "";
-
 
                 throw new Error(
                     mensagem + detalhes
                 );
 
             }
-
 
             return (
                 dados?.partida ||
@@ -2714,95 +2751,61 @@
                 return;
             }
 
-
-            area.classList.remove(
-                "d-none"
-            );
-
+            area.classList.remove("d-none");
 
             const nomeTime1 =
-                this.obterNomeTime(
-                    this.time1
-                );
+                this.obterNomeTime(this.time1);
 
             const nomeTime2 =
-                this.obterNomeTime(
-                    this.time2
-                );
-
+                this.obterNomeTime(this.time2);
 
             const golsTime1 =
-                this.calcularTotalGols(
-                    "time1"
-                );
+                this.calcularTotalGols("time1");
 
             const golsTime2 =
-                this.calcularTotalGols(
-                    "time2"
-                );
-
+                this.calcularTotalGols("time2");
 
             const placarNomeTime1 =
-                document.getElementById(
-                    "placarNomeTime1"
-                );
+                document.getElementById("placarNomeTime1");
 
             const placarNomeTime2 =
-                document.getElementById(
-                    "placarNomeTime2"
-                );
+                document.getElementById("placarNomeTime2");
 
             const tituloGolsTime1 =
-                document.getElementById(
-                    "tituloGolsTime1"
-                );
+                document.getElementById("tituloGolsTime1");
 
             const tituloGolsTime2 =
-                document.getElementById(
-                    "tituloGolsTime2"
-                );
+                document.getElementById("tituloGolsTime2");
 
             const placarTime1 =
-                document.getElementById(
-                    "placarTime1"
-                );
+                document.getElementById("placarTime1");
 
             const placarTime2 =
-                document.getElementById(
-                    "placarTime2"
-                );
-
+                document.getElementById("placarTime2");
 
             if (placarNomeTime1) {
-                placarNomeTime1.textContent =
-                    nomeTime1;
+                placarNomeTime1.textContent = nomeTime1;
             }
 
             if (placarNomeTime2) {
-                placarNomeTime2.textContent =
-                    nomeTime2;
+                placarNomeTime2.textContent = nomeTime2;
             }
 
             if (tituloGolsTime1) {
-                tituloGolsTime1.textContent =
-                    nomeTime1;
+                tituloGolsTime1.textContent = nomeTime1;
             }
 
             if (tituloGolsTime2) {
-                tituloGolsTime2.textContent =
-                    nomeTime2;
+                tituloGolsTime2.textContent = nomeTime2;
             }
 
             if (placarTime1) {
-                placarTime1.textContent =
-                    golsTime1;
+                placarTime1.textContent = golsTime1;
             }
 
             if (placarTime2) {
-                placarTime2.textContent =
-                    golsTime2;
+                placarTime2.textContent = golsTime2;
             }
-
 
             this.renderizarListaGols(
                 "time1",
@@ -2814,12 +2817,10 @@
                 "listaGolsTime2"
             );
 
-
             const btnConfirmarResultado =
                 document.getElementById(
                     "btnConfirmarResultado"
                 );
-
 
             if (btnConfirmarResultado) {
 
@@ -2829,23 +2830,16 @@
 
             }
 
-
             const mensagem =
                 document.getElementById(
                     "mensagemResultado"
                 );
 
-
             if (mensagem) {
 
-                mensagem.classList.remove(
-                    "d-none"
-                );
+                mensagem.classList.remove("d-none");
 
-
-                if (
-                    golsTime1 === golsTime2
-                ) {
+                if (golsTime1 === golsTime2) {
 
                     mensagem.className =
                         "alert alert-warning mt-4 mb-0";
@@ -2888,14 +2882,11 @@
         ) {
 
             const elemento =
-                document.getElementById(
-                    elementoId
-                );
+                document.getElementById(elementoId);
 
             if (!elemento) {
                 return;
             }
-
 
             const jogadores =
                 this.obterJogadoresDoTime(
@@ -2903,7 +2894,6 @@
                         ? this.time1
                         : this.time2
                 );
-
 
             if (!jogadores.length) {
 
@@ -2914,16 +2904,13 @@
                 `;
 
                 return;
-            }
 
+            }
 
             elemento.innerHTML =
                 jogadores
                     .map(
-                        (
-                            jogador,
-                            indice
-                        ) => {
+                        (jogador, indice) => {
 
                             const id =
                                 this.obterIdJogador(
@@ -2932,15 +2919,12 @@
                                 );
 
                             const nome =
-                                this.obterNomeJogador(
-                                    jogador
-                                );
+                                this.obterNomeJogador(jogador);
 
                             const gols =
                                 Number(
                                     this.golsPartida[time]?.[id] || 0
                                 );
-
 
                             return `
                                 <div
@@ -3007,16 +2991,10 @@
         ocultarAreaResultado() {
 
             const area =
-                document.getElementById(
-                    "areaResultado"
-                );
+                document.getElementById("areaResultado");
 
             if (area) {
-
-                area.classList.add(
-                    "d-none"
-                );
-
+                area.classList.add("d-none");
             }
 
         }
@@ -3039,12 +3017,9 @@
             elemento.className =
                 `alert alert-${tipo} mt-4 mb-0`;
 
-            elemento.classList.remove(
-                "d-none"
-            );
+            elemento.classList.remove("d-none");
 
-            elemento.innerHTML =
-                mensagem;
+            elemento.innerHTML = mensagem;
 
         }
 
@@ -3071,20 +3046,14 @@
                 partida <= 0
             ) {
 
-                elemento.textContent =
-                    "—";
+                elemento.textContent = "—";
 
                 return;
+
             }
 
-
-            const estimativa =
-                Math.floor(
-                    total / partida
-                );
-
             elemento.textContent =
-                estimativa;
+                Math.floor(total / partida);
 
         }
 
@@ -3097,21 +3066,16 @@
                 );
 
             const minutos =
-                Number(
-                    elemento?.value || 60
-                );
+                Number(elemento?.value || 60);
 
             if (
                 !Number.isFinite(minutos) ||
                 minutos <= 0
             ) {
-
                 return 0;
             }
 
-            return Math.round(
-                minutos * 60
-            );
+            return Math.round(minutos * 60);
 
         }
 
@@ -3124,50 +3088,35 @@
                 );
 
             const minutos =
-                Number(
-                    elemento?.value || 7
-                );
+                Number(elemento?.value || 7);
 
             if (
                 !Number.isFinite(minutos) ||
                 minutos <= 0
             ) {
-
                 return 0;
             }
 
-            return Math.round(
-                minutos * 60
-            );
+            return Math.round(minutos * 60);
 
         }
 
 
         atualizarCronometroPelada() {
 
-            const elementos = [
-
+            const elemento =
                 document.getElementById(
                     "tempoRestantePelada"
-                )
+                );
 
-            ];
+            if (elemento) {
 
+                elemento.textContent =
+                    this.formatarTempo(
+                        this.tempoRestantePelada
+                    );
 
-            elementos.forEach(
-                elemento => {
-
-                    if (elemento) {
-
-                        elemento.textContent =
-                            this.formatarTempo(
-                                this.tempoRestantePelada
-                            );
-
-                    }
-
-                }
-            );
+            }
 
         }
 
@@ -3175,7 +3124,6 @@
         atualizarCronometroPartida() {
 
             const elementos = [
-
                 document.getElementById(
                     "tempoRestantePartida"
                 ),
@@ -3183,9 +3131,7 @@
                 document.getElementById(
                     "cronometroPartida"
                 )
-
             ];
-
 
             elementos.forEach(
                 elemento => {
@@ -3212,62 +3158,36 @@
             segundos =
                 Math.max(
                     0,
-                    Math.floor(
-                        segundos
-                    )
+                    Math.floor(segundos)
                 );
-
 
             const horas =
-                Math.floor(
-                    segundos / 3600
-                );
-
+                Math.floor(segundos / 3600);
 
             const minutos =
                 Math.floor(
-                    (
-                        segundos % 3600
-                    ) / 60
+                    (segundos % 3600) / 60
                 );
-
 
             const segundosRestantes =
                 segundos % 60;
 
-
             if (horas > 0) {
 
                 return (
-
-                    String(horas)
-                        .padStart(2, "0") +
-
+                    String(horas).padStart(2, "0") +
                     ":" +
-
-                    String(minutos)
-                        .padStart(2, "0") +
-
+                    String(minutos).padStart(2, "0") +
                     ":" +
-
-                    String(segundosRestantes)
-                        .padStart(2, "0")
-
+                    String(segundosRestantes).padStart(2, "0")
                 );
 
             }
 
-
             return (
-
-                String(minutos)
-                    .padStart(2, "0") +
-
+                String(minutos).padStart(2, "0") +
                 ":" +
-
-                String(segundosRestantes)
-                    .padStart(2, "0")
-
+                String(segundosRestantes).padStart(2, "0")
             );
 
         }
@@ -3283,10 +3203,7 @@
                 );
 
             if (elemento) {
-
-                elemento.textContent =
-                    texto;
-
+                elemento.textContent = texto;
             }
 
         }
@@ -3306,8 +3223,7 @@
                 return;
             }
 
-            elemento.textContent =
-                texto;
+            elemento.textContent = texto;
 
             elemento.className =
                 `badge px-3 py-2 ${classe}`;
@@ -3322,7 +3238,6 @@
                     "proximoTime"
                 );
 
-
             if (proximoTime) {
 
                 proximoTime.textContent =
@@ -3332,12 +3247,10 @@
 
             }
 
-
             const nomeTime1 =
                 document.getElementById(
                     "nomeTimePartida1"
                 );
-
 
             if (nomeTime1) {
 
@@ -3348,12 +3261,10 @@
 
             }
 
-
             const nomeTime2 =
                 document.getElementById(
                     "nomeTimePartida2"
                 );
-
 
             if (nomeTime2) {
 
@@ -3364,24 +3275,20 @@
 
             }
 
-
             this.renderizarJogadoresTela(
                 this.time1,
                 "jogadoresTimePartida1"
             );
-
 
             this.renderizarJogadoresTela(
                 this.time2,
                 "jogadoresTimePartida2"
             );
 
-
             const numeroPartida =
                 document.getElementById(
                     "numeroPartida"
                 );
-
 
             if (numeroPartida) {
 
@@ -3389,7 +3296,6 @@
                     this.partidasRealizadas + 1;
 
             }
-
 
             const partidasRealizadas =
                 document.getElementById(
@@ -3402,7 +3308,6 @@
                     this.partidasRealizadas;
 
             }
-
 
             this.atualizarCronometroPelada();
 
@@ -3419,21 +3324,14 @@
         ) {
 
             const elemento =
-                document.getElementById(
-                    elementoId
-                );
-
+                document.getElementById(elementoId);
 
             if (!elemento) {
                 return;
             }
 
-
             const jogadores =
-                this.obterJogadoresDoTime(
-                    codigoTime
-                );
-
+                this.obterJogadoresDoTime(codigoTime);
 
             if (!jogadores.length) {
 
@@ -3444,36 +3342,25 @@
                 `;
 
                 return;
+
             }
 
-
-            elemento.innerHTML =
-                `
-                    <div class="d-flex flex-column gap-1">
-
-                        ${
-                            jogadores
-                                .map(
-                                    jogador => {
-
-                                        return `
-                                            <div>
-                                                <i class="bi bi-person me-1"></i>
-                                                ${this.escaparHtml(
-                                                    this.obterNomeJogador(
-                                                        jogador
-                                                    )
-                                                )}
-                                            </div>
-                                        `;
-
-                                    }
-                                )
-                                .join("")
-                        }
-
-                    </div>
-                `;
+            elemento.innerHTML = `
+                <div class="d-flex flex-column gap-1">
+                    ${
+                        jogadores.map(
+                            jogador => `
+                                <div>
+                                    <i class="bi bi-person me-1"></i>
+                                    ${this.escaparHtml(
+                                        this.obterNomeJogador(jogador)
+                                    )}
+                                </div>
+                            `
+                        ).join("")
+                    }
+                </div>
+            `;
 
         }
 
@@ -3485,17 +3372,14 @@
                     "historicoPartidas"
                 );
 
-
             if (!elemento) {
                 return;
             }
-
 
             const badgeHistorico =
                 document.getElementById(
                     "badgeHistorico"
                 );
-
 
             if (badgeHistorico) {
 
@@ -3508,119 +3392,97 @@
 
             }
 
-
             if (!this.historico.length) {
 
                 elemento.innerHTML = `
                     <tr>
-
                         <td
                             colspan="7"
                             class="text-center text-muted py-4"
                         >
-
                             <i class="bi bi-inbox fs-3 d-block mb-2"></i>
-
                             Nenhuma partida registrada ainda.
-
                         </td>
-
                     </tr>
                 `;
 
                 return;
+
             }
 
-
             elemento.innerHTML =
-                this.historico
-                    .map(
-                        partida => {
+                this.historico.map(
+                    partida => {
 
-                            const nomeTime1 =
-                                this.obterNomeTime(
-                                    partida.time1
-                                );
+                        const nomeTime1 =
+                            this.obterNomeTime(
+                                partida.time1
+                            );
 
-                            const nomeTime2 =
-                                this.obterNomeTime(
-                                    partida.time2
-                                );
+                        const nomeTime2 =
+                            this.obterNomeTime(
+                                partida.time2
+                            );
 
-                            const nomeVencedor =
-                                this.obterNomeTime(
-                                    partida.vencedor
-                                );
+                        const nomeVencedor =
+                            this.obterNomeTime(
+                                partida.vencedor
+                            );
 
-                            const placar =
-                                `${partida.golsTime1} x ${partida.golsTime2}`;
+                        const placar =
+                            `${partida.golsTime1} x ${partida.golsTime2}`;
 
-                            const data =
-                                this.formatarData(
-                                    partida.data
-                                );
+                        const data =
+                            this.formatarData(
+                                partida.data
+                            );
 
-                            const duracao =
-                                this.formatarTempo(
-                                    partida.duracao
-                                );
+                        const duracao =
+                            this.formatarTempo(
+                                partida.duracao
+                            );
 
+                        return `
+                            <tr>
 
-                            return `
-                                <tr>
+                                <td>
+                                    <strong>${partida.numero}</strong>
+                                </td>
 
-                                    <td>
-                                        <strong>
-                                            ${partida.numero}
-                                        </strong>
-                                    </td>
+                                <td>
+                                    ${this.escaparHtml(nomeTime1)}
+                                </td>
 
-                                    <td>
-                                        ${this.escaparHtml(nomeTime1)}
-                                    </td>
+                                <td class="text-center">
+                                    <span class="badge bg-dark fs-6">
+                                        ${placar}
+                                    </span>
+                                </td>
 
-                                    <td class="text-center">
+                                <td>
+                                    ${this.escaparHtml(nomeTime2)}
+                                </td>
 
-                                        <span
-                                            class="badge bg-dark fs-6"
-                                        >
-                                            ${placar}
-                                        </span>
+                                <td>
+                                    <span class="badge bg-success">
+                                        <i class="bi bi-trophy-fill me-1"></i>
+                                        ${this.escaparHtml(nomeVencedor)}
+                                    </span>
+                                </td>
 
-                                    </td>
+                                <td>
+                                    ${duracao}
+                                </td>
 
-                                    <td>
-                                        ${this.escaparHtml(nomeTime2)}
-                                    </td>
+                                <td>
+                                    ${data}
+                                </td>
 
-                                    <td>
+                            </tr>
+                        `;
 
-                                        <span
-                                            class="badge bg-success"
-                                        >
-
-                                            <i class="bi bi-trophy-fill me-1"></i>
-
-                                            ${this.escaparHtml(nomeVencedor)}
-
-                                        </span>
-
-                                    </td>
-
-                                    <td>
-                                        ${duracao}
-                                    </td>
-
-                                    <td>
-                                        ${data}
-                                    </td>
-
-                                </tr>
-                            `;
-
-                        }
-                    )
-                    .join("");
+                    }
+                ).join("");
 
         }
 
@@ -3635,11 +3497,7 @@
 
             try {
 
-                return new Date(
-                    data
-                ).toLocaleString(
-                    "pt-BR"
-                );
+                return new Date(data).toLocaleString("pt-BR");
 
             } catch (erro) {
 
@@ -3657,39 +3515,23 @@
                     "Deseja realmente reiniciar a pelada? O histórico exibido será perdido."
                 );
 
-
             if (!confirmar) {
                 return;
             }
-
 
             this.pararCronometroPelada();
 
             this.pararCronometroPartida();
 
-            this.peladaIniciada =
-                false;
+            this.peladaIniciada = false;
+            this.partidaIniciada = false;
+            this.partidaPausada = false;
+            this.peladaFinalizada = false;
+            this.resultadoPendente = false;
+            this.salvandoResultado = false;
 
-            this.partidaIniciada =
-                false;
-
-            this.partidaPausada =
-                false;
-
-            this.peladaFinalizada =
-                false;
-
-            this.resultadoPendente =
-                false;
-
-            this.salvandoResultado =
-                false;
-
-            this.partidasRealizadas =
-                0;
-
-            this.historico =
-                [];
+            this.partidasRealizadas = 0;
+            this.historico = [];
 
             this.tempoRestantePelada =
                 this.obterDuracaoPelada();
@@ -3707,29 +3549,14 @@
                 "azul"
             ];
 
-            this.time1 =
-                null;
+            this.time1 = null;
+            this.time2 = null;
+            this.proximoTime = null;
 
-            this.time2 =
-                null;
+            this.iniciadaEm = null;
 
-            this.proximoTime =
-                null;
-
-            this.iniciadaEm =
-                null;
-
-            /*
-             * Libera o vínculo da sessão.
-             *
-             * Ao iniciar novamente, o sistema irá ler
-             * novamente a Pelada atualmente selecionada.
-             */
-            this.peladaDaSessaoId =
-                null;
-
-            this.peladaDaSessaoNome =
-                null;
+            this.peladaDaSessaoId = null;
+            this.peladaDaSessaoNome = null;
 
             this.ocultarAreaResultado();
 
@@ -3776,8 +3603,8 @@
             this.salvandoResultado = false;
 
             /*
-             * Se o tempo total acabar durante uma partida,
-             * preserva o resultado para que ele possa ser confirmado.
+             * Se o tempo acabar durante uma partida, preserva
+             * o resultado para que possa ser confirmado.
              */
             this.resultadoPendente = Boolean(
                 partidaEstavaEmAndamento ||
@@ -3794,6 +3621,7 @@
                 this.resultadoPendente
                     ? "Resultado pendente"
                     : "Pelada finalizada",
+
                 this.resultadoPendente
                     ? "bg-warning text-dark"
                     : "bg-danger"
@@ -3802,11 +3630,17 @@
             this.atualizarCronometroPelada();
 
             if (this.resultadoPendente) {
+
                 this.renderizarAreaResultado();
+
                 this.salvarSessaoPersistida();
+
             } else {
+
                 this.limparSessaoPersistida();
+
                 this.ocultarAreaResultado();
+
             }
 
             this.atualizarBotoes();
@@ -3855,7 +3689,6 @@
                     "btnConfirmarResultado"
                 );
 
-
             if (btnIniciarPelada) {
 
                 btnIniciarPelada.disabled =
@@ -3864,14 +3697,11 @@
 
             }
 
-
             if (btnReiniciarPelada) {
 
-                btnReiniciarPelada.disabled =
-                    false;
+                btnReiniciarPelada.disabled = false;
 
             }
-
 
             if (btnIniciarPartida) {
 
@@ -3884,12 +3714,10 @@
 
             }
 
-
             if (btnPausarPartida) {
 
                 btnPausarPartida.disabled =
                     !this.partidaIniciada;
-
 
                 if (this.partidaPausada) {
 
@@ -3909,7 +3737,6 @@
 
             }
 
-
             if (btnFinalizarPartida) {
 
                 btnFinalizarPartida.disabled =
@@ -3917,13 +3744,11 @@
 
             }
 
-
             if (btnConfirmarResultado) {
 
                 btnConfirmarResultado.disabled =
                     !this.resultadoPendente ||
                     this.salvandoResultado;
-
 
                 if (this.salvandoResultado) {
 
@@ -3954,9 +3779,7 @@
         ) {
 
             const div =
-                document.createElement(
-                    "div"
-                );
+                document.createElement("div");
 
             div.textContent =
                 valor ?? "";
@@ -3970,14 +3793,9 @@
             mensagem
         ) {
 
-            console.error(
-                mensagem
-            );
+            console.error(mensagem);
 
-
-            if (
-                typeof toast === "function"
-            ) {
+            if (typeof toast === "function") {
 
                 toast(
                     mensagem,
@@ -3985,30 +3803,22 @@
                 );
 
                 return;
+
             }
 
-
-            if (
-                typeof Swal !== "undefined"
-            ) {
+            if (typeof Swal !== "undefined") {
 
                 Swal.fire({
-
                     icon: "error",
-
                     title: "Atenção",
-
                     text: mensagem
-
                 });
 
                 return;
+
             }
 
-
-            alert(
-                mensagem
-            );
+            alert(mensagem);
 
         }
 
@@ -4022,11 +3832,14 @@
             this.salvarSessaoPersistida();
 
             if (this.eventoPageHide) {
+
                 window.removeEventListener(
                     "pagehide",
                     this.eventoPageHide
                 );
+
                 this.eventoPageHide = null;
+
             }
 
             console.log(
