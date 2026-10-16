@@ -14,6 +14,9 @@ const golRoutes =
 const peladaRoutes =
     require("./routes/peladaRoutes");
 
+const configuracaoRoutes =
+    require("./routes/configuracaoRoutes");
+
 
 const app = express();
 
@@ -24,13 +27,11 @@ const app = express();
 
 app.use(cors());
 
-
 app.use(
     express.json({
         limit: "10mb"
     })
 );
-
 
 app.use(
     express.urlencoded({
@@ -49,22 +50,24 @@ app.use(
     jogadorRoutes
 );
 
-
 app.use(
     "/api/partidas",
     partidaRoutes
 );
-
 
 app.use(
     "/api/gols",
     golRoutes
 );
 
-
 app.use(
     "/api/peladas",
     peladaRoutes
+);
+
+app.use(
+    "/api/configuracoes",
+    configuracaoRoutes
 );
 
 

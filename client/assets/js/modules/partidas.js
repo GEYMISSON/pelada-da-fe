@@ -94,6 +94,11 @@
 
             this.carregarTimesDoSorteio();
 
+            // Carrega as durações padrão antes de tentar restaurar a sessão.
+            // Se existir uma sessão em andamento, a restauração aplicará os tempos
+            // que estavam salvos nela e terá prioridade sobre estas configurações.
+            this.carregarConfiguracoesPadrao();
+
             this.eventoPageHide = () => {
                 this.salvarSessaoPersistida();
             };
@@ -738,6 +743,90 @@
                 );
 
             }
+
+        }
+
+
+        carregarConfiguracoesPadrao() {
+
+            const configuracoesPadrao = {
+                duracaoPeladaMinutos: 60,
+                duracaoPartidaMinutos: 7
+            };
+
+            const configuracoes = {
+                ...configuracoesPadrao
+            };
+
+            try {
+
+                const dados = localStorage.getItem(
+                    "peladaDaFeConfiguracoes"
+                );
+
+                if (dados) {
+
+                    const salvas = JSON.parse(dados);
+
+                    if (salvas && typeof salvas === "object") {
+
+                        const minutosPelada = Number(
+                            salvas.duracaoPeladaMinutos
+                        );
+
+                        const minutosPartida = Number(
+                            salvas.duracaoPartidaMinutos
+                        );
+
+                        if (
+                            Number.isInteger(minutosPelada) &&
+                            minutosPelada >= 1 &&
+                            minutosPelada <= 720
+                        ) {
+                            configuracoes.duracaoPeladaMinutos =
+                                minutosPelada;
+                        }
+
+                        if (
+                            Number.isInteger(minutosPartida) &&
+                            minutosPartida >= 1 &&
+                            minutosPartida <= 720
+                        ) {
+                            configuracoes.duracaoPartidaMinutos =
+                                minutosPartida;
+                        }
+
+                    }
+
+                }
+
+            } catch (erro) {
+
+                console.warn(
+                    "⚠️ Não foi possível ler as configurações salvas. Serão usados os tempos padrão.",
+                    erro
+                );
+
+            }
+
+            this.duracaoPelada =
+                configuracoes.duracaoPeladaMinutos * 60;
+
+            this.duracaoPartida =
+                configuracoes.duracaoPartidaMinutos * 60;
+
+            this.tempoRestantePelada =
+                this.duracaoPelada;
+
+            this.tempoRestantePartida =
+                this.duracaoPartida;
+
+            this.atualizarDuracoesNaTela();
+
+            console.log(
+                "⚙️ Tempos padrão carregados das Configurações:",
+                configuracoes
+            );
 
         }
 

@@ -1,0 +1,313 @@
+<div class="container-fluid py-3">
+
+    <!-- CABEÇALHO -->
+    <div class="d-flex flex-wrap justify-content-between align-items-center mb-4 gap-3">
+
+        <div>
+            <h2 class="fw-bold mb-1">
+                <i class="bi bi-gear-fill text-success me-2"></i>
+                Configurações
+            </h2>
+
+            <p class="text-muted mb-0">
+                Personalize as preferências do Pelada da Fé.
+            </p>
+        </div>
+
+        <span id="statusConfiguracoes" class="badge bg-secondary fs-6">
+            Carregando configurações...
+        </span>
+
+    </div>
+
+    <div class="row g-4">
+
+        <!-- CONFIGURAÇÕES PRINCIPAIS -->
+        <div class="col-12 col-xl-8">
+
+            <div class="card border-0 shadow-sm">
+
+                <div class="card-header bg-white border-0 pt-4 px-4">
+
+                    <h5 class="fw-bold mb-1">
+                        <i class="bi bi-sliders text-success me-2"></i>
+                        Preferências de partidas
+                    </h5>
+
+                    <p class="text-muted mb-0">
+                        Defina os tempos padrão desejados para as partidas.
+                    </p>
+
+                </div>
+
+                <div class="card-body p-4">
+
+                    <form id="formConfiguracoes">
+
+                        <!-- DURAÇÃO DA PELADA -->
+                        <div class="mb-4">
+
+                            <label
+                                for="duracaoPeladaPadrao"
+                                class="form-label fw-semibold"
+                            >
+                                Duração padrão da Pelada
+                            </label>
+
+                            <div class="input-group">
+
+                                <span class="input-group-text">
+                                    <i class="bi bi-clock"></i>
+                                </span>
+
+                                <input
+                                    type="number"
+                                    id="duracaoPeladaPadrao"
+                                    class="form-control"
+                                    min="1"
+                                    max="720"
+                                    step="1"
+                                    value="60"
+                                    required
+                                >
+
+                                <span class="input-group-text">
+                                    minutos
+                                </span>
+
+                            </div>
+
+                            <div class="form-text">
+                                Exemplo: 60 minutos correspondem a uma hora.
+                            </div>
+
+                        </div>
+
+                        <!-- DURAÇÃO DA PARTIDA -->
+                        <div class="mb-4">
+
+                            <label
+                                for="duracaoPartidaPadrao"
+                                class="form-label fw-semibold"
+                            >
+                                Duração padrão de cada partida
+                            </label>
+
+                            <div class="input-group">
+
+                                <span class="input-group-text">
+                                    <i class="bi bi-stopwatch"></i>
+                                </span>
+
+                                <input
+                                    type="number"
+                                    id="duracaoPartidaPadrao"
+                                    class="form-control"
+                                    min="1"
+                                    max="720"
+                                    step="1"
+                                    value="7"
+                                    required
+                                >
+
+                                <span class="input-group-text">
+                                    minutos
+                                </span>
+
+                            </div>
+
+                            <div class="form-text">
+                                Exemplo: 7 minutos por partida.
+                            </div>
+
+                        </div>
+
+                        <!-- RESUMO -->
+                        <div class="border rounded-3 p-3 mb-4">
+
+                            <h6 class="fw-bold mb-3">
+                                <i class="bi bi-info-circle me-2"></i>
+                                Resumo das preferências
+                            </h6>
+
+                            <div class="d-flex justify-content-between align-items-center mb-2 gap-3">
+
+                                <span class="text-muted">
+                                    Tempo da Pelada
+                                </span>
+
+                                <strong id="resumoDuracaoPelada">
+                                    60 minutos
+                                </strong>
+
+                            </div>
+
+                            <div class="d-flex justify-content-between align-items-center gap-3">
+
+                                <span class="text-muted">
+                                    Tempo de cada partida
+                                </span>
+
+                                <strong id="resumoDuracaoPartida">
+                                    7 minutos
+                                </strong>
+
+                            </div>
+
+                        </div>
+
+                        <!-- AVISO SOBRE SINCRONIZAÇÃO -->
+                        <div class="alert alert-info">
+
+                            <i class="bi bi-info-circle-fill me-2"></i>
+
+                            <strong>Configurações compartilhadas:</strong>
+
+                            os tempos padrão são guardados no MongoDB e utilizados
+                            pelos dispositivos que acessam esta instalação do Pelada da Fé.
+                            Uma cópia local é mantida neste navegador como contingência.
+                            Se o servidor estiver indisponível, a tela avisará que as
+                            alterações ficaram salvas somente neste navegador.
+
+                        </div>
+
+                        <!-- BOTÕES -->
+                        <div class="d-flex flex-wrap gap-2">
+
+                            <button
+                                type="submit"
+                                id="btnSalvarConfiguracoes"
+                                class="btn btn-success"
+                            >
+                                <i class="bi bi-check-circle me-1"></i>
+                                Salvar configurações
+                            </button>
+
+                            <button
+                                type="button"
+                                id="btnRestaurarConfiguracoes"
+                                class="btn btn-outline-secondary"
+                            >
+                                <i class="bi bi-arrow-counterclockwise me-1"></i>
+                                Restaurar padrões
+                            </button>
+
+                        </div>
+
+                    </form>
+
+                </div>
+
+            </div>
+
+        </div>
+
+        <!-- INFORMAÇÕES DO SISTEMA -->
+        <div class="col-12 col-xl-4">
+
+            <div class="card border-0 shadow-sm mb-4">
+
+                <div class="card-body p-4">
+
+                    <div class="d-flex align-items-center gap-3 mb-3">
+
+                        <div
+                            class="rounded-circle bg-success bg-opacity-10 d-flex align-items-center justify-content-center"
+                            style="width: 56px; height: 56px;"
+                        >
+                            <i class="bi bi-dribbble text-success fs-3"></i>
+                        </div>
+
+                        <div>
+
+                            <h5 class="fw-bold mb-1">
+                                Pelada da Fé
+                            </h5>
+
+                            <span class="badge bg-success">
+                                Em desenvolvimento
+                            </span>
+
+                        </div>
+
+                    </div>
+
+                    <p class="text-muted mb-0">
+                        Sistema para organizar peladas, gerenciar jogadores,
+                        sortear times e acompanhar partidas, gols,
+                        artilharia e estatísticas.
+                    </p>
+
+                </div>
+
+            </div>
+
+            <!-- RECURSOS -->
+            <div class="card border-0 shadow-sm mb-4">
+
+                <div class="card-header bg-white border-0 pt-3 px-4">
+
+                    <h6 class="fw-bold mb-0">
+                        <i class="bi bi-grid me-2 text-success"></i>
+                        Recursos do sistema
+                    </h6>
+
+                </div>
+
+                <div class="card-body px-4">
+
+                    <div class="d-flex align-items-center mb-3">
+                        <i class="bi bi-check-circle-fill text-success me-2"></i>
+                        <span>Cadastro de jogadores</span>
+                    </div>
+
+                    <div class="d-flex align-items-center mb-3">
+                        <i class="bi bi-check-circle-fill text-success me-2"></i>
+                        <span>Gerenciamento de Peladas</span>
+                    </div>
+
+                    <div class="d-flex align-items-center mb-3">
+                        <i class="bi bi-check-circle-fill text-success me-2"></i>
+                        <span>Sorteio e controle de times</span>
+                    </div>
+
+                    <div class="d-flex align-items-center mb-3">
+                        <i class="bi bi-check-circle-fill text-success me-2"></i>
+                        <span>Registro de partidas e gols</span>
+                    </div>
+
+                    <div class="d-flex align-items-center">
+                        <i class="bi bi-check-circle-fill text-success me-2"></i>
+                        <span>Histórico e estatísticas</span>
+                    </div>
+
+                </div>
+
+            </div>
+
+            <!-- ARMAZENAMENTO -->
+            <div class="card border-0 shadow-sm">
+
+                <div class="card-body p-4">
+
+                    <h6 class="fw-bold mb-2">
+                        <i class="bi bi-database me-2 text-success"></i>
+                        Armazenamento das preferências
+                    </h6>
+
+                    <p class="text-muted small mb-0">
+                        Os tempos padrão ficam no MongoDB e podem ser usados em
+                        computadores e celulares que acessam esta mesma instalação
+                        do sistema. O navegador também mantém uma cópia local para
+                        uso quando o servidor estiver temporariamente indisponível.
+                    </p>
+
+                </div>
+
+            </div>
+
+        </div>
+
+    </div>
+
+</div>

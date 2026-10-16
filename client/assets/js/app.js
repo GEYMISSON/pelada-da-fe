@@ -846,7 +846,9 @@
 
                     "estatisticas",
 
-                    "historico"
+                    "historico",
+
+                    "configuracoes"
 
                 ]);
 
