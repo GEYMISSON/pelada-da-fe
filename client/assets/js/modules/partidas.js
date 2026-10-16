@@ -20,6 +20,12 @@
 
             this.eventoPageHide = null;
 
+            // Protege a tela contra respostas assíncronas após sair dela.
+            this.moduloDestruido = false;
+
+            // Impede que a consulta ao servidor sobrescreva tempos que o usuário editou.
+            this.configuracoesEditadasNaTela = false;
+
             this.intervaloPelada = null;
             this.intervaloPartida = null;
 
@@ -94,9 +100,8 @@
 
             this.carregarTimesDoSorteio();
 
-            // Carrega as durações padrão antes de tentar restaurar a sessão.
-            // Se existir uma sessão em andamento, a restauração aplicará os tempos
-            // que estavam salvos nela e terá prioridade sobre estas configurações.
+            // Carrega as durações locais imediatamente.
+            // Se houver uma sessão ativa, a restauração preservará seus tempos.
             this.carregarConfiguracoesPadrao();
 
             this.eventoPageHide = () => {
@@ -110,6 +115,13 @@
 
             const sessaoRestaurada =
                 this.restaurarSessaoPersistida();
+
+            // Consulta o MongoDB em toda abertura da tela.
+            // Se uma sessão foi restaurada, atualiza somente a cópia local,
+            // sem alterar os tempos da sessão atual.
+            this.sincronizarConfiguracoesPadraoDoServidor(
+                !sessaoRestaurada
+            );
 
             if (sessaoRestaurada) {
 
@@ -831,6 +843,137 @@
         }
 
 
+        async sincronizarConfiguracoesPadraoDoServidor(
+            aplicarNaTela = true
+        ) {
+
+            try {
+
+                const resposta = await fetch(
+                    "/api/configuracoes",
+                    {
+                        method: "GET",
+                        headers: {
+                            "Accept": "application/json"
+                        }
+                    }
+                );
+
+                let dados = null;
+
+                try {
+                    dados = await resposta.json();
+                } catch (erro) {
+                    dados = null;
+                }
+
+                if (!resposta.ok) {
+                    throw new Error(
+                        dados?.erro ||
+                        dados?.message ||
+                        `Não foi possível carregar as configurações (HTTP ${resposta.status}).`
+                    );
+                }
+
+                const recebidas = dados?.configuracoes;
+
+                if (!recebidas || typeof recebidas !== "object") {
+                    throw new Error(
+                        "A API não retornou as configurações esperadas."
+                    );
+                }
+
+                const minutosPelada = Number(
+                    recebidas.duracaoPeladaMinutos
+                );
+
+                const minutosPartida = Number(
+                    recebidas.duracaoPartidaMinutos
+                );
+
+                if (
+                    !Number.isInteger(minutosPelada) ||
+                    minutosPelada < 1 ||
+                    minutosPelada > 720 ||
+                    !Number.isInteger(minutosPartida) ||
+                    minutosPartida < 1 ||
+                    minutosPartida > 720
+                ) {
+                    throw new Error(
+                        "A API retornou durações inválidas."
+                    );
+                }
+
+                const configuracoes = {
+                    duracaoPeladaMinutos: minutosPelada,
+                    duracaoPartidaMinutos: minutosPartida
+                };
+
+                // Atualiza a cópia local para que Configurações e Partidas
+                // continuem usando a mesma chave de armazenamento.
+                try {
+                    localStorage.setItem(
+                        "peladaDaFeConfiguracoes",
+                        JSON.stringify(configuracoes)
+                    );
+                } catch (erro) {
+                    console.warn(
+                        "⚠️ Não foi possível atualizar a cópia local das configurações:",
+                        erro
+                    );
+                }
+
+                // O resultado da consulta pode chegar depois da navegação.
+                if (this.moduloDestruido) {
+                    return;
+                }
+
+                // Sessão restaurada, partida iniciada ou valores editados pelo usuário
+                // têm prioridade sobre os padrões recebidos do servidor.
+                if (
+                    !aplicarNaTela ||
+                    this.peladaIniciada ||
+                    this.partidaIniciada ||
+                    this.resultadoPendente ||
+                    this.peladaFinalizada ||
+                    this.configuracoesEditadasNaTela
+                ) {
+                    console.log(
+                        "⚙️ Configurações do servidor consultadas; os tempos atuais foram preservados."
+                    );
+                    return;
+                }
+
+                this.duracaoPelada = minutosPelada * 60;
+                this.duracaoPartida = minutosPartida * 60;
+
+                this.tempoRestantePelada = this.duracaoPelada;
+                this.tempoRestantePartida = this.duracaoPartida;
+
+                this.atualizarDuracoesNaTela();
+                this.atualizarEstimativa();
+                this.atualizarCronometroPelada();
+                this.atualizarCronometroPartida();
+
+                console.log(
+                    "✅ Tempos padrão carregados do MongoDB:",
+                    configuracoes
+                );
+
+            } catch (erro) {
+
+                // Em caso de falha, os valores já carregados do localStorage
+                // permanecem na tela como contingência.
+                console.warn(
+                    "⚠️ Não foi possível sincronizar os tempos com o servidor. Serão mantidos os valores locais:",
+                    erro
+                );
+
+            }
+
+        }
+
+
         configurarEventos() {
 
             const btnIniciarPelada =
@@ -880,6 +1023,8 @@
                     "input",
                     () => {
 
+                        this.configuracoesEditadasNaTela = true;
+
                         if (!this.peladaIniciada) {
 
                             this.tempoRestantePelada =
@@ -902,6 +1047,8 @@
                 duracaoPartida.addEventListener(
                     "input",
                     () => {
+
+                        this.configuracoesEditadasNaTela = true;
 
                         if (!this.partidaIniciada) {
 
@@ -3913,6 +4060,8 @@
 
 
         destroy() {
+
+            this.moduloDestruido = true;
 
             this.pararCronometroPelada();
 
