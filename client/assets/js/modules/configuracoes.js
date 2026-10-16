@@ -1,105 +1,92 @@
 (function () {
-
     "use strict";
 
-    const CHAVE_CONFIGURACOES_LOCAL =
-        "peladaDaFeConfiguracoes";
+    const CHAVE_LOCAL = "peladaDaFeConfiguracoes";
+    const URL_API = "/api/configuracoes";
 
-    const URL_API_CONFIGURACOES =
-        "/api/configuracoes";
-
-    const CONFIGURACOES_PADRAO = {
+    const PADRAO = {
         duracaoPeladaMinutos: 60,
-        duracaoPartidaMinutos: 7
+        duracaoPartidaMinutos: 7,
+        temaAparencia: "claro"
     };
 
-    let salvandoConfiguracoes = false;
+    let salvando = false;
+
+    const elemento = id => document.getElementById(id);
 
 
-    function obterElemento(id) {
+    function normalizar(config = {}) {
 
-        return document.getElementById(id);
+        const pelada =
+            Number(
+                config.duracaoPeladaMinutos ??
+                PADRAO.duracaoPeladaMinutos
+            );
 
-    }
-
-
-    function normalizarConfiguracoes(configuracoes) {
-
-        const duracaoPeladaMinutos = Number(
-            configuracoes?.duracaoPeladaMinutos ??
-            CONFIGURACOES_PADRAO.duracaoPeladaMinutos
-        );
-
-        const duracaoPartidaMinutos = Number(
-            configuracoes?.duracaoPartidaMinutos ??
-            CONFIGURACOES_PADRAO.duracaoPartidaMinutos
-        );
+        const partida =
+            Number(
+                config.duracaoPartidaMinutos ??
+                PADRAO.duracaoPartidaMinutos
+            );
 
         return {
 
             duracaoPeladaMinutos:
-                Number.isInteger(duracaoPeladaMinutos) &&
-                duracaoPeladaMinutos >= 1 &&
-                duracaoPeladaMinutos <= 720
-                    ? duracaoPeladaMinutos
-                    : CONFIGURACOES_PADRAO.duracaoPeladaMinutos,
+                Number.isInteger(pelada) &&
+                pelada >= 1 &&
+                pelada <= 720
+                    ? pelada
+                    : PADRAO.duracaoPeladaMinutos,
 
             duracaoPartidaMinutos:
-                Number.isInteger(duracaoPartidaMinutos) &&
-                duracaoPartidaMinutos >= 1 &&
-                duracaoPartidaMinutos <= 720
-                    ? duracaoPartidaMinutos
-                    : CONFIGURACOES_PADRAO.duracaoPartidaMinutos
+                Number.isInteger(partida) &&
+                partida >= 1 &&
+                partida <= 720
+                    ? partida
+                    : PADRAO.duracaoPartidaMinutos,
+
+            temaAparencia:
+                config.temaAparencia === "escuro"
+                    ? "escuro"
+                    : "claro"
 
         };
 
     }
 
 
-    function lerConfiguracoesLocais() {
+    function lerLocal() {
 
         try {
 
             const dados =
-                localStorage.getItem(
-                    CHAVE_CONFIGURACOES_LOCAL
-                );
+                localStorage.getItem(CHAVE_LOCAL);
 
-            if (!dados) {
-
-                return {
-                    ...CONFIGURACOES_PADRAO
-                };
-
-            }
-
-            return normalizarConfiguracoes(
-                JSON.parse(dados)
-            );
+            return dados
+                ? normalizar(JSON.parse(dados))
+                : { ...PADRAO };
 
         } catch (erro) {
 
-            console.error(
-                "Erro ao ler a cópia local das configurações:",
+            console.warn(
+                "Não foi possível ler as configurações locais:",
                 erro
             );
 
-            return {
-                ...CONFIGURACOES_PADRAO
-            };
+            return { ...PADRAO };
 
         }
 
     }
 
 
-    function salvarCopiaLocal(configuracoes) {
+    function salvarLocal(config) {
 
         try {
 
             localStorage.setItem(
-                CHAVE_CONFIGURACOES_LOCAL,
-                JSON.stringify(configuracoes)
+                CHAVE_LOCAL,
+                JSON.stringify(normalizar(config))
             );
 
             return true;
@@ -107,28 +94,9 @@
         } catch (erro) {
 
             console.warn(
-                "Não foi possível atualizar a cópia local das configurações:",
+                "Não foi possível salvar a cópia local das configurações:",
                 erro
             );
-
-            return false;
-
-        }
-
-    }
-
-
-    function existeCopiaLocal() {
-
-        try {
-
-            return Boolean(
-                localStorage.getItem(
-                    CHAVE_CONFIGURACOES_LOCAL
-                )
-            );
-
-        } catch (erro) {
 
             return false;
 
@@ -142,20 +110,69 @@
         tipo = "secondary"
     ) {
 
-        const elemento =
-            obterElemento(
-                "statusConfiguracoes"
-            );
+        const status =
+            elemento("statusConfiguracoes");
 
-        if (!elemento) {
+        if (!status) {
             return;
         }
 
-        elemento.textContent =
-            mensagem;
+        status.textContent = mensagem;
+        status.className = `badge bg-${tipo} fs-6`;
 
-        elemento.className =
-            `badge bg-${tipo} fs-6`;
+    }
+
+
+    function aplicarTema(
+        tema,
+        origem = "configuracoes"
+    ) {
+
+        if (window.PeladaDaFeTema?.aplicar) {
+
+            window.PeladaDaFeTema.aplicar(
+                tema,
+                { origem }
+            );
+
+        }
+
+    }
+
+
+    function preencherFormulario(configuracoes) {
+
+        const config =
+            normalizar(configuracoes);
+
+        const campoPelada =
+            elemento("duracaoPeladaPadrao");
+
+        const campoPartida =
+            elemento("duracaoPartidaPadrao");
+
+        const campoTema =
+            elemento("temaAparencia");
+
+
+        if (campoPelada) {
+            campoPelada.value = config.duracaoPeladaMinutos;
+        }
+
+        if (campoPartida) {
+            campoPartida.value = config.duracaoPartidaMinutos;
+        }
+
+        if (campoTema) {
+            campoTema.value = config.temaAparencia;
+        }
+
+        aplicarTema(
+            config.temaAparencia,
+            "configuracoes"
+        );
+
+        atualizarResumo();
 
     }
 
@@ -172,36 +189,28 @@
     function atualizarResumo() {
 
         const campoPelada =
-            obterElemento(
-                "duracaoPeladaPadrao"
-            );
+            elemento("duracaoPeladaPadrao");
 
         const campoPartida =
-            obterElemento(
-                "duracaoPartidaPadrao"
-            );
+            elemento("duracaoPartidaPadrao");
 
         const resumoPelada =
-            obterElemento(
-                "resumoDuracaoPelada"
-            );
+            elemento("resumoDuracaoPelada");
 
         const resumoPartida =
-            obterElemento(
-                "resumoDuracaoPartida"
-            );
+            elemento("resumoDuracaoPartida");
 
 
         if (campoPelada && resumoPelada) {
 
-            const minutos =
+            const valor =
                 Number(campoPelada.value);
 
             resumoPelada.textContent =
-                Number.isInteger(minutos) &&
-                minutos >= 1 &&
-                minutos <= 720
-                    ? formatarMinutos(minutos)
+                Number.isInteger(valor) &&
+                valor >= 1 &&
+                valor <= 720
+                    ? formatarMinutos(valor)
                     : "Valor inválido";
 
         }
@@ -209,14 +218,14 @@
 
         if (campoPartida && resumoPartida) {
 
-            const minutos =
+            const valor =
                 Number(campoPartida.value);
 
             resumoPartida.textContent =
-                Number.isInteger(minutos) &&
-                minutos >= 1 &&
-                minutos <= 720
-                    ? formatarMinutos(minutos)
+                Number.isInteger(valor) &&
+                valor >= 1 &&
+                valor <= 720
+                    ? formatarMinutos(valor)
                     : "Valor inválido";
 
         }
@@ -224,84 +233,48 @@
     }
 
 
-    function preencherFormulario(configuracoes) {
-
-        const config =
-            normalizarConfiguracoes(
-                configuracoes
-            );
-
-        const campoPelada =
-            obterElemento(
-                "duracaoPeladaPadrao"
-            );
-
-        const campoPartida =
-            obterElemento(
-                "duracaoPartidaPadrao"
-            );
-
-
-        if (campoPelada) {
-
-            campoPelada.value =
-                config.duracaoPeladaMinutos;
-
-        }
-
-
-        if (campoPartida) {
-
-            campoPartida.value =
-                config.duracaoPartidaMinutos;
-
-        }
-
-        atualizarResumo();
-
-    }
-
-
     function validarFormulario() {
 
         const campoPelada =
-            obterElemento(
-                "duracaoPeladaPadrao"
-            );
+            elemento("duracaoPeladaPadrao");
 
         const campoPartida =
-            obterElemento(
-                "duracaoPartidaPadrao"
-            );
+            elemento("duracaoPartidaPadrao");
+
+        const campoTema =
+            elemento("temaAparencia");
 
 
-        if (!campoPelada || !campoPartida) {
+        if (
+            !campoPelada ||
+            !campoPartida ||
+            !campoTema
+        ) {
 
             return {
                 valido: false,
                 mensagem:
-                    "Não foi possível localizar os campos de configuração."
+                    "Não foi possível localizar todos os campos de configuração."
             };
 
         }
 
 
-        const duracaoPelada =
+        const pelada =
             Number(campoPelada.value);
 
-        const duracaoPartida =
+        const partida =
             Number(campoPartida.value);
 
 
         if (
-            !Number.isInteger(duracaoPelada) ||
-            duracaoPelada < 1 ||
-            duracaoPelada > 720
+            !Number.isInteger(pelada) ||
+            pelada < 1 ||
+            pelada > 720
         ) {
 
             return {
                 valido: false,
-
                 mensagem:
                     "A duração da Pelada precisa ser um número inteiro entre 1 e 720 minutos."
             };
@@ -310,16 +283,30 @@
 
 
         if (
-            !Number.isInteger(duracaoPartida) ||
-            duracaoPartida < 1 ||
-            duracaoPartida > 720
+            !Number.isInteger(partida) ||
+            partida < 1 ||
+            partida > 720
         ) {
 
             return {
                 valido: false,
-
                 mensagem:
                     "A duração da partida precisa ser um número inteiro entre 1 e 720 minutos."
+            };
+
+        }
+
+
+        if (
+            !["claro", "escuro"].includes(
+                campoTema.value
+            )
+        ) {
+
+            return {
+                valido: false,
+                mensagem:
+                    "Selecione um tema de aparência válido."
             };
 
         }
@@ -329,15 +316,16 @@
             valido: true,
 
             configuracoes: {
-                duracaoPeladaMinutos: duracaoPelada,
-                duracaoPartidaMinutos: duracaoPartida
+                duracaoPeladaMinutos: pelada,
+                duracaoPartidaMinutos: partida,
+                temaAparencia: campoTema.value
             }
         };
 
     }
 
 
-    async function lerRespostaApi(resposta) {
+    async function lerResposta(resposta) {
 
         let dados = null;
 
@@ -367,14 +355,13 @@
     }
 
 
-    async function carregarConfiguracoesDoServidor() {
+    async function carregarDoServidor() {
 
         const resposta =
             await fetch(
-                URL_API_CONFIGURACOES,
+                URL_API,
                 {
                     method: "GET",
-
                     headers: {
                         "Accept": "application/json"
                     }
@@ -382,7 +369,7 @@
             );
 
         const dados =
-            await lerRespostaApi(resposta);
+            await lerResposta(resposta);
 
 
         if (!dados?.configuracoes) {
@@ -394,14 +381,11 @@
         }
 
 
-        const configuracoes =
-            normalizarConfiguracoes(
-                dados.configuracoes
-            );
+        const config =
+            normalizar(dados.configuracoes);
 
-        salvarCopiaLocal(configuracoes);
-
-        preencherFormulario(configuracoes);
+        salvarLocal(config);
+        preencherFormulario(config);
 
         atualizarStatus(
             "Sincronizadas com servidor",
@@ -410,61 +394,55 @@
 
         console.log(
             "Configurações carregadas do MongoDB:",
-            configuracoes
+            config
         );
 
     }
 
 
-    async function salvarConfiguracoes(configuracoes) {
+    async function salvarNoServidor(configuracoes) {
 
         const config =
-            normalizarConfiguracoes(
-                configuracoes
-            );
+            normalizar(configuracoes);
 
-        // Mantém uma cópia local para a tela Partidas
-        // e como contingência se o servidor estiver indisponível.
+        // A cópia local mantém Partidas disponível mesmo se o servidor cair.
         const copiaLocalSalva =
-            salvarCopiaLocal(config);
+            salvarLocal(config);
+
+        // O tema muda imediatamente, antes mesmo de a requisição terminar.
+        aplicarTema(
+            config.temaAparencia,
+            "salvamento"
+        );
 
 
         try {
 
             const resposta =
                 await fetch(
-                    URL_API_CONFIGURACOES,
+                    URL_API,
                     {
                         method: "PUT",
 
                         headers: {
-                            "Content-Type":
-                                "application/json",
-
-                            "Accept":
-                                "application/json"
+                            "Content-Type": "application/json",
+                            "Accept": "application/json"
                         },
 
-                        body:
-                            JSON.stringify(config)
+                        body: JSON.stringify(config)
                     }
                 );
 
             const dados =
-                await lerRespostaApi(resposta);
+                await lerResposta(resposta);
 
-            const configuracoesSalvas =
-                normalizarConfiguracoes(
+            const salvas =
+                normalizar(
                     dados?.configuracoes || config
                 );
 
-            salvarCopiaLocal(
-                configuracoesSalvas
-            );
-
-            preencherFormulario(
-                configuracoesSalvas
-            );
+            salvarLocal(salvas);
+            preencherFormulario(salvas);
 
             atualizarStatus(
                 "Sincronizadas com servidor",
@@ -473,13 +451,12 @@
 
             console.log(
                 "Configurações salvas no MongoDB:",
-                configuracoesSalvas
+                salvas
             );
 
             return {
                 sincronizado: true,
-                localSalvo: copiaLocalSalva,
-                configuracoes: configuracoesSalvas
+                localSalvo: copiaLocalSalva
             };
 
         } catch (erro) {
@@ -489,21 +466,15 @@
                 erro
             );
 
-            if (copiaLocalSalva) {
+            atualizarStatus(
+                copiaLocalSalva
+                    ? "Salvas só neste navegador"
+                    : "Falha ao salvar",
 
-                atualizarStatus(
-                    "Salvas só neste navegador",
-                    "warning"
-                );
-
-            } else {
-
-                atualizarStatus(
-                    "Falha ao salvar",
-                    "danger"
-                );
-
-            }
+                copiaLocalSalva
+                    ? "warning"
+                    : "danger"
+            );
 
             atualizarResumo();
 
@@ -518,7 +489,7 @@
     }
 
 
-    function mostrarAviso(
+    async function mostrarAviso(
         titulo,
         mensagem,
         tipo = "warning"
@@ -534,16 +505,12 @@
 
         }
 
-        alert(
-            `${titulo}\n\n${mensagem}`
-        );
-
-        return Promise.resolve();
+        alert(`${titulo}\n\n${mensagem}`);
 
     }
 
 
-    function mostrarToastSucesso(mensagem) {
+    function mostrarSucesso(mensagem) {
 
         if (typeof toast === "function") {
 
@@ -552,12 +519,7 @@
                 "#198754"
             );
 
-            return;
-
-        }
-
-
-        if (typeof Swal !== "undefined") {
+        } else if (typeof Swal !== "undefined") {
 
             Swal.fire({
                 icon: "success",
@@ -567,35 +529,29 @@
                 showConfirmButton: false
             });
 
-            return;
+        } else {
+
+            console.log(mensagem);
 
         }
-
-        console.log(mensagem);
 
     }
 
 
-    function definirSalvamentoEmAndamento(emAndamento) {
+    function definirSalvamento(emAndamento) {
 
-        salvandoConfiguracoes =
-            emAndamento;
+        salvando = emAndamento;
 
         const botaoSalvar =
-            obterElemento(
-                "btnSalvarConfiguracoes"
-            );
+            elemento("btnSalvarConfiguracoes");
 
         const botaoRestaurar =
-            obterElemento(
-                "btnRestaurarConfiguracoes"
-            );
+            elemento("btnRestaurarConfiguracoes");
 
 
         if (botaoSalvar) {
 
-            botaoSalvar.disabled =
-                emAndamento;
+            botaoSalvar.disabled = emAndamento;
 
             botaoSalvar.innerHTML =
                 emAndamento
@@ -616,68 +572,57 @@
 
 
         if (botaoRestaurar) {
-
-            botaoRestaurar.disabled =
-                emAndamento;
-
+            botaoRestaurar.disabled = emAndamento;
         }
 
     }
 
 
-    async function processarSalvamento(configuracoes) {
+    async function processarSalvamento(config) {
 
-        if (salvandoConfiguracoes) {
+        if (salvando) {
             return;
         }
 
-        definirSalvamentoEmAndamento(true);
+        definirSalvamento(true);
 
         try {
 
             const resultado =
-                await salvarConfiguracoes(
-                    configuracoes
-                );
+                await salvarNoServidor(config);
 
 
             if (resultado.sincronizado) {
 
-                mostrarToastSucesso(
+                mostrarSucesso(
                     "Configurações salvas e sincronizadas com o servidor!"
                 );
 
-                return;
-
-            }
-
-
-            if (resultado.localSalvo) {
+            } else if (resultado.localSalvo) {
 
                 await mostrarAviso(
-                    "Configurações salvas localmente",
+                    "Salvas só neste navegador",
 
-                    "Não foi possível sincronizar com o servidor. As preferências ficaram salvas apenas neste navegador e não aparecerão nos outros dispositivos até que a conexão seja restabelecida e você salve novamente.",
+                    "Não foi possível sincronizar com o servidor. A cópia local foi atualizada; as alterações não serão compartilhadas com os outros dispositivos até que a conexão seja restabelecida e você salve novamente.",
 
                     "warning"
                 );
 
-                return;
+            } else {
+
+                await mostrarAviso(
+                    "Falha ao salvar",
+
+                    "Não foi possível gravar as configurações no servidor nem neste navegador. Verifique a conexão e tente novamente.",
+
+                    "error"
+                );
 
             }
 
-
-            await mostrarAviso(
-                "Falha ao salvar",
-
-                "Não foi possível gravar as configurações no servidor nem neste navegador. Verifique a conexão e tente novamente.",
-
-                "error"
-            );
-
         } finally {
 
-            definirSalvamentoEmAndamento(false);
+            definirSalvamento(false);
 
         }
 
@@ -687,24 +632,19 @@
     function configurarEventos() {
 
         const formulario =
-            obterElemento(
-                "formConfiguracoes"
-            );
+            elemento("formConfiguracoes");
 
-        const btnRestaurar =
-            obterElemento(
-                "btnRestaurarConfiguracoes"
-            );
+        const botaoRestaurar =
+            elemento("btnRestaurarConfiguracoes");
 
         const campoPelada =
-            obterElemento(
-                "duracaoPeladaPadrao"
-            );
+            elemento("duracaoPeladaPadrao");
 
         const campoPartida =
-            obterElemento(
-                "duracaoPartidaPadrao"
-            );
+            elemento("duracaoPartidaPadrao");
+
+        const campoTema =
+            elemento("temaAparencia");
 
 
         if (campoPelada) {
@@ -727,6 +667,25 @@
         }
 
 
+        if (campoTema) {
+
+            campoTema.addEventListener(
+                "change",
+                () => {
+
+                    // Pré-visualização imediata. Para sincronizar entre dispositivos,
+                    // clique em Salvar configurações.
+                    aplicarTema(
+                        campoTema.value,
+                        "usuario"
+                    );
+
+                }
+            );
+
+        }
+
+
         if (formulario) {
 
             formulario.addEventListener(
@@ -735,7 +694,7 @@
 
                     evento.preventDefault();
 
-                    if (salvandoConfiguracoes) {
+                    if (salvando) {
                         return;
                     }
 
@@ -771,13 +730,13 @@
         }
 
 
-        if (btnRestaurar) {
+        if (botaoRestaurar) {
 
-            btnRestaurar.addEventListener(
+            botaoRestaurar.addEventListener(
                 "click",
                 async () => {
 
-                    if (salvandoConfiguracoes) {
+                    if (salvando) {
                         return;
                     }
 
@@ -794,7 +753,7 @@
                                 title: "Restaurar padrões?",
 
                                 text:
-                                    "Os tempos voltarão para 60 minutos por Pelada e 7 minutos por partida. Essa alteração também será enviada ao servidor para uso nos demais dispositivos.",
+                                    "Os tempos voltarão para 60 minutos por Pelada e 7 minutos por partida, e o tema voltará para Claro. As alterações serão enviadas ao servidor para uso nos demais dispositivos.",
 
                                 showCancelButton: true,
 
@@ -816,7 +775,7 @@
 
                         confirmou =
                             window.confirm(
-                                "Restaurar os valores padrão de 60 minutos para a Pelada e 7 minutos para cada partida?"
+                                "Restaurar os padrões: Pelada de 60 minutos, partida de 7 minutos e tema Claro?"
                             );
 
                     }
@@ -827,12 +786,10 @@
                     }
 
 
-                    preencherFormulario(
-                        CONFIGURACOES_PADRAO
-                    );
+                    preencherFormulario(PADRAO);
 
                     await processarSalvamento({
-                        ...CONFIGURACOES_PADRAO
+                        ...PADRAO
                     });
 
                 }
@@ -847,13 +804,8 @@
 
         configurarEventos();
 
-        // Mostra a cópia local imediatamente enquanto consulta o servidor.
-        const configuracoesLocais =
-            lerConfiguracoesLocais();
-
-        preencherFormulario(
-            configuracoesLocais
-        );
+        // Mostra a cópia local enquanto consulta o servidor.
+        preencherFormulario(lerLocal());
 
         atualizarStatus(
             "Carregando configurações...",
@@ -863,7 +815,7 @@
 
         try {
 
-            await carregarConfiguracoesDoServidor();
+            await carregarDoServidor();
 
         } catch (erro) {
 
@@ -872,12 +824,10 @@
                 erro
             );
 
-            preencherFormulario(
-                lerConfiguracoesLocais()
-            );
+            preencherFormulario(lerLocal());
 
             atualizarStatus(
-                existeCopiaLocal()
+                localStorage.getItem(CHAVE_LOCAL)
                     ? "Usando cópia local"
                     : "Servidor indisponível",
 

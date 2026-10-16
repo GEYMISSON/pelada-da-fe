@@ -32,6 +32,13 @@ const configuracaoSchema = new mongoose.Schema(
                 validator: Number.isInteger,
                 message: "A duração da partida precisa ser um número inteiro."
             }
+        },
+
+        temaAparencia: {
+            type: String,
+            enum: ["claro", "escuro"],
+            required: true,
+            default: "claro"
         }
     },
     {

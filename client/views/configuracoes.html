@@ -14,7 +14,10 @@
             </p>
         </div>
 
-        <span id="statusConfiguracoes" class="badge bg-secondary fs-6">
+        <span
+            id="statusConfiguracoes"
+            class="badge bg-secondary fs-6"
+        >
             Carregando configurações...
         </span>
 
@@ -122,6 +125,44 @@
 
                         </div>
 
+                        <!-- APARÊNCIA -->
+                        <div class="mb-4">
+
+                            <label
+                                for="temaAparencia"
+                                class="form-label fw-semibold"
+                            >
+                                Tema da aparência
+                            </label>
+
+                            <div class="input-group">
+
+                                <span class="input-group-text">
+                                    <i class="bi bi-palette"></i>
+                                </span>
+
+                                <select
+                                    id="temaAparencia"
+                                    class="form-select"
+                                    required
+                                >
+                                    <option value="claro">
+                                        Tema claro
+                                    </option>
+
+                                    <option value="escuro">
+                                        Tema escuro
+                                    </option>
+                                </select>
+
+                            </div>
+
+                            <div class="form-text">
+                                A escolha será aplicada a todas as telas do sistema e sincronizada pelo MongoDB.
+                            </div>
+
+                        </div>
+
                         <!-- RESUMO -->
                         <div class="border rounded-3 p-3 mb-4">
 
@@ -156,18 +197,17 @@
 
                         </div>
 
-                        <!-- AVISO SOBRE SINCRONIZAÇÃO -->
+                        <!-- AVISO -->
                         <div class="alert alert-info">
 
                             <i class="bi bi-info-circle-fill me-2"></i>
 
                             <strong>Configurações compartilhadas:</strong>
-
-                            os tempos padrão são guardados no MongoDB e utilizados
-                            pelos dispositivos que acessam esta instalação do Pelada da Fé.
-                            Uma cópia local é mantida neste navegador como contingência.
-                            Se o servidor estiver indisponível, a tela avisará que as
-                            alterações ficaram salvas somente neste navegador.
+                            os tempos padrão e o tema são salvos no MongoDB e usados
+                            nos dispositivos que acessam esta instalação. Uma cópia
+                            local é mantida neste navegador para contingência. Se o
+                            servidor estiver indisponível, o sistema avisará quando
+                            a alteração ficar salva somente neste navegador.
 
                         </div>
 
@@ -296,10 +336,10 @@
                     </h6>
 
                     <p class="text-muted small mb-0">
-                        Os tempos padrão ficam no MongoDB e podem ser usados em
-                        computadores e celulares que acessam esta mesma instalação
-                        do sistema. O navegador também mantém uma cópia local para
-                        uso quando o servidor estiver temporariamente indisponível.
+                        Os tempos padrão e o tema da aparência ficam guardados
+                        no MongoDB, para serem usados nos computadores e celulares
+                        que acessam esta instalação. O navegador mantém uma cópia
+                        local para uso em caso de indisponibilidade do servidor.
                     </p>
 
                 </div>

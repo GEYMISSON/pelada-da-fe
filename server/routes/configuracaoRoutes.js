@@ -8,19 +8,18 @@ const CHAVE_CONFIGURACAO_GERAL = "geral";
 const CONFIGURACOES_PADRAO = {
     chave: CHAVE_CONFIGURACAO_GERAL,
     duracaoPeladaMinutos: 60,
-    duracaoPartidaMinutos: 7
+    duracaoPartidaMinutos: 7,
+    temaAparencia: "claro"
 };
 
 
-function validarDuracoes(dados) {
+function validarConfiguracoes(dados) {
 
-    const duracaoPeladaMinutos = Number(
-        dados?.duracaoPeladaMinutos
-    );
+    const duracaoPeladaMinutos =
+        Number(dados?.duracaoPeladaMinutos);
 
-    const duracaoPartidaMinutos = Number(
-        dados?.duracaoPartidaMinutos
-    );
+    const duracaoPartidaMinutos =
+        Number(dados?.duracaoPartidaMinutos);
 
     if (
         !Number.isInteger(duracaoPeladaMinutos) ||
@@ -50,13 +49,37 @@ function validarDuracoes(dados) {
 
     }
 
+    const configuracoes = {
+        duracaoPeladaMinutos,
+        duracaoPartidaMinutos
+    };
+
+    // Clientes antigos podem enviar somente as durações.
+    // Quando o tema não vem no corpo, ele não é sobrescrito.
+    if (dados?.temaAparencia !== undefined) {
+
+        if (
+            !["claro", "escuro"].includes(
+                dados.temaAparencia
+            )
+        ) {
+
+            return {
+                valido: false,
+                mensagem:
+                    "O tema de aparência deve ser claro ou escuro."
+            };
+
+        }
+
+        configuracoes.temaAparencia =
+            dados.temaAparencia;
+
+    }
+
     return {
         valido: true,
-
-        configuracoes: {
-            duracaoPeladaMinutos,
-            duracaoPartidaMinutos
-        }
+        configuracoes
     };
 
 }
@@ -69,7 +92,12 @@ function formatarResposta(configuracao) {
             configuracao.duracaoPeladaMinutos,
 
         duracaoPartidaMinutos:
-            configuracao.duracaoPartidaMinutos
+            configuracao.duracaoPartidaMinutos,
+
+        temaAparencia:
+            configuracao.temaAparencia === "escuro"
+                ? "escuro"
+                : "claro"
     };
 
 }
@@ -78,7 +106,7 @@ function formatarResposta(configuracao) {
 // ============================================================
 // GET /api/configuracoes
 // Busca as configurações gerais.
-// Se não houver registro, cria um com os valores padrão.
+// Se o registro ainda não existir, cria os valores padrão.
 // ============================================================
 
 router.get("/", async (req, res) => {
@@ -91,7 +119,8 @@ router.get("/", async (req, res) => {
                     chave: CHAVE_CONFIGURACAO_GERAL
                 },
                 {
-                    $setOnInsert: CONFIGURACOES_PADRAO
+                    $setOnInsert:
+                        CONFIGURACOES_PADRAO
                 },
                 {
                     new: true,
@@ -103,7 +132,6 @@ router.get("/", async (req, res) => {
 
         return res.json({
             sucesso: true,
-
             configuracoes:
                 formatarResposta(configuracao)
         });
@@ -117,7 +145,6 @@ router.get("/", async (req, res) => {
 
         return res.status(500).json({
             sucesso: false,
-
             erro:
                 "Não foi possível carregar as configurações do servidor."
         });
@@ -135,7 +162,7 @@ router.get("/", async (req, res) => {
 router.put("/", async (req, res) => {
 
     const validacao =
-        validarDuracoes(req.body);
+        validarConfiguracoes(req.body);
 
     if (!validacao.valido) {
 
@@ -171,10 +198,8 @@ router.put("/", async (req, res) => {
 
         return res.json({
             sucesso: true,
-
             mensagem:
                 "Configurações salvas no MongoDB.",
-
             configuracoes:
                 formatarResposta(configuracao)
         });
@@ -188,7 +213,6 @@ router.put("/", async (req, res) => {
 
         return res.status(500).json({
             sucesso: false,
-
             erro:
                 "Não foi possível salvar as configurações no banco de dados."
         });
